@@ -4,11 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, Container, Form, Row, Col } from "react-bootstrap";
 import { motion } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-<<<<<<< HEAD
-=======
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
->>>>>>> c9e96e1 (carrelloOk e inizio checkOut)
 
 const ProductsPage = () => {
     const [products, setProducts] = useState([]);
@@ -237,10 +234,6 @@ const ProductsPage = () => {
                     opacity: currentIndex >= filteredProducts.length - productsPerView ? 0.5 : 1,
                 }}
             />
-<<<<<<< HEAD
-=======
-            <ToastContainer />
->>>>>>> c9e96e1 (carrelloOk e inizio checkOut)
         </Container>
     );
 };

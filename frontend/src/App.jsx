@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ToastContainer } from 'react-toastify';
 import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
 import Layout from "./components/Layout";
@@ -18,6 +19,7 @@ function App() {
           <Route path="/checkout" element={<OrderPage />} /> {/* Aggiunta questa riga */}
         </Routes>
       </Layout>
+      <ToastContainer />
     </Router>
   );
 }

@@ -3,6 +3,7 @@ import axios from "axios";
 import { Button, Alert, ListGroup, Card, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { Plus, Minus, Trash } from "lucide-react";
+import { toast } from "react-toastify";
 
 const CartPage = () => {
   const [cart, setCart] = useState([]);
@@ -66,29 +67,37 @@ const CartPage = () => {
     }
   };
 
-  const removeFromCart = async (productId) => {
-    console.log("Tentativo di rimozione prodotto con ID:", productId);
+  const removeFromCart = async (cartItemId) => {
+    console.log("Tentativo di rimozione prodotto con ID:", cartItemId);
 
     try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:5000/api/cart/${productId}`, { 
+        await axios.delete(`http://localhost:5000/api/cart/${cartItemId}`, { 
             headers: { Authorization: `Bearer ${token}` }
         });
 
-        const updatedCart = cart.filter(item => item._id !== productId);
+        const updatedCart = cart.filter(item => item.cartItemId !== cartItemId);
         setCart(updatedCart);
 
         const totalPrice = updatedCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
         setTotal(totalPrice);
 
         setShowModal(false);
+        toast.success("Prodotto rimosso dal carrello!", {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+        });
     } catch (err) {
         console.error("Errore nella rimozione del prodotto", err);
         setError("Errore nella rimozione del prodotto.");
     }
-};
-
-
+  };
 
   const clearCart = async () => {
     try {
@@ -96,29 +105,22 @@ const CartPage = () => {
       await axios.delete("http://localhost:5000/api/cart", {
         headers: { Authorization: `Bearer ${token}` },
       });
-<<<<<<< HEAD
-      const updatedCart = cart.filter(item => item.cartItemId !== cartItemId);
-      setCart(updatedCart);
-      const totalPrice = updatedCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      setTotal(totalPrice);
-      setShowModal(false);
-=======
-      setCart([]); // Pulisce lo stato
+      setCart([]);
       setTotal(0);
->>>>>>> c9e96e1 (carrelloOk e inizio checkOut)
+      setShowModal(false);
+      toast.success("Carrello svuotato con successo!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+      });
     } catch {
       setError("Errore nello svuotamento del carrello.");
     }
-  };
-  const handleShowModal = (item) => {
-    setItemToDelete(item._id); // Qui memorizzi già l'ID giusto
-    setShowModal(true);
-  };
-
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setItemToDelete(null);
   };
 
   const handleShowModal = (item) => {
@@ -217,17 +219,9 @@ const CartPage = () => {
           <Button variant="secondary" onClick={handleCloseModal}>
             Annulla
           </Button>
-<<<<<<< HEAD
           <Button variant="danger" onClick={() => removeFromCart(itemToDelete.cartItemId)}>
             Elimina
           </Button>
-=======
-          <Button variant="danger" onClick={() => removeFromCart(itemToDelete)}>
-            Elimina
-          </Button>
-
-
->>>>>>> c9e96e1 (carrelloOk e inizio checkOut)
         </Modal.Footer>
       </Modal>
     </div>
