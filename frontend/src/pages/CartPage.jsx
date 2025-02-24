@@ -66,20 +66,59 @@ const CartPage = () => {
     }
   };
 
-  const removeFromCart = async (cartItemId) => {
+  const removeFromCart = async (productId) => {
+    console.log("Tentativo di rimozione prodotto con ID:", productId);
+
+    try {
+        const token = localStorage.getItem("token");
+        await axios.delete(`http://localhost:5000/api/cart/${productId}`, { 
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const updatedCart = cart.filter(item => item._id !== productId);
+        setCart(updatedCart);
+
+        const totalPrice = updatedCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        setTotal(totalPrice);
+
+        setShowModal(false);
+    } catch (err) {
+        console.error("Errore nella rimozione del prodotto", err);
+        setError("Errore nella rimozione del prodotto.");
+    }
+};
+
+
+
+  const clearCart = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/cart/${cartItemId}`, {
+      await axios.delete("http://localhost:5000/api/cart", {
         headers: { Authorization: `Bearer ${token}` },
       });
+<<<<<<< HEAD
       const updatedCart = cart.filter(item => item.cartItemId !== cartItemId);
       setCart(updatedCart);
       const totalPrice = updatedCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
       setTotal(totalPrice);
       setShowModal(false);
+=======
+      setCart([]); // Pulisce lo stato
+      setTotal(0);
+>>>>>>> c9e96e1 (carrelloOk e inizio checkOut)
     } catch {
-      setError("Errore nella rimozione del prodotto.");
+      setError("Errore nello svuotamento del carrello.");
     }
+  };
+  const handleShowModal = (item) => {
+    setItemToDelete(item._id); // Qui memorizzi già l'ID giusto
+    setShowModal(true);
+  };
+
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setItemToDelete(null);
   };
 
   const handleShowModal = (item) => {
@@ -100,7 +139,8 @@ const CartPage = () => {
       <Card className="p-4 shadow-lg border-0">
         <ListGroup variant="flush">
           {cart.map((item) => (
-            <ListGroup.Item key={item.cartItemId} className="d-flex justify-content-between align-items-center py-3 border-bottom">
+            <ListGroup.Item key={item._id} className="d-flex justify-content-between align-items-center py-3 border-bottom">
+
               <div className="d-flex align-items-center">
                 <img src={item.images} alt={item.name} className="rounded" style={{ width: "60px", height: "60px", marginRight: "20px" }} />
                 <div>
@@ -160,6 +200,9 @@ const CartPage = () => {
       </Card>
       <div className="mt-4 text-end">
         <h3 className="fw-bold">Totale: €{total.toFixed(2)}</h3>
+        <Button variant="danger" size="lg" className="shadow-sm me-2" onClick={clearCart} disabled={cart.length === 0}>
+          🗑️ Svuota Carrello
+        </Button>
         <Button variant="success" size="lg" className="shadow-sm" onClick={() => navigate("/checkout")} disabled={cart.length === 0}>
           🛒 Procedi al Checkout
         </Button>
@@ -174,9 +217,17 @@ const CartPage = () => {
           <Button variant="secondary" onClick={handleCloseModal}>
             Annulla
           </Button>
+<<<<<<< HEAD
           <Button variant="danger" onClick={() => removeFromCart(itemToDelete.cartItemId)}>
             Elimina
           </Button>
+=======
+          <Button variant="danger" onClick={() => removeFromCart(itemToDelete)}>
+            Elimina
+          </Button>
+
+
+>>>>>>> c9e96e1 (carrelloOk e inizio checkOut)
         </Modal.Footer>
       </Modal>
     </div>

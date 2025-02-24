@@ -4,6 +4,11 @@ import { useNavigate } from "react-router-dom";
 import { Card, Container, Form, Row, Col } from "react-bootstrap";
 import { motion } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+<<<<<<< HEAD
+=======
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
+>>>>>>> c9e96e1 (carrelloOk e inizio checkOut)
 
 const ProductsPage = () => {
     const [products, setProducts] = useState([]);
@@ -44,8 +49,28 @@ const ProductsPage = () => {
                 { productId, quantity: 1 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
+            toast.success("Prodotto aggiunto al carrello!", {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "colored",
+            });
         } catch (error) {
             console.error("Errore nell'aggiunta al carrello", error);
+            toast.error("Errore nell'aggiunta al carrello", {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "colored",
+            });
         }
     };
 
@@ -212,6 +237,10 @@ const ProductsPage = () => {
                     opacity: currentIndex >= filteredProducts.length - productsPerView ? 0.5 : 1,
                 }}
             />
+<<<<<<< HEAD
+=======
+            <ToastContainer />
+>>>>>>> c9e96e1 (carrelloOk e inizio checkOut)
         </Container>
     );
 };

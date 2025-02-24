@@ -2,8 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
 import Layout from "./components/Layout";
-import ProductsPage from './pages/ProductsPage'; 
-import LoginPage from './pages/LoginPage'; 
+import ProductsPage from "./pages/ProductsPage";
+import LoginPage from "./pages/LoginPage";
+import OrderPage from "./pages/OrderPage"; // Importa OrderPage
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/checkout" element={<OrderPage />} /> {/* Aggiunta questa riga */}
         </Routes>
       </Layout>
     </Router>
