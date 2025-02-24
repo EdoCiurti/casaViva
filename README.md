@@ -1,4 +1,4 @@
-# 🏡 ArredoVivo
+# 🏡 CasaViva
 
 ArredoVivo è un e-commerce innovativo dedicato alla vendita di mobili e arredamenti, con un'esperienza utente avanzata grazie all'integrazione della realtà aumentata (AR). La piattaforma offre un catalogo ricco, un carrello intuitivo, un checkout sicuro e una gestione avanzata degli ordini, il tutto con un design moderno e reattivo.
 
