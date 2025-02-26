@@ -4,6 +4,16 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
+// Ottenere tutti gli ordini
+router.get("/", authMiddleware, async (req, res) => {
+    try {
+      const orders = await Order.find().populate("user").populate("products.product");
+      res.json(orders);
+    } catch (err) {
+      res.status(500).json({ error: "Errore nel recupero degli ordini" });
+    }
+  });
+  
 // 🛒 Creare un nuovo ordine
 router.post("/", authMiddleware, async (req, res) => {
     try {

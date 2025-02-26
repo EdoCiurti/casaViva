@@ -7,6 +7,7 @@ import ProductsPage from "./pages/ProductsPage";
 import LoginPage from "./pages/LoginPage";
 import OrderPage from "./pages/OrderPage"; // Importa OrderPage
 import SuccessPage from "./pages/SuccessPage";
+import AdminHomePage from "./pages/AdminHomePage";
 import Footer from "./components/Footer"; // Importa Footer
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/checkout" element={<OrderPage />} /> {/* Aggiunta questa riga */}
             <Route path="/success" element={<SuccessPage />} />
+            <Route path="/admin" element={<AdminHomePage />} />
           </Routes>
         </Layout>
         <Footer /> {/* Aggiunta questa riga */}

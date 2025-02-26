@@ -34,7 +34,8 @@ const CartPage = () => {
         setCart(productsWithDetails);
         const totalPrice = productsWithDetails.reduce((sum, item) => sum + item.price * item.quantity, 0);
         setTotal(totalPrice);
-      } catch {
+      } catch (error) {
+        console.error("Errore nel recupero del carrello:", error);
         setError("Errore nel recupero del carrello.");
       }
     };

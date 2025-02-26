@@ -24,12 +24,19 @@ const LoginPage = () => {
             
             if (response) {
                 localStorage.setItem("token", response.data.token);
-                localStorage.setItem("username", response.data.username);
-                navigate('/');
+                const loggedInUsername = response.data.username;
+                localStorage.setItem("username", loggedInUsername);
+
+                // Controlla se le credenziali corrispondono a quelle dell'amministratore
+                if (loggedInUsername === "admin") {
+                    navigate('/admin'); // Reindirizza alla pagina admin
+                } else {
+                    navigate('/');
+                }
                 window.location.reload();
             }
         } catch (err) {
-            console.log(err)
+            console.log(err);
             setError("Errore nell'autenticazione. Riprova.");
         }
     };
