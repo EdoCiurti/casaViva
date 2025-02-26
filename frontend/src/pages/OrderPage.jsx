@@ -1,145 +1,181 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Container, Row, Col, Card, Form, Button, Alert } from "react-bootstrap";
+import { motion } from "framer-motion";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Form, Button, Container, Row, Col, Alert, ListGroup } from "react-bootstrap";
 
 const OrderPage = () => {
-    const navigate = useNavigate();
-    const [cart, setCart] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        taxCode: "",
-        address: "",
-        city: "",
-        province: "",
-        postalCode: "",
-        phone: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        newsletter: false,
-        invoiceRequest: false
-    });
-    const [error, setError] = useState(null);
+  const [cartItems, setCartItems] = useState([]);
+  const [shippingInfo, setShippingInfo] = useState({ address: "", city: "", postalCode: "", country: "" });
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const addressInputRef = useRef(null);
 
-    useEffect(() => {
-        const fetchCart = async () => {
-            try {
-                const token = localStorage.getItem("token");
-                const response = await axios.get("http://localhost:5000/api/cart", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setCart(response.data.products);
-                const totalPrice = response.data.products.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-                setTotal(totalPrice);
-            } catch (err) {
-                console.error("Errore nel recupero del carrello", err);
-                setError("Errore nel caricamento del carrello");
-            }
-        };
-        fetchCart();
-    }, []);
-
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData({
-            ...formData,
-            [name]: type === "checkbox" ? checked : value
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:5000/api/cart", {
+          headers: { Authorization: `Bearer ${token}` },
         });
+        setCartItems(response.data.products);
+      } catch (err) {
+        setError("Errore nel recupero del carrello.");
+      }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const token = localStorage.getItem("token");
-            const orderResponse = await axios.post("http://localhost:5000/api/orders", {
-                products: cart,
-                billingInfo: formData
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            
-            const paymentResponse = await axios.post("http://localhost:5000/api/payments/create-checkout-session", {
-                cartItems: cart
-            });
-            
-            window.location.href = paymentResponse.data.url;
-        } catch (err) {
-            console.error("Errore nell'invio dell'ordine", err);
-            setError("Errore durante la creazione dell'ordine");
-        }
+    fetchCartItems();
+  }, []);
+
+  useEffect(() => {
+    const loadScript = (url, callback) => {
+      const script = document.createElement("script");
+      script.type = "text/javascript";
+      script.src = url;
+      script.onload = callback;
+      document.head.appendChild(script);
     };
 
-    return (
-        <Container>
-            <h2>Checkout</h2>
-            {error && <Alert variant="danger">{error}</Alert>}
-            <Form onSubmit={handleSubmit}>
-                <Row>
-                    <Col md={6}>
-                        <Form.Group controlId="firstName">
-                            <Form.Label>Nome *</Form.Label>
-                            <Form.Control type="text" name="firstName" value={formData.firstName} onChange={handleChange} required />
-                        </Form.Group>
-                        <Form.Group controlId="lastName">
-                            <Form.Label>Cognome *</Form.Label>
-                            <Form.Control type="text" name="lastName" value={formData.lastName} onChange={handleChange} required />
-                        </Form.Group>
-                        <Form.Group controlId="taxCode">
-                            <Form.Label>Codice Fiscale *</Form.Label>
-                            <Form.Control type="text" name="taxCode" value={formData.taxCode} onChange={handleChange} required />
-                        </Form.Group>
-                        <Form.Group controlId="address">
-                            <Form.Label>Indirizzo *</Form.Label>
-                            <Form.Control type="text" name="address" value={formData.address} onChange={handleChange} required />
-                        </Form.Group>
-                    </Col>
-                    <Col md={6}>
-                        <Form.Group controlId="city">
-                            <Form.Label>Città *</Form.Label>
-                            <Form.Control type="text" name="city" value={formData.city} onChange={handleChange} required />
-                        </Form.Group>
-                        <Form.Group controlId="province">
-                            <Form.Label>Provincia *</Form.Label>
-                            <Form.Control type="text" name="province" value={formData.province} onChange={handleChange} required />
-                        </Form.Group>
-                        <Form.Group controlId="postalCode">
-                            <Form.Label>CAP *</Form.Label>
-                            <Form.Control type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} required />
-                        </Form.Group>
-                        <Form.Group controlId="phone">
-                            <Form.Label>Telefono *</Form.Label>
-                            <Form.Control type="text" name="phone" value={formData.phone} onChange={handleChange} required />
-                        </Form.Group>
-                    </Col>
-                </Row>
-                <Form.Group controlId="newsletter">
-                    <Form.Check type="checkbox" label="Iscriviti alla nostra newsletter e ricevi subito 10 € sul tuo prossimo acquisto!" name="newsletter" checked={formData.newsletter} onChange={handleChange} />
-                </Form.Group>
-                <Form.Group controlId="invoiceRequest">
-                    <Form.Check type="checkbox" label="Richiedi la fattura" name="invoiceRequest" checked={formData.invoiceRequest} onChange={handleChange} />
-                </Form.Group>
-                <Button variant="primary" type="submit">Procedi al pagamento</Button>
-            </Form>
-            <h3 className="mt-4">Riepilogo Ordine</h3>
-            <ListGroup>
-                {cart.map((item) => (
-                    <ListGroup.Item key={item.product._id} className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5>{item.product.name}</h5>
-                            <p>Quantità: {item.quantity}</p>
-                        </div>
-                        <div>
-                            <h5>€{(item.product.price * item.quantity).toFixed(2)}</h5>
-                        </div>
-                    </ListGroup.Item>
+    loadScript(`https://maps.googleapis.com/maps/api/js?key=AIzaSyBUSCdPDCz0xe58_cHSoQWU5zLy4lE_IqE&libraries=places`, () => {
+      const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+        types: ["address"],
+      });
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        const address = place.formatted_address;
+        const city = place.address_components.find(component => component.types.includes("locality"))?.long_name || "";
+        const postalCode = place.address_components.find(component => component.types.includes("postal_code"))?.long_name || "";
+        const country = place.address_components.find(component => component.types.includes("country"))?.long_name || "";
+
+        setShippingInfo({ address, city, postalCode, country });
+      });
+    });
+  }, []);
+
+  const handleOrder = async () => {
+    try {
+        const token = localStorage.getItem("token");
+
+        const response = await axios.post(
+            "http://localhost:5000/api/payments/create-checkout-session",
+            { cartItems }, 
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Reindirizza alla pagina di pagamento Stripe
+        window.location.href = response.data.url;
+    } catch (err) {
+        console.error("Errore nella creazione della sessione di pagamento:", err.response?.data || err);
+        setError("Errore nella creazione della sessione di pagamento.");
+    }
+  };
+
+  const isFormValid = () => {
+    return shippingInfo.address && shippingInfo.city && shippingInfo.postalCode && shippingInfo.country;
+  };
+
+  return (
+    <Container className="mt-5">
+      <br></br><br></br>
+      <motion.h1 
+        className="text-center mb-4"
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        Checkout
+      </motion.h1>
+      {error && <Alert variant="danger">{error}</Alert>}
+      <Row>
+        <Col md={6}>
+          <motion.div
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card className="mb-4 shadow-lg">
+              <Card.Header as="h5">Riepilogo Ordine</Card.Header>
+              <Card.Body>
+                {cartItems.map((item) => (
+                  <div key={item.product._id} className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h6>{item.product.name}</h6>
+                      <p>Quantità: {item.quantity}</p>
+                    </div>
+                    <p>€{(item.product.price * item.quantity).toFixed(2)}</p>
+                  </div>
                 ))}
-            </ListGroup>
-            <h3 className="mt-4">Totale: €{total.toFixed(2)}</h3>
-        </Container>
-    );
+                <h5 className="text-end">Totale: €{cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0).toFixed(2)}</h5>
+              </Card.Body>
+            </Card>
+          </motion.div>
+        </Col>
+        <Col md={6}>
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card className="mb-4 shadow-lg">
+              <Card.Header as="h5">Informazioni di Spedizione</Card.Header>
+              <Card.Body>
+                <Form>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Indirizzo</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Inserisci indirizzo"
+                      value={shippingInfo.address}
+                      onChange={(e) => setShippingInfo({ ...shippingInfo, address: e.target.value })}
+                      ref={addressInputRef}
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Città</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Inserisci città"
+                      value={shippingInfo.city}
+                      onChange={(e) => setShippingInfo({ ...shippingInfo, city: e.target.value })}
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Codice Postale</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Inserisci codice postale"
+                      value={shippingInfo.postalCode}
+                      onChange={(e) => setShippingInfo({ ...shippingInfo, postalCode: e.target.value })}
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Paese</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Inserisci paese"
+                      value={shippingInfo.country}
+                      onChange={(e) => setShippingInfo({ ...shippingInfo, country: e.target.value })}
+                    />
+                  </Form.Group>
+                </Form>
+              </Card.Body>
+            </Card>
+          </motion.div>
+        </Col>
+      </Row>
+      <motion.div 
+        className="text-center"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Button variant="success" size="lg" onClick={handleOrder} disabled={!isFormValid()}>
+          Procedi al Pagamento
+        </Button>
+      </motion.div>
+    </Container>
+  );
 };
 
 export default OrderPage;

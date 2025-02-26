@@ -3,7 +3,6 @@ import axios from "axios";
 import { Button, Alert, ListGroup, Card, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { Plus, Minus, Trash } from "lucide-react";
-import { toast } from "react-toastify";
 
 const CartPage = () => {
   const [cart, setCart] = useState([]);
@@ -44,7 +43,7 @@ const CartPage = () => {
   }, []);
 
   const updateQuantity = async (productId, newQuantity) => {
-    if (newQuantity < 1) return; // Evita quantità negative o zero
+    if (newQuantity < 1) return; // Evita quantità negative o zero
 
     try {
       const token = localStorage.getItem("token");
@@ -63,41 +62,33 @@ const CartPage = () => {
       const totalPrice = updatedCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
       setTotal(totalPrice);
     } catch (error) {
-      console.error("Errore aggiornamento quantità", error);
+      console.error("Errore aggiornamento quantità", error);
     }
   };
 
-  const removeFromCart = async (cartItemId) => {
-    console.log("Tentativo di rimozione prodotto con ID:", cartItemId);
+  const removeFromCart = async (productId) => {
+    console.log("Tentativo di rimozione prodotto con ID:", productId);
 
     try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:5000/api/cart/${cartItemId}`, { 
+        await axios.delete(`http://localhost:5000/api/cart/${productId}`, { 
             headers: { Authorization: `Bearer ${token}` }
         });
 
-        const updatedCart = cart.filter(item => item.cartItemId !== cartItemId);
+        const updatedCart = cart.filter(item => item._id !== productId);
         setCart(updatedCart);
 
         const totalPrice = updatedCart.reduce((sum, item) => sum + item.price * item.quantity, 0);
         setTotal(totalPrice);
 
         setShowModal(false);
-        toast.success("Prodotto rimosso dal carrello!", {
-            position: "top-right",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-        });
     } catch (err) {
         console.error("Errore nella rimozione del prodotto", err);
         setError("Errore nella rimozione del prodotto.");
     }
-  };
+};
+
+
 
   const clearCart = async () => {
     try {
@@ -105,28 +96,17 @@ const CartPage = () => {
       await axios.delete("http://localhost:5000/api/cart", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setCart([]);
+      setCart([]); // Pulisce lo stato
       setTotal(0);
-      setShowModal(false);
-      toast.success("Carrello svuotato con successo!", {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "colored",
-      });
     } catch {
       setError("Errore nello svuotamento del carrello.");
     }
   };
-
   const handleShowModal = (item) => {
-    setItemToDelete(item);
+    setItemToDelete(item._id); // Qui memorizzi già l'ID giusto
     setShowModal(true);
   };
+
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -203,7 +183,7 @@ const CartPage = () => {
       <div className="mt-4 text-end">
         <h3 className="fw-bold">Totale: €{total.toFixed(2)}</h3>
         <Button variant="danger" size="lg" className="shadow-sm me-2" onClick={clearCart} disabled={cart.length === 0}>
-          🗑️ Svuota Carrello
+          🗑 Svuota Carrello
         </Button>
         <Button variant="success" size="lg" className="shadow-sm" onClick={() => navigate("/checkout")} disabled={cart.length === 0}>
           🛒 Procedi al Checkout
@@ -219,9 +199,11 @@ const CartPage = () => {
           <Button variant="secondary" onClick={handleCloseModal}>
             Annulla
           </Button>
-          <Button variant="danger" onClick={() => removeFromCart(itemToDelete.cartItemId)}>
+          <Button variant="danger" onClick={() => removeFromCart(itemToDelete)}>
             Elimina
           </Button>
+
+
         </Modal.Footer>
       </Modal>
     </div>
