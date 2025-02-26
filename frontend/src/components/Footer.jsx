@@ -1,6 +1,25 @@
+import { useEffect, useState } from "react";
+
 const Footer = () => {
+  const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
+
+  useEffect(() => {
+    const handleDarkModeToggle = () => {
+      setDarkMode(localStorage.getItem("darkMode") === "true");
+    };
+
+    window.addEventListener('darkModeToggle', handleDarkModeToggle);
+
+    return () => {
+      window.removeEventListener('darkModeToggle', handleDarkModeToggle);
+    };
+  }, []);
+
   return (
-    <footer className="bg-dark text-light text-center py-3 mt-4" style={{ width: '100%', height: "7%", marginTop: 'auto', bottom:0, position:'relative' }}>
+    <footer 
+      className={`text-center py-3 mt-4 ${darkMode ? "bg-dark text-light" : "bg-light text-dark"}`} 
+      style={{ width: '100%', height: "7%", marginTop: 'auto', bottom: 0, position: 'relative' }}
+    >
       <p>&copy; 2025 Ecommerce AR. All rights reserved.</p>
     </footer>
   );

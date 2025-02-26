@@ -262,7 +262,7 @@ const ProductsPage = () => {
                                                     <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>{product.name}</Card.Title>
                                                     <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
                                                     <motion.button
-                                                        className="btn btn-primary mt-auto"
+                                                        className="btnCarrello"
                                                         whileHover={{ scale: 1.1 }}
                                                         whileTap={{ scale: 0.9 }}
                                                         onClick={() => addToCart(product._id)}

@@ -9,6 +9,7 @@ import OrderPage from "./pages/OrderPage"; // Importa OrderPage
 import SuccessPage from "./pages/SuccessPage";
 import AdminHomePage from "./pages/AdminHomePage";
 import Footer from "./components/Footer"; // Importa Footer
+import './App.css';
 
 function App() {
   return (

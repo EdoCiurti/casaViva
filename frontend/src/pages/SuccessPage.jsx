@@ -8,6 +8,7 @@ const SuccessPage = () => {
   const [orderDetails, setOrderDetails] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [estimatedDeliveryDate, setEstimatedDeliveryDate] = useState("");
+  const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +29,18 @@ const SuccessPage = () => {
     fetchOrderDetails();
   }, []);
 
+  useEffect(() => {
+    const handleDarkModeToggle = () => {
+      setDarkMode(localStorage.getItem("darkMode") === "true");
+    };
+
+    window.addEventListener('darkModeToggle', handleDarkModeToggle);
+
+    return () => {
+      window.removeEventListener('darkModeToggle', handleDarkModeToggle);
+    };
+  }, []);
+
   const calculateTotalPrice = (products) => {
     const total = products.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
     setTotalPrice(total);
@@ -46,7 +59,7 @@ const SuccessPage = () => {
   };
 
   return (
-    <Container className="mt-5">
+    <Container className={`mt-5 ${darkMode ? "dark-mode success-dark-text" : "light-mode"}`}>
         <br></br><br></br>
       <Row className="justify-content-center">
         <Col md={8}>

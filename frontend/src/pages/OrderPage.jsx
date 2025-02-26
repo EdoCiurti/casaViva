@@ -9,6 +9,7 @@ const OrderPage = () => {
   const [productItems, setProductItems] = useState([]);
   const [shippingInfo, setShippingInfo] = useState({ address: "", city: "", postalCode: "", country: "" });
   const [error, setError] = useState(null);
+  const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
   const navigate = useNavigate();
   const addressInputRef = useRef(null);
 
@@ -27,6 +28,18 @@ const OrderPage = () => {
     };
 
     fetchCartItems();
+  }, []);
+
+  useEffect(() => {
+    const handleDarkModeToggle = () => {
+      setDarkMode(localStorage.getItem("darkMode") === "true");
+    };
+
+    window.addEventListener('darkModeToggle', handleDarkModeToggle);
+
+    return () => {
+      window.removeEventListener('darkModeToggle', handleDarkModeToggle);
+    };
   }, []);
 
   useEffect(() => {
@@ -105,7 +118,7 @@ const OrderPage = () => {
   };
 
   return (
-    <Container className="mt-5">
+    <Container className={`mt-5 ${darkMode ? "dark-mode order-dark-text" : "light-mode"}`}>
       <br></br><br></br>
       <motion.h1 
         className="text-center mb-4"
