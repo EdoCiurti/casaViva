@@ -23,7 +23,10 @@ const AdminHomePage = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/orders");
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:5000/api/orders", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.status === 200) {
         setOrders(response.data);
       } else {

@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 const OrderPage = () => {
   const [cartItems, setCartItems] = useState([]);
+  const [productItems, setProductItems] = useState([]);
   const [shippingInfo, setShippingInfo] = useState({ address: "", city: "", postalCode: "", country: "" });
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const OrderPage = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCartItems(response.data.products);
+        setProductItems(response.data);
       } catch (err) {
         setError("Errore nel recupero del carrello.");
       }
@@ -53,21 +55,48 @@ const OrderPage = () => {
     });
   }, []);
 
+  const createOrder = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "http://localhost:5000/api/orders",
+        { products: productItems},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data._id; // Assicurati che il server restituisca l'ID dell'ordine creato
+    } catch (err) {
+      console.error("Errore nella creazione dell'ordine:", err.response?.data || err);
+      setError("Errore nella creazione dell'ordine.");
+      throw err;
+    }
+  };
+
   const handleOrder = async () => {
     try {
-        const token = localStorage.getItem("token");
+      if (cartItems.length === 0) {
+        setError("Il carrello è vuoto.");
+        return;
+      }
 
-        const response = await axios.post(
-            "http://localhost:5000/api/payments/create-checkout-session",
-            { cartItems }, 
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+      const orderId = await createOrder(); // Crea l'ordine nel database
+      const token = localStorage.getItem("token");
 
-        // Reindirizza alla pagina di pagamento Stripe
-        window.location.href = response.data.url;
+      const response = await axios.post(
+        "http://localhost:5000/api/payments/create-checkout-session",
+        { cartItems, orderId }, // Invia l'ID dell'ordine alla sessione di pagamento
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Svuota il carrello
+      await axios.delete("http://localhost:5000/api/cart", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Reindirizza alla pagina di pagamento Stripe
+      window.location.href = response.data.url;
     } catch (err) {
-        console.error("Errore nella creazione della sessione di pagamento:", err.response?.data || err);
-        setError("Errore nella creazione della sessione di pagamento.");
+      console.error("Errore nella creazione della sessione di pagamento:", err.response?.data || err);
+      setError("Errore nella creazione della sessione di pagamento.");
     }
   };
 
@@ -97,6 +126,7 @@ const OrderPage = () => {
             <Card className="mb-4 shadow-lg">
               <Card.Header as="h5">Riepilogo Ordine</Card.Header>
               <Card.Body>
+                
                 {cartItems.map((item) => (
                   <div key={item.product._id} className="d-flex justify-content-between align-items-center mb-3">
                     <div>

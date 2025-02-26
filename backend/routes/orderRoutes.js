@@ -23,13 +23,17 @@ router.post("/", authMiddleware, async (req, res) => {
         }
 
         let total = 0;
-        products.forEach(p => {
-            total += p.price * p.quantity;
+        products.products.forEach(p => {
+            total += p.product.price * p.quantity;
         });
 
         const newOrder = new Order({
-            user: req.user.userId,
-            products,
+            user: products.user,
+            products: products.products.map(p => ({
+                product: p.product,
+                quantity: p.quantity,
+                price: p.product.price
+            })),
             total
         });
 
