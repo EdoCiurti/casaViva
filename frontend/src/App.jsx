@@ -1,36 +1,68 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ToastContainer } from 'react-toastify';
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
 import Layout from "./components/Layout";
 import ProductsPage from "./pages/ProductsPage";
 import LoginPage from "./pages/LoginPage";
-import OrderPage from "./pages/OrderPage"; // Importa OrderPage
+import OrderPage from "./pages/OrderPage";
 import SuccessPage from "./pages/SuccessPage";
 import AdminHomePage from "./pages/AdminHomePage";
-import Footer from "./components/Footer"; // Importa Footer
-import './App.css';
+import Footer from "./components/Footer";
+import "./App.css";
 
 function App() {
+  const location = useLocation();
+  const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true");
+
+  useEffect(() => {
+    const handleDarkModeToggle = () => {
+      setDarkMode(localStorage.getItem("darkMode") === "true");
+    };
+
+    window.addEventListener("darkModeToggle", handleDarkModeToggle);
+    return () => {
+      window.removeEventListener("darkModeToggle", handleDarkModeToggle);
+    };
+  }, []);
+
   return (
-    <Router>
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/products" element={<ProductsPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/checkout" element={<OrderPage />} /> {/* Aggiunta questa riga */}
-            <Route path="/success" element={<SuccessPage />} />
-            <Route path="/admin" element={<AdminHomePage />} />
+    <motion.div
+      key={darkMode} // Permette l'animazione tra light/dark mode
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      className={darkMode ? "dark-mode" : "light-mode"}
+      style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+    >
+      <Layout>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<HomePage darkMode={darkMode} />} />
+            <Route path="/cart" element={<CartPage darkMode={darkMode} />} />
+            <Route path="/products" element={<ProductsPage darkMode={darkMode} />} />
+            <Route path="/login" element={<LoginPage darkMode={darkMode} />} />
+            <Route path="/checkout" element={<OrderPage darkMode={darkMode} />} />
+            <Route path="/success" element={<SuccessPage darkMode={darkMode} />} />
+            <Route path="/admin" element={<AdminHomePage darkMode={darkMode} />} />
           </Routes>
-        </Layout>
-        <Footer /> {/* Aggiunta questa riga */}
-        <ToastContainer />
-      </div>
-    </Router>
+        </AnimatePresence>
+      </Layout>
+      <Footer />
+      <ToastContainer />
+    </motion.div>
   );
 }
 
-export default App;
+const AppWrapper = () => {
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+};
+
+export default AppWrapper;
