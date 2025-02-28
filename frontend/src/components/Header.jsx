@@ -2,6 +2,7 @@ import { Container, Navbar, Nav, NavDropdown } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const Header = () => {
   const location = useLocation();
@@ -56,21 +57,66 @@ const Header = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
             {/* Pulsante dark mode */}
-            <button className="theme-button" onClick={toggleDarkMode}>
+            <motion.button 
+              className="theme-button" 
+              onClick={toggleDarkMode}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+            >
               {darkMode ? "🌙" : "☀️"}
-            </button>
+            </motion.button>
 
             {username ? (
-              <NavDropdown title={`👤 ${username}`} id="basic-nav-dropdown" style={{ fontSize: '1.2rem' }}>
-                <NavDropdown.Item as={Link} to="/cart">🛒 Carrello</NavDropdown.Item>
-                <NavDropdown.Item onClick={handleLogout} style={{ cursor: 'pointer' }}>🚪 Logout</NavDropdown.Item>
+              <NavDropdown 
+                title={`👤 ${username}`} 
+                id="basic-nav-dropdown" 
+                className="custom-dropdown"
+                style={{ fontSize: '1.2rem', borderRadius: '10px', overflow: 'show', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
+              >
+                <NavDropdown.Item as={Link} to="/cart" className="custom-dropdown-item" style={{ padding: '10px 20px', transition: 'background-color 0.3s ease, color 0.3s ease' }}>🛒 Carrello</NavDropdown.Item>
+                <NavDropdown.Item onClick={handleLogout} className="custom-dropdown-item" style={{ padding: '10px 20px', cursor: 'pointer', transition: 'background-color 0.3s ease, color 0.3s ease' }}>🚪 Logout</NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <Nav.Link as={Link} to="/login" style={{ fontSize: '1.2rem' }}>🔑 Accedi</Nav.Link>
+              <Nav.Link 
+                as={Link} 
+                to="/login" 
+                style={{ fontSize: '1.2rem' }}
+                //as={motion.div}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                🔑 Accedi
+              </Nav.Link>
             )}
           </Nav>
         </Navbar.Collapse>
       </Container>
+      <style>{`
+        .theme-button {
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          cursor: pointer;
+        }
+        .custom-dropdown {
+          background-color: ${darkMode ? '#343a40' : '#f8f9fa'};
+          border-radius: 10px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          overflow: show;
+        }
+
+        .custom-dropdown-item {
+          padding: 10px 20px;
+          transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .custom-dropdown-item:hover {
+          background-color: #007bff;
+          color: white;
+        }
+      `}</style>
     </Navbar>
   );
 };

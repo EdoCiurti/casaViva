@@ -15,6 +15,15 @@ body {
   color: #ffffff; /* Light text color */
 }
 
+/* Aggiungi queste classi per gestire il colore del testo "Checkout" */
+.light-mode .checkout-title {
+  color: #000000; /* Nero in modalità chiara */
+}
+
+.dark-mode .checkout-title {
+  color: #ffffff; /* Bianco in modalità scura */
+}
+
 .theme-button {
   background: none;
   border: none;
@@ -110,7 +119,22 @@ footer.dark-mode .footer {
 .container {
   animation: fadeIn 0.5s ease-in-out;
 }
+.arrow-icon {
+  z-index: 2;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.card-img-top:hover{
+  cursor: pointer;
+}
 
+.arrow-icon:hover {
+  transform: translateY(-50%) scale(1.2);
+}
 .card {
   animation: slideIn 0.5s ease-in-out;
   border-radius: 18px;

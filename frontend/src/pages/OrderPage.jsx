@@ -73,7 +73,7 @@ const OrderPage = () => {
       const token = localStorage.getItem("token");
       const response = await axios.post(
         "http://localhost:5000/api/orders",
-        { products: productItems},
+        { products: productItems },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return response.data._id; // Assicurati che il server restituisca l'ID dell'ordine creato
@@ -120,8 +120,8 @@ const OrderPage = () => {
   return (
     <Container className={`mt-5 ${darkMode ? "dark-mode order-dark-text" : "light-mode"}`}>
       <br></br><br></br>
-      <motion.h1 
-        className="text-center mb-4"
+      <motion.h1
+        className="text-center mb-4 checkout-title"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -139,7 +139,7 @@ const OrderPage = () => {
             <Card className="mb-4 shadow-lg">
               <Card.Header as="h5">Riepilogo Ordine</Card.Header>
               <Card.Body>
-                
+
                 {cartItems.map((item) => (
                   <div key={item.product._id} className="d-flex justify-content-between align-items-center mb-3">
                     <div>
@@ -207,7 +207,7 @@ const OrderPage = () => {
           </motion.div>
         </Col>
       </Row>
-      <motion.div 
+      <motion.div
         className="text-center"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}

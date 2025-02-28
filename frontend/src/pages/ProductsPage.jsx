@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const ProductsPage = () => {
     const [products, setProducts] = useState([]);
@@ -19,6 +20,8 @@ const ProductsPage = () => {
     const [showPopup, setShowPopup] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
+    // Aggiungi lo stato di caricamento
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const itemsPerView = 3;
 
@@ -51,6 +54,9 @@ const ProductsPage = () => {
                 // Extract unique categories from products
                 const uniqueCategories = [...new Set(response.data.map(product => product.category))];
                 setCategories(uniqueCategories);
+
+                // Imposta loading su false dopo il caricamento dei prodotti
+                setLoading(false);
             } catch (error) {
                 console.error("Errore nel recupero dei prodotti", error);
             }
@@ -65,11 +71,16 @@ const ProductsPage = () => {
                 setShowScrollToTop(false);
             }
         };
-    
+
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
-
+    useEffect(() => {
+        setTimeout(() => {
+            // Carica i dati qui
+            setLoading(false);
+        }, 30000); // Simula un ritardo di 2 secondi
+    }, []);
     const addToCart = async (productId) => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -111,21 +122,23 @@ const ProductsPage = () => {
         }
     };
 
-    const handleScroll = (direction) => {
+    const handleScroll = (direction, increment = itemsPerView) => {
         setCurrentIndex((prev) => {
             if (direction === "right") {
-                return Math.min(prev + itemsPerView, selectedCategory ? filteredProducts.length - itemsPerView : categories.length - itemsPerView);
+                return Math.min(prev + increment, selectedCategory ? filteredProducts.length - itemsPerView : categories.length - itemsPerView);
             } else {
-                return Math.max(prev - itemsPerView, 0);
+                return Math.max(prev - increment, 0);
             }
         });
     };
 
-    const handleDragEnd = (info) => {
-        if (info.offset.x < -50) {
-            handleScroll("right");
-        } else if (info.offset.x > 50) {
-            handleScroll("left");
+    const handleDragEnd = (event, info) => {
+        if (info && info.offset && typeof info.offset.x === 'number') {
+            if (info.offset.x < -50) {
+                handleScroll("right");
+            } else if (info.offset.x > 50) {
+                handleScroll("left");
+            }
         }
     };
 
@@ -183,266 +196,259 @@ const ProductsPage = () => {
     };
 
     return (
+
         <Container className="mt-5 text-center position-relative" style={{ zIndex: 0 }}>
-            <br></br> <br></br> 
+            <br></br> <br></br>
             <h1 className="mb-4" style={{ color: '#007bff', fontWeight: 'bold' }}>I nostri prodotti</h1>
             {selectedCategory && (
-            <Form className="mb-4">
-                <Row>
-                <Col md={4}>
-                    <Form.Group controlId="filterName">
-                    <Form.Label>Nome</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Cerca per nome"
-                        name="name"
-                        value={filters.name}
-                        onChange={handleFilterChange}
-                    />
-                    </Form.Group>
-                </Col>
-                <Col md={4}>
-                    <Form.Group controlId="filterPrice">
-                    <Form.Label>Prezzo massimo</Form.Label>
-                    <Form.Control
-                        type="number"
-                        placeholder="Cerca per prezzo"
-                        name="price"
-                        value={filters.price}
-                        onChange={handleFilterChange}
-                    />
-                    </Form.Group>
-                </Col>
-                <Col md={4}>
-                    <Form.Group controlId="filterCategory">
-                    <Form.Label>Categoria</Form.Label>
-                    <Form.Control
-                        as="select"
-                        name="category"
-                        value={filters.category}
-                        onChange={handleFilterChange}
-                    >
-                        <option value="">Tutte le categorie</option>
-                        {categories.map((category, index) => (
-                        <option key={index} value={category}>
-                            {category.replace(/-/g, ' ')}
-                        </option>
-                        ))}
-                    </Form.Control>
-                    </Form.Group>
-                </Col>
-                </Row>
-            </Form>
+                <Form className="mb-4">
+                    <Row>
+                        <Col md={4}>
+                            <Form.Group controlId="filterName">
+                                <Form.Label>Nome</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Cerca per nome"
+                                    name="name"
+                                    value={filters.name}
+                                    onChange={handleFilterChange}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                            <Form.Group controlId="filterPrice">
+                                <Form.Label>Prezzo massimo</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    placeholder="Cerca per prezzo"
+                                    name="price"
+                                    value={filters.price}
+                                    onChange={handleFilterChange}
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={4}>
+                            <Form.Group controlId="filterCategory">
+                                <Form.Label>Categoria</Form.Label>
+                                <Form.Control
+                                    as="select"
+                                    name="category"
+                                    value={filters.category}
+                                    onChange={handleFilterChange}
+                                >
+                                    <option value="">Tutte le categorie</option>
+                                    {categories.map((category, index) => (
+                                        <option key={index} value={category}>
+                                            {category.replace(/-/g, ' ')}
+                                        </option>
+                                    ))}
+                                </Form.Control>
+                            </Form.Group>
+                        </Col>
+                    </Row>
+                </Form>
             )}
             {selectedCategory ? (
-            <>
-                <Button variant="secondary" className="mb-4" onClick={handleBackToCategories}>
-                Torna alle categorie
-                </Button>
-                <div className="d-flex justify-content-end mb-4">
-                <ToggleButtonGroup type="radio" name="viewMode" value={viewMode} onChange={handleViewModeChange}>
-                    <ToggleButton id="tbg-radio-1" value="scroll" className="custom-toggle-btn">
-                    Scorrimento
-                    </ToggleButton>
-                    <ToggleButton id="tbg-radio-2" value="grid" className="custom-toggle-btn">
-                    Griglia
-                    </ToggleButton>
-                </ToggleButtonGroup>
-                </div>
-                {viewMode === "scroll" ? (
+                <>
+                    <Button variant="secondary" className="mb-4" onClick={handleBackToCategories}>
+                        Torna alle categorie
+                    </Button>
+                    <div className="d-flex justify-content-end mb-4">
+                        <ToggleButtonGroup type="radio" name="viewMode" value={viewMode} onChange={handleViewModeChange}>
+                            <ToggleButton id="tbg-radio-1" value="scroll" className="custom-toggle-btn">
+                                Scorrimento
+                            </ToggleButton>
+                            <ToggleButton id="tbg-radio-2" value="grid" className="custom-toggle-btn">
+                                Griglia
+                            </ToggleButton>
+                        </ToggleButtonGroup>
+                    </div>
+                    {viewMode === "scroll" ? (
+                        <>
+                            <div className="position-relative">
+                                <FaArrowLeft
+                                    className="arrow-icon"
+                                    onClick={() => handleScroll("left")}
+                                    style={{
+                                        cursor: currentIndex === 0 ? "default" : "pointer",
+                                        left: "-50px",
+                                        opacity: currentIndex === 0 ? 0.5 : 1,
+                                    }}
+                                />
+                                <div
+                                    className="d-flex align-items-center overflow-hidden position-relative"
+                                    style={{ maxWidth: "100%", cursor: "grab" }}
+                                    onWheel={(e) => handleScroll(e.deltaY > 0 ? "right" : "left", 0.05)}
+                                >
+                                    <motion.div
+                                        className="d-flex"
+                                        style={{ display: "flex", gap: "20px" }}
+                                        animate={{ x: -currentIndex * 320 }}
+                                        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                                        drag="x"
+                                        dragConstraints={{ left: -((filteredProducts.length - itemsPerView) * 320), right: 0 }}
+                                        onDragEnd={handleDragEnd}
+                                    >
+                                        {filteredProducts.map((product, index) => (
+                                            <motion.div
+                                                key={product._id}
+                                                className="product-card"
+                                                initial={{ opacity: 1, scale: 0.9 }}
+                                                animate={{
+                                                    opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
+                                                    scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
+                                                }}
+                                                transition={{ duration: 0.5 }}
+                                                onClick={(event) => handleCardClick(product, index, event)}
+                                            >
+                                                <Card
+                                                    className="shadow-lg"
+                                                    style={{ borderRadius: "15px", overflow: "hidden", width: "300px", height: "500px" }}
+                                                >
+                                                    <Card.Img
+                                                        variant="top"
+                                                        src={product.images}
+                                                        alt={product.name}
+                                                        style={{ height: "250px", objectFit: "cover" }}
+                                                    />
+                                                    <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
+                                                        <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
+                                                            {product.name}
+                                                        </Card.Title>
+                                                        <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
+                                                        <motion.button
+                                                            className="btnCarrello"
+                                                            whileHover={{ scale: 1.1 }}
+                                                            whileTap={{ scale: 0.9 }}
+                                                            onClick={() => addToCart(product._id)}
+                                                        >
+                                                            Aggiungi al carrello
+                                                        </motion.button>
+                                                    </Card.Body>
+                                                </Card>
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+                                </div>
+                                <FaArrowRight
+                                    className="arrow-icon"
+                                    onClick={() => handleScroll("right")}
+                                    style={{
+                                        cursor: currentIndex >= filteredProducts.length - itemsPerView ? "default" : "pointer",
+                                        right: "-50px",
+                                        opacity: currentIndex >= filteredProducts.length - itemsPerView ? 0.5 : 1,
+                                    }}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <Row>
+                            {filteredProducts.map((product) => (
+                                <Col key={product._id} md={4} className="mb-4">
+                                    <Card className="shadow-lg" style={{ borderRadius: "15px", overflow: "hidden" }} onClick={(event) => handleCardClick(product, null, event)}>
+                                        <Card.Img
+                                            variant="top"
+                                            src={product.images}
+                                            alt={product.name}
+                                            style={{ height: "250px", objectFit: "cover" }}
+                                        />
+                                        <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
+                                            <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
+                                                {product.name}
+                                            </Card.Title>
+                                            <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
+                                            <motion.button
+                                                className="btn btn-primary mt-auto"
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.9 }}
+                                                onClick={() => addToCart(product._id)}
+                                            >
+                                                Aggiungi al carrello
+                                            </motion.button>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            ))}
+                        </Row>
+                    )}
+
+                </>
+            ) : (
                 <>
                     <FaArrowLeft
-                    className="arrow-icon position-absolute"
-                    onClick={() => handleScroll("left")}
-                    style={{
-                        cursor: currentIndex === 0 ? "default" : "pointer",
-                        fontSize: "2rem",
-                        left: "-50px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        zIndex: 1,
-                        opacity: currentIndex === 0 ? 0.5 : 1,
-                    }}
+                        className="arrow-icon position-absolute"
+                        onClick={() => handleScroll("left")}
+                        style={{
+                            cursor: currentIndex === 0 ? "default" : "pointer",
+                            fontSize: "2rem",
+                            left: "-50px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            zIndex: 1,
+                            opacity: currentIndex === 0 ? 0.5 : 1,
+                        }}
                     />
                     <div
-                    className="d-flex align-items-center overflow-hidden position-relative"
-                    style={{ maxWidth: "100%", cursor: "grab" }}
-                    onWheel={(e) => handleScroll(e.deltaY > 0 ? "right" : "left")}
+                        className="d-flex align-items-center overflow-hidden position-relative"
+                        style={{ maxWidth: "100%", cursor: "grab" }}
+                        onWheel={(e) => handleScroll(e.deltaY > 0 ? "right" : "left")}
                     >
-                    <motion.div
-                        className="d-flex"
-                        style={{ display: "flex", gap: "20px" }}
-                        animate={{ x: -currentIndex * 320 }}
-                        transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                        drag="x"
-                        dragConstraints={{ left: -((filteredProducts.length - itemsPerView) * 320), right: 0 }}
-                        onDragEnd={handleDragEnd}
-                    >
-                        {filteredProducts.map((product, index) => (
                         <motion.div
-                            key={product._id}
-                            className="product-card"
-                            initial={{ opacity: 1, scale: 0.9 }}
-                            animate={{
-                            opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
-                            scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
-                            }}
-                            transition={{ duration: 0.5 }}
-                            onClick={(event) => handleCardClick(product, index, event)}
+                            className="d-flex"
+                            style={{ display: "flex", gap: "20px" }}
+                            animate={{ x: -currentIndex * 320 }}
+                            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                            drag="x"
+                            dragConstraints={{ left: -((categories.length - itemsPerView) * 320), right: 0 }}
+                            onDragEnd={handleDragEnd}
                         >
-                            <Card
-                            className="shadow-lg"
-                            style={{ borderRadius: "15px", overflow: "hidden", width: "300px", height: "500px" }}
-                            >
-                            <Card.Img
-                                variant="top"
-                                src={product.images}
-                                alt={product.name}
-                                style={{ height: "250px", objectFit: "cover" }}
-                            />
-                            <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
-                                <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
-                                {product.name}
-                                </Card.Title>
-                                <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
-                                <motion.button
-                                className="btnCarrello"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => addToCart(product._id)}
+                            {categories.map((category, index) => (
+                                <motion.div
+                                    key={index}
+                                    className="category-card"
+                                    initial={{ opacity: 1, scale: 0.9 }}
+                                    animate={{
+                                        opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
+                                        scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
+                                    }}
+                                    transition={{ duration: 0.5 }}
+                                    onClick={() => handleCategoryClick(category, index)}
                                 >
-                                Aggiungi al carrello
-                                </motion.button>
-                            </Card.Body>
-                            </Card>
+                                    <Card
+                                        className="shadow-lg"
+                                        style={{ borderRadius: "15px", overflow: "hidden", width: "300px", height: "200px", cursor: "pointer", backgroundColor: "#f0f0f0" }}
+                                    >
+                                        <Card.Img
+                                            variant="top"
+                                            src={categoryImages[category]} // Usa l'immagine della categoria
+                                            alt={category}
+                                            style={{ height: "150px", objectFit: "cover" }}
+                                        />
+                                        <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
+                                            <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>{category.replace(/-/g, ' ')}</Card.Title>
+                                        </Card.Body>
+                                    </Card>
+                                </motion.div>
+                            ))}
                         </motion.div>
-                        ))}
-                    </motion.div>
                     </div>
                     <FaArrowRight
-                    className="arrow-icon position-absolute"
-                    onClick={() => handleScroll("right")}
-                    style={{
-                        cursor: currentIndex >= filteredProducts.length - itemsPerView ? "default" : "pointer",
-                        fontSize: "2rem",
-                        right: "10px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        zIndex: 1,
-                        opacity: currentIndex >= filteredProducts.length - itemsPerView ? 0.5 : 1,
-                    }}
-                    />
-                </>
-                ) : (
-                <Row>
-                    {filteredProducts.map((product) => (
-                    <Col key={product._id} md={4} className="mb-4">
-                        <Card className="shadow-lg" style={{ borderRadius: "15px", overflow: "hidden" }} onClick={(event) => handleCardClick(product, null, event)}>
-                        <Card.Img
-                            variant="top"
-                            src={product.images}
-                            alt={product.name}
-                            style={{ height: "250px", objectFit: "cover" }}
-                        />
-                        <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
-                            <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
-                            {product.name}
-                            </Card.Title>
-                            <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
-                            <motion.button
-                            className="btn btn-primary mt-auto"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => addToCart(product._id)}
-                            >
-                            Aggiungi al carrello
-                            </motion.button>
-                        </Card.Body>
-                        </Card>
-                    </Col>
-                    ))}
-                </Row>
-
-                
-                )}
-                
-            </>
-            ) : (
-            <>
-                <FaArrowLeft
-                className="arrow-icon position-absolute"
-                onClick={() => handleScroll("left")}
-                style={{
-                    cursor: currentIndex === 0 ? "default" : "pointer",
-                    fontSize: "2rem",
-                    left: "-50px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    zIndex: 1,
-                    opacity: currentIndex === 0 ? 0.5 : 1,
-                }}
-                />
-                <div
-                className="d-flex align-items-center overflow-hidden position-relative"
-                style={{ maxWidth: "100%", cursor: "grab" }}
-                onWheel={(e) => handleScroll(e.deltaY > 0 ? "right" : "left")}
-                >
-                <motion.div
-                    className="d-flex"
-                    style={{ display: "flex", gap: "20px" }}
-                    animate={{ x: -currentIndex * 320 }}
-                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                    drag="x"
-                    dragConstraints={{ left: -((categories.length - itemsPerView) * 320), right: 0 }}
-                    onDragEnd={handleDragEnd}
-                >
-                    {categories.map((category, index) => (
-                    <motion.div
-                        key={index}
-                        className="category-card"
-                        initial={{ opacity: 1, scale: 0.9 }}
-                        animate={{
-                        opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
-                        scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
+                        className="arrow-icon position-absolute"
+                        onClick={() => handleScroll("right")}
+                        style={{
+                            cursor: currentIndex >= categories.length - itemsPerView ? "default" : "pointer",
+                            fontSize: "2rem",
+                            right: "10px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            zIndex: 1,
+                            opacity: currentIndex >= categories.length - itemsPerView ? 0.5 : 1,
                         }}
-                        transition={{ duration: 0.5 }}
-                        onClick={() => handleCategoryClick(category, index)}
-                    >
-                        <Card
-                        className="shadow-lg"
-                        style={{ borderRadius: "15px", overflow: "hidden", width: "300px", height: "200px", cursor: "pointer", backgroundColor: "#f0f0f0" }}
-                        >
-                        <Card.Img
-                            variant="top"
-                            src={categoryImages[category]} // Usa l'immagine della categoria
-                            alt={category}
-                            style={{ height: "150px", objectFit: "cover" }}
-                        />
-                        <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
-                            <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>{category.replace(/-/g, ' ')}</Card.Title>
-                        </Card.Body>
-                        </Card>
-                    </motion.div>
-                    ))}
-                </motion.div>
-                </div>
-                <FaArrowRight
-                className="arrow-icon position-absolute"
-                onClick={() => handleScroll("right")}
-                style={{
-                    cursor: currentIndex >= categories.length - itemsPerView ? "default" : "pointer",
-                    fontSize: "2rem",
-                    right: "10px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    zIndex: 1,
-                    opacity: currentIndex >= categories.length - itemsPerView ? 0.5 : 1,
-                }}
                     />
                 </>
-                )}
-                <ToastContainer />
-                <Modal show={showPopup} onHide={handleClosePopup} centered>
+            )}
+            <ToastContainer />
+            <Modal show={showPopup} onHide={handleClosePopup} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Dettagli Prodotto</Modal.Title>
                 </Modal.Header>
@@ -456,12 +462,12 @@ const ProductsPage = () => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleClosePopup}>
-                    Chiudi
-                </Button>
-                <Button variant="primary" onClick={() => addToCart(selectedProduct?._id)}>
-                Aggiungi al carrello
-                </Button>
-            </Modal.Footer>
+                        Chiudi
+                    </Button>
+                    <Button variant="primary" onClick={() => addToCart(selectedProduct?._id)}>
+                        Aggiungi al carrello
+                    </Button>
+                </Modal.Footer>
             </Modal>
             <style>{`
             .scroll-to-top-btn {
@@ -510,19 +516,28 @@ const ProductsPage = () => {
             }
             `}</style>
 
-{viewMode === "grid" && showScrollToTop && (
-    <Button
-        variant="secondary"
-        className="scroll-to-top-btn"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-    >
-        ↑
-    </Button>
-)}
-            
+            {viewMode === "grid" && showScrollToTop && (
+                <Button
+                    variant="secondary"
+                    className="scroll-to-top-btn"
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >
+                    ↑
+                </Button>
+            )}
+            <>
+                {loading ? (
+                    <LoadingSpinner />
+                ) : (
+                    <Container className="mt-5 text-center position-relative" style={{ zIndex: 0 }}>
+                        {/* Il resto del tuo codice */}
+                    </Container>
+                )}
+            </>
         </Container>
-        );
+    );
 };
 
+
+
 export default ProductsPage;
-                    

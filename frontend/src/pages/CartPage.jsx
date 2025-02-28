@@ -3,6 +3,7 @@ import axios from "axios";
 import { Button, Alert, ListGroup, Card, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { Plus, Minus, Trash } from "lucide-react";
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const CartPage = () => {
   const [cart, setCart] = useState([]);
@@ -10,6 +11,7 @@ const CartPage = () => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,6 +44,8 @@ const CartPage = () => {
 
     fetchCart();
   }, []);
+
+
 
   const updateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) return; // Evita quantità negative o zero
@@ -207,6 +211,15 @@ const CartPage = () => {
 
         </Modal.Footer>
       </Modal>
+      <>
+                {loading ? (
+                    <LoadingSpinner />
+                ) : (
+                    <Container className="mt-5 text-center position-relative" style={{ zIndex: 0 }}>
+                        {/* Il resto del tuo codice */}
+                    </Container>
+                )}
+            </>
     </div>
   );
 };
