@@ -3,6 +3,7 @@ import { ToastContainer } from "react-toastify";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import HomePage from "./pages/HomePage";
+import ProfilePage from './pages/ProfilePage';
 import CartPage from "./pages/CartPage";
 import Layout from "./components/Layout";
 import ProductsPage from "./pages/ProductsPage";
@@ -48,6 +49,7 @@ function App() {
             <Route path="/checkout" element={<OrderPage darkMode={darkMode} />} />
             <Route path="/success" element={<SuccessPage darkMode={darkMode} />} />
             <Route path="/admin" element={<AdminHomePage darkMode={darkMode} />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Routes>
         </AnimatePresence>
       </Layout>

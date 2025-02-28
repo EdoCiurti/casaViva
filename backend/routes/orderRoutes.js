@@ -4,7 +4,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Ottenere tutti gli ordini
+// Ottenere tutti gli ordini (solo admin)
 router.get("/", authMiddleware, async (req, res) => {
     try {
       const orders = await Order.find().populate("user").populate("products.product");
@@ -45,7 +45,7 @@ router.post("/", authMiddleware, async (req, res) => {
 });
 
 // 📦 Ottenere tutti gli ordini dell'utente
-router.get("/", authMiddleware, async (req, res) => {
+router.get("/user", authMiddleware, async (req, res) => {
     try {
         const orders = await Order.find({ user: req.user.userId }).populate("products.product");
         res.json(orders);

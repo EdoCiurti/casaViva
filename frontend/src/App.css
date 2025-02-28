@@ -15,6 +15,11 @@ body {
   color: #ffffff; /* Light text color */
 }
 
+.container-fluid {
+  background-color: inherit; /* Inherit background color from body */
+  color: inherit; /* Inherit text color from body */
+}
+
 /* Aggiungi queste classi per gestire il colore del testo "Checkout" */
 .light-mode .checkout-title {
   color: #000000; /* Nero in modalità chiara */

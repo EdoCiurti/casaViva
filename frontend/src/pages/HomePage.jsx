@@ -21,10 +21,10 @@ const HomePage = () => {
     <Container 
       fluid 
       className={`vh-100 w-100 d-flex flex-column justify-content-center align-items-center ${darkMode ? "bg-dark text-light" : "bg-light text-dark"} text-center`}
-      style={{ overflowX: 'hidden' }}
+      style={{ overflowX: 'hidden', maxWidth: '1200px' }}
     >
       <motion.h1 
-        className="display-3 text-primary font-weight-bold"
+        className="display-3 font-weight-bold"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
@@ -32,7 +32,7 @@ const HomePage = () => {
         Benvenuto nel nostro E-commerce
       </motion.h1>
       <motion.p 
-        className="lead text-secondary"
+        className="lead"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 0.5 }}
@@ -44,7 +44,7 @@ const HomePage = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 1 }}
       >
-        <Button variant="outline-primary" size="lg" href="/products" className="mt-3" style={{ width: '100%' }}>
+        <Button variant={darkMode ? "outline-light" : "outline-dark"} size="lg" href="/products" className="mt-3" style={{ width: '100%' }}>
           Esplora i Prodotti
         </Button>
       </motion.div>

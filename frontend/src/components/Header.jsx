@@ -29,7 +29,7 @@ const Header = () => {
     localStorage.setItem("darkMode", newMode);
     document.body.classList.toggle("dark-mode", newMode);
     document.body.classList.toggle("light-mode", !newMode);
-    
+
     // Dispatch custom event
     window.dispatchEvent(new Event('darkModeToggle'));
   };
@@ -42,11 +42,11 @@ const Header = () => {
   };
 
   return (
-    <Navbar 
-      bg={darkMode ? "dark" : "light"} 
-      variant={darkMode ? "dark" : "light"} 
-      expand="lg" 
-      className="py-3" 
+    <Navbar
+      bg={darkMode ? "dark" : "light"}
+      variant={darkMode ? "dark" : "light"}
+      expand="lg"
+      className="py-3"
       style={{ width: '100%', position: 'fixed', top: 0, zIndex: 1 }}
     >
       <Container>
@@ -57,8 +57,8 @@ const Header = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
             {/* Pulsante dark mode */}
-            <motion.button 
-              className="theme-button" 
+            <motion.button
+              className="theme-button"
               onClick={toggleDarkMode}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -68,19 +68,20 @@ const Header = () => {
             </motion.button>
 
             {username ? (
-              <NavDropdown 
-                title={`👤 ${username}`} 
-                id="basic-nav-dropdown" 
+              <NavDropdown
+                title={`👤 ${username}`}
+                id="basic-nav-dropdown"
                 className="custom-dropdown"
                 style={{ fontSize: '1.2rem', borderRadius: '10px', overflow: 'show', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
               >
+                <NavDropdown.Item as={Link} to="/profile" className="custom-dropdown-item" style={{ padding: '10px 20px', transition: 'background-color 0.3s ease, color 0.3s ease' }}>👤 Profilo</NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/cart" className="custom-dropdown-item" style={{ padding: '10px 20px', transition: 'background-color 0.3s ease, color 0.3s ease' }}>🛒 Carrello</NavDropdown.Item>
                 <NavDropdown.Item onClick={handleLogout} className="custom-dropdown-item" style={{ padding: '10px 20px', cursor: 'pointer', transition: 'background-color 0.3s ease, color 0.3s ease' }}>🚪 Logout</NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <Nav.Link 
-                as={Link} 
-                to="/login" 
+              <Nav.Link
+                as={Link}
+                to="/login"
                 style={{ fontSize: '1.2rem' }}
                 //as={motion.div}
                 initial={{ opacity: 0, y: -10 }}
