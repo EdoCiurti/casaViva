@@ -20,7 +20,10 @@ const ProductsPage = () => {
     const [showPopup, setShowPopup] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
-    // Aggiungi lo stato di caricamento
+    const [showQRModal, setShowQRModal] = useState(false);
+
+    const handleShowQRModal = () => setShowQRModal(true);
+    const handleCloseQRModal = () => setShowQRModal(false);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const itemsPerView = 3;
@@ -456,10 +459,17 @@ const ProductsPage = () => {
                     <img src={selectedProduct?.images} alt={selectedProduct?.name} style={{ width: "100%", height: "auto", marginBottom: "20px" }} />
                     <h4>{selectedProduct?.name.split(" ").slice(0, 2).join(" ")}</h4>
                     <p><strong>Prezzo:</strong> €{selectedProduct?.price}</p>
-                    <p><strong>Descrizione:</strong> {selectedProduct?.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."}</p>
+                    <p><strong>Descrizione:</strong> {selectedProduct?.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit."}</p>
                     <p><strong>Dimensioni:</strong> {selectedProduct?.description.match(/\d+/g)?.join("x") || "200x100x50 cm"}</p>
                     <p><strong>Categoria:</strong> {selectedProduct?.category.replace(/-/g, ' ')}</p>
+
+                    {/* Bottone per aprire il modale con il QR Code */}
+                    <Button variant="info" className="mt-3" onClick={() => setShowQRModal(true)}>
+                        Visualizza in 3D
+                    </Button>
+
                 </Modal.Body>
+
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleClosePopup}>
                         Chiudi
@@ -467,8 +477,27 @@ const ProductsPage = () => {
                     <Button variant="primary" onClick={() => addToCart(selectedProduct?._id)}>
                         Aggiungi al carrello
                     </Button>
+
+                </Modal.Footer>
+
+            </Modal>
+            <Modal show={showQRModal} onHide={() => setShowQRModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Scansiona per vedere in 3D</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="text-center">
+                <img src="https://quickchart.io/qr?text=https://arvr.google.com/scene-viewer/1.0?file=drive.google.com/uc?export=download&id=1urB4qL5_CllHef6Aobmi5pfKkDoocXQP&mode=ar_only" alt="QR Code AR" />
+
+
+                    <p>Scansiona questo codice QR con il tuo smartphone per visualizzare il prodotto in 3D.</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button data-8code="nd7ea" variant="secondary" onClick={() => setShowQRModal(false)}>
+                        Chiudi
+                    </Button>
                 </Modal.Footer>
             </Modal>
+
             <style>{`
             .scroll-to-top-btn {
     position: fixed;
