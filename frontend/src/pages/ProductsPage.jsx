@@ -482,21 +482,46 @@ const ProductsPage = () => {
 
             </Modal>
             <Modal show={showQRModal} onHide={() => setShowQRModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Scansiona per vedere in 3D</Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="text-center">
-                <img src="https://quickchart.io/qr?text=https://arvr.google.com/scene-viewer/1.0?file=drive.google.com/uc?export=download&id=1urB4qL5_CllHef6Aobmi5pfKkDoocXQP&mode=ar_only" alt="QR Code AR" />
+    <Modal.Header closeButton>
+        <Modal.Title>Scansiona per vedere in AR</Modal.Title>
+    </Modal.Header>
+    <Modal.Body className="text-center">
+        {/* QR Code che apre il modello in AR direttamente */}
+        <img 
+            src={`https://quickchart.io/qr?text=https%3A%2F%2Fcalossoa.github.io%2F3D%2Findex.html`} 
+            alt="QR Code AR"
+        />
+        <p>Scansiona con la fotocamera del tuo smartphone per visualizzare il modello in realtà aumentata.</p>
+
+        {/* Pulsante per aprire in AR */}
+        {/* <Button 
+            variant="primary" 
+            href="https://calossoa.github.io/3D/index.html"
+            target="_blank"
+        >
+            📱 Apri in AR
+        </Button> */}
+
+        {/* Modello 3D interattivo nel browser */}
+        <model-viewer
+            src="https://calossoa.github.io/3D/modello.glb"
+            ios-src="https://calossoa.github.io/3D/modello.usdz"
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            camera-controls
+            auto-rotate
+            style={{ width: "100%", height: "400px" }}
+        >
+        </model-viewer>
+    </Modal.Body>
+    <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShowQRModal(false)}>
+            Chiudi
+        </Button>
+    </Modal.Footer>
+</Modal>
 
 
-                    <p>Scansiona questo codice QR con il tuo smartphone per visualizzare il prodotto in 3D.</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button data-8code="nd7ea" variant="secondary" onClick={() => setShowQRModal(false)}>
-                        Chiudi
-                    </Button>
-                </Modal.Footer>
-            </Modal>
 
             <style>{`
             .scroll-to-top-btn {
