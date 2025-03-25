@@ -23,12 +23,14 @@ const authRoutes = require("./routes/authRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const wishRoutes = require("./routes/wishRoutes"); // 🔥 Importa le rotte della wishlist
 
 app.use("/api/products", productRoutes);
-app.use("/api/auth", authRoutes);  // 🔥 Aggiunto qui
+app.use("/api/auth", authRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/wishlist", wishRoutes); // 🔥 Aggiungi il middleware per la wishlist
 
 // Rotta di test
 app.get("/", (req, res) => res.send("API funzionante"));

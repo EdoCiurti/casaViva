@@ -6,6 +6,7 @@ import { Card, Container, Form, Row, Col, Button, ToggleButtonGroup, ToggleButto
 import { motion } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
+import { FaHeart } from "react-icons/fa"; // Importa l'icona del cuore
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -21,6 +22,7 @@ const ProductsPage = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
+    const [wishlist, setWishlist] = useState([]); // Stato per la wishlist
 
     const handleShowQRModal = () => setShowQRModal(true);
     const handleCloseQRModal = () => setShowQRModal(false);
@@ -48,36 +50,51 @@ const ProductsPage = () => {
     };
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const response = await axios.get("http://localhost:5000/api/products");
-                setProducts(response.data);
-                setFilteredProducts(response.data);
+    const fetchProducts = async () => {
+        try {
+            const response = await axios.get("http://localhost:5000/api/products");
+            setProducts(response.data);
+            setFilteredProducts(response.data);
 
-                // Extract unique categories from products
-                const uniqueCategories = [...new Set(response.data.map(product => product.category))];
-                setCategories(uniqueCategories);
+            // Extract unique categories from products
+            const uniqueCategories = [...new Set(response.data.map(product => product.category))];
+            setCategories(uniqueCategories);
 
-                // Imposta loading su false dopo il caricamento dei prodotti
-                setLoading(false);
-            } catch (error) {
-                console.error("Errore nel recupero dei prodotti", error);
-            }
-        };
+            // Imposta loading su false dopo il caricamento dei prodotti
+            setLoading(false);
+        } catch (error) {
+            console.error("Errore nel recupero dei prodotti", error);
+        }
+    };
 
-        fetchProducts();
+    const fetchWishlist = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+    
+            const response = await axios.get("http://localhost:5000/api/wishlist", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setWishlist(response.data.products.map((item) => item.product._id)); // Salva solo gli ID dei prodotti
+        } catch (error) {
+            console.error("Errore nel recupero della wishlist", error);
+        }
+    };
 
-        const handleScroll = () => {
-            if (window.scrollY > 300) {
-                setShowScrollToTop(true);
-            } else {
-                setShowScrollToTop(false);
-            }
-        };
+    fetchProducts();
+    fetchWishlist();
 
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+    const handleScroll = () => {
+        if (window.scrollY > 300) {
+            setShowScrollToTop(true);
+        } else {
+            setShowScrollToTop(false);
+        }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+}, []);
     useEffect(() => {
         setTimeout(() => {
             // Carica i dati qui
@@ -200,8 +217,62 @@ const ProductsPage = () => {
         setSelectedProduct(null);
     };
 
-    return (
+    const addToWishlist = async (productId) => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+        try {
+            await axios.post(
+                "http://localhost:5000/api/wishlist",
+                { productId },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setWishlist((prev) => [...prev, productId]); // Aggiungi il prodotto alla wishlist
+            toast.success("Prodotto aggiunto alla wishlist!", {
+                position: "top-right",
+                autoClose: 3000,
+                theme: "colored",
+            });
+        } catch (error) {
+            console.error("Errore nell'aggiunta alla wishlist", error);
+            toast.error("Errore nell'aggiunta alla wishlist", {
+                position: "top-right",
+                autoClose: 3000,
+                theme: "colored",
+            });
+        }
+    };
 
+    const removeFromWishlist = async (productId) => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+        try {
+            await axios.delete(`http://localhost:5000/api/wishlist/${productId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setWishlist((prev) => prev.filter((id) => id !== productId)); // Rimuovi il prodotto dalla wishlist
+            toast.success("Prodotto rimosso dalla wishlist!", {
+                position: "top-right",
+                autoClose: 3000,
+                theme: "colored",
+            });
+        } catch (error) {
+            console.error("Errore nella rimozione dalla wishlist", error);
+            toast.error("Errore nella rimozione dalla wishlist", {
+                position: "top-right",
+                autoClose: 3000,
+                theme: "colored",
+            });
+        }
+    };
+
+
+    return (
         <Container className="mt-5 text-center position-relative" style={{ zIndex: 0 }}>
             <br></br> <br></br>
             <h1 className="products-title mb-4" style={{ fontWeight: 'bold' }}>
@@ -298,16 +369,16 @@ const ProductsPage = () => {
                                     >
                                         {filteredProducts.map((product, index) => (
                                             <motion.div
-                                                key={product._id}
-                                                className="product-card"
-                                                initial={{ opacity: 1, scale: 0.9 }}
-                                                animate={{
-                                                    opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
-                                                    scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
-                                                }}
-                                                transition={{ duration: 0.5 }}
-                                                onClick={(event) => handleCardClick(product, index, event)}
-                                            >
+                                            key={product._id}
+                                            className={`product-card ${index >= currentIndex && index < currentIndex + itemsPerView ? "" : "inactive"}`}
+                                            initial={{ opacity: 1, scale: 0.9 }}
+                                            animate={{
+                                                opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
+                                                scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
+                                            }}
+                                            transition={{ duration: 0.5 }}
+                                            onClick={(event) => handleCardClick(product, index, event)}
+                                        >
                                                 <Card
                                                     className="shadow-lg"
                                                     style={{ borderRadius: "15px", overflow: "hidden", width: "300px", height: "500px" }}
@@ -319,19 +390,35 @@ const ProductsPage = () => {
                                                         style={{ height: "250px", objectFit: "cover" }}
                                                     />
                                                     <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
-                                                        <Card.Title  style={{ color: "#343a40", fontWeight: "bold" }}>
+                                                        <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
                                                             {product.name}
                                                         </Card.Title>
-                                                        <Card.Text><strong  style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
-                                                        <motion.button
-                                                            variant="dark"
-                                                            className="btnCarrello"
-                                                            whileHover={{ scale: 1.1 }}
-                                                            whileTap={{ scale: 0.9 }}
-                                                            onClick={() => addToCart(product._id)}
-                                                        >
-                                                            Aggiungi al carrello
-                                                        </motion.button>
+                                                        <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
+                                                        <div className="d-flex justify-content-between align-items-center">
+                                                            <motion.button
+                                                                variant="dark"
+                                                                className="btnCarrello"
+                                                                whileHover={{ scale: 1.1 }}
+                                                                whileTap={{ scale: 0.9 }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    addToCart(product._id)
+                                                                }}
+                                                            >
+                                                                Aggiungi al carrello
+                                                            </motion.button>
+                                                            <FaHeart
+                                                        size={24}
+                                                        color={wishlist.includes(product._id) ? "red" : "gray"} // Cuore rosso se è nella wishlist, grigio altrimenti
+                                                        style={{ cursor: "pointer" }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(); // Impedisce la propagazione dell'evento
+                                                            wishlist.includes(product._id)
+                                                                ? removeFromWishlist(product._id) // Rimuovi dalla wishlist
+                                                                : addToWishlist(product._id); // Aggiungi alla wishlist
+                                                        }}
+                                                    />
+                                                        </div>
                                                     </Card.Body>
                                                 </Card>
                                             </motion.div>
@@ -351,43 +438,44 @@ const ProductsPage = () => {
                         </>
                     ) : (
                         <Row>
-                        {filteredProducts.map((product) => (
-                            <Col key={product._id} md={4} className="mb-4">
-                                <Card className="shadow-lg" style={{ borderRadius: "15px", overflow: "hidden" }} onClick={(event) => handleCardClick(product, null, event)}>
-                                    <Card.Img
-                                        variant="top"
-                                        src={product.images}
-                                        alt={product.name}
-                                        style={{ height: "250px", objectFit: "cover" }}
-                                    />
-                                    <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
-                                        <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
-                                            {product.name}
-                                        </Card.Title>
-                                        <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
-                                        <motion.button
-                                            className={`btn ${viewMode === "grid" ? "btn-dark" : "btn-primary"} mt-auto`}
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={() => addToCart(product._id)}
-                                        >
-                                            Aggiungi al carrello
-                                        </motion.button>
-                                        {/* {(product.link3Dios || product.link3Dandroid) && (
-                                            <Button
-                                                variant="dark"
-                                                onClick={() => handleShowQRModal(product.link3Dios || product.link3Dandroid)}
-                                            >
-                                                Visualizza modello 3D
-                                            </Button>
-                                        )} */}
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        ))}
-                    </Row>
+                            {filteredProducts.map((product) => (
+                                <Col key={product._id} md={4} className="mb-4">
+                                    <Card className="shadow-lg" style={{ borderRadius: "15px", overflow: "hidden" }}>
+                                        <Card.Img
+                                            variant="top"
+                                            src={product.images}
+                                            alt={product.name}
+                                            style={{ height: "250px", objectFit: "cover" }}
+                                        />
+                                        <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
+                                            <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
+                                                {product.name}
+                                            </Card.Title>
+                                            <Card.Text>
+                                                <strong style={{ color: "#28a745" }}>€{product.price}</strong>
+                                            </Card.Text>
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <motion.button
+                                                    className="btn btn-dark"
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={() => addToCart(product._id)}
+                                                >
+                                                    Aggiungi al carrello
+                                                </motion.button>
+                                                <FaHeart
+                                                    size={24}
+                                                    color="red"
+                                                    style={{ cursor: "pointer" }}
+                                                    onClick={() => addToWishlist(product._id)}
+                                                />
+                                            </div>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            ))}
+                        </Row>
                     )}
-
                 </>
             ) : (
                 <>
@@ -436,7 +524,7 @@ const ProductsPage = () => {
                                     >
                                         <Card.Img
                                             variant="top"
-                                            src={categoryImages[category]} // Usa l'immagine della categoria
+                                            src={categoryImages[category]}
                                             alt={category}
                                             style={{ height: "150px", objectFit: "cover" }}
                                         />
@@ -469,23 +557,16 @@ const ProductsPage = () => {
                     <Modal.Title>Dettagli Prodotto</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {/* Immagine del prodotto */}
                     <img
-                        src={selectedProduct?.images[0]} // Usa la prima immagine dell'array
+                        src={selectedProduct?.images[0]}
                         alt={selectedProduct?.name}
                         style={{ width: "100%", height: "auto", marginBottom: "20px" }}
                     />
-                    {/* Nome del prodotto */}
                     <h4>{selectedProduct?.name}</h4>
-                    {/* Prezzo */}
                     <p><strong>Prezzo:</strong> €{selectedProduct?.price}</p>
-                    {/* Descrizione */}
                     <p><strong>Descrizione:</strong> {selectedProduct?.description}</p>
-                    {/* Dimensioni */}
                     <p><strong>Dimensioni:</strong> {selectedProduct?.dimensioni || "Non specificate"}</p>
-                    {/* Stock */}
                     <p><strong>Disponibilità:</strong> {selectedProduct?.stock > 0 ? `${selectedProduct.stock} pezzi disponibili` : "Non disponibile"}</p>
-                    {/* Link 3D */}
                     {(selectedProduct?.link3Dios || selectedProduct?.link3Dandroid) && (
                         <>
                             <p><strong>Visualizza in 3D:</strong></p>
@@ -524,23 +605,11 @@ const ProductsPage = () => {
                     <Modal.Title>Scansiona per vedere in AR</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="text-center">
-                    {/* QR Code che apre il modello in AR direttamente */}
                     <img
                         src={`https://quickchart.io/qr?text=https%3A%2F%2Fcalossoa.github.io%2F3D%2Findex.html`}
                         alt="QR Code AR"
                     />
                     <p>Scansiona con la fotocamera del tuo smartphone per visualizzare il modello in realtà aumentata.</p>
-
-                    {/* Pulsante per aprire in AR */}
-                    {/* <Button 
-            variant="primary" 
-            href="https://calossoa.github.io/3D/index.html"
-            target="_blank"
-        >
-            📱 Apri in AR
-        </Button> */}
-
-                    {/* Modello 3D interattivo nel browser */}
                     <model-viewer
                         src="https://calossoa.github.io/3D/modello.glb"
                         ios-src="https://calossoa.github.io/3D/modello.usdz"
@@ -558,56 +627,60 @@ const ProductsPage = () => {
                     </Button>
                 </Modal.Footer>
             </Modal>
-
-
-
             <style>{`
-            .scroll-to-top-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    transition: opacity 0.3s ease-in-out;
-    opacity: 0.7;
-    background-color: #007bff; /* Colore blu come il titolo */
-    color: white;
-    border: none;
-}
+                .scroll-to-top-btn {
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    z-index: 1000;
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                    transition: opacity 0.3s ease-in-out;
+                    opacity: 0.7;
+                    background-color: #007bff;
+                    color: white;
+                    border: none;
+                }
+                .scroll-to-top-btn:hover {
+                    opacity: 1;
+                    background-color: #007bff;
+                }
+                .custom-toggle-btn {
+                    background-color: rgb(125, 111, 108);
+                    color: white;
+                    border: none;
+                    margin: 0 5px;
+                    padding: 5px 10px;
+                    font-size: 0.8rem;
+                    border-radius: 5px;
+                }
+                .custom-toggle-btn.active {
+                    background-color: rgb(64, 53, 52);
+                }
+                .product-card {
+                    cursor: pointer;
+                }
+                .category-card {
+                    cursor: pointer;
+                }
+                .arrow-icon {
+                    z-index: 2;
+                }
+                .product-card {
+                    cursor: pointer;
+                    transition: opacity 0.3s ease-in-out;
+                }
 
-.scroll-to-top-btn:hover {
-    opacity: 1;
-    background-color: #007bff; /* Colore blu come il titolo */
-}
-            .custom-toggle-btn {
-                background-color:rgb(125, 111, 108);
-                color: white;
-                border: none;
-                margin: 0 5px;
-                padding: 5px 10px;
-                font-size: 0.8rem;
-                border-radius: 5px;
-            }
-            .custom-toggle-btn.active {
-                background-color:rgb(64, 53, 52);
-            }
-            .product-card {
-                cursor: pointer;
-            }
-            .category-card {
-                cursor: pointer;
-            }
-            .arrow-icon {
-                z-index: 2;
-            }
+                .product-card.inactive {
+                    pointer-events: none; /* Disabilita l'interazione */
+                    opacity: 0.5; /* Rende il prodotto opaco */
+                }
             `}</style>
-
             {viewMode === "grid" && showScrollToTop && (
                 <Button
                     variant="secondary"

@@ -11,6 +11,7 @@ import LoginPage from "./pages/LoginPage";
 import OrderPage from "./pages/OrderPage";
 import SuccessPage from "./pages/SuccessPage";
 import AdminHomePage from "./pages/AdminHomePage";
+import WishlistPage from "./pages/wishPage"; // Importa la pagina della wishlist
 import Footer from "./components/Footer";
 import "./App.css";
 
@@ -45,6 +46,7 @@ function App() {
             <Route path="/" element={<HomePage darkMode={darkMode} />} />
             <Route path="/cart" element={<CartPage darkMode={darkMode} />} />
             <Route path="/products" element={<ProductsPage darkMode={darkMode} />} />
+            <Route path="/wishlist" element={<WishlistPage darkMode={darkMode} />} /> {/* Aggiungi la route per la wishlist */}
             <Route path="/login" element={<LoginPage darkMode={darkMode} />} />
             <Route path="/checkout" element={<OrderPage darkMode={darkMode} />} />
             <Route path="/success" element={<SuccessPage darkMode={darkMode} />} />
