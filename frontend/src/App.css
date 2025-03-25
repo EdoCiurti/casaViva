@@ -14,6 +14,126 @@ body {
   background-color: #212529; /* Dark background */
   color: #ffffff; /* Light text color */
 }
+.custom-toggle-btn {
+  background-color: #343a40; /* Grigio scuro */
+  color: white;
+  border: none;
+  margin: 0 5px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  border-radius: 5px;
+}
+.custom-toggle-btn.active {
+  background-color: #000000; /* Nero */
+}
+.btnCarrello {
+  background-color: #343a40; /* Grigio scuro */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+.light-mode .products-title {
+  color: #000000; /* Nero in modalità chiara */
+}
+.light-mode .profile-page {
+  color: #000000; /* Nero in modalità chiara */
+}
+
+.dark-mode .profile-page {
+  color: #ffffff; /* Bianco in modalità scura */
+}
+
+.light-mode .profile-card .card-title,
+.light-mode .order-card .card-title,
+.light-mode .cart-card .card-title {
+  color: #000000; /* Nero in modalità chiara */
+}
+
+.dark-mode .profile-card .card-title,
+.dark-mode .order-card .card-title,
+.dark-mode .cart-card .card-title {
+  color: #ffffff; /* Bianco in modalità scura */
+}
+
+.light-mode .arrow-icon {
+  color: #000000; /* Nero in modalità chiara */
+}
+/* Colore generale del testo */
+.light-mode {
+  color: #000000; /* Nero in modalità chiara */
+}
+
+.dark-mode {
+  color: #ffffff; /* Bianco in modalità scura */
+}
+
+/* Specifico per le card */
+.light-mode .card {
+  background-color: #ffffff; /* Sfondo bianco */
+  color: #000000; /* Testo nero */
+}
+
+.dark-mode .card {
+  background-color: #343a40; /* Sfondo grigio scuro */
+  color: #ffffff; /* Testo bianco */
+}
+
+/* Specifico per i titoli */
+.light-mode .card-title,
+.light-mode .products-title {
+  color: #000000; /* Nero in modalità chiara */
+}
+
+.dark-mode .card-title,
+.dark-mode .products-title {
+  color: #ffffff; /* Bianco in modalità scura */
+}
+
+/* Specifico per le icone */
+.light-mode .arrow-icon {
+  color: #000000; /* Nero in modalità chiara */
+}
+
+.dark-mode .arrow-icon {
+  color: #ffffff; /* Bianco in modalità scura */
+}
+.text-light {
+  color: #f8f9fa; /* Colore chiaro per dark mode */
+}
+
+.text-muted {
+  color: #6c757d; /* Colore scuro per light mode */
+}
+
+/* Pulsanti */
+.btnCarrello {
+  background-color: #212529; /* Nero */
+  color: #ffffff; /* Bianco */
+}
+
+.btnCarrello:hover {
+  background-color: #000000; /* Nero più scuro */
+}
+
+.dark-mode .arrow-icon {
+  color: #ffffff; /* Bianco in modalità scura */
+}
+
+.dark-mode .products-title {
+  color: #ffffff; /* Bianco in modalità scura */
+}
+.btnCarrello:hover {
+  background-color: #000000; /* Nero */
+}
+.scroll-to-top-btn {
+  background-color: #343a40; /* Grigio scuro */
+  color: white;
+}
+.scroll-to-top-btn:hover {
+  background-color: #000000; /* Nero */
+}
 
 .container-fluid {
   background-color: inherit; /* Inherit background color from body */

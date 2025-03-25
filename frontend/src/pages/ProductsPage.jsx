@@ -135,6 +135,8 @@ const ProductsPage = () => {
         });
     };
 
+
+
     const handleDragEnd = (event, info) => {
         if (info && info.offset && typeof info.offset.x === 'number') {
             if (info.offset.x < -50) {
@@ -202,7 +204,9 @@ const ProductsPage = () => {
 
         <Container className="mt-5 text-center position-relative" style={{ zIndex: 0 }}>
             <br></br> <br></br>
-            <h1 className="mb-4" style={{ color: '#007bff', fontWeight: 'bold' }}>I nostri prodotti</h1>
+            <h1 className="products-title mb-4" style={{ fontWeight: 'bold' }}>
+                I nostri prodotti
+            </h1>
             {selectedCategory && (
                 <Form className="mb-4">
                     <Row>
@@ -258,10 +262,10 @@ const ProductsPage = () => {
                     </Button>
                     <div className="d-flex justify-content-end mb-4">
                         <ToggleButtonGroup type="radio" name="viewMode" value={viewMode} onChange={handleViewModeChange}>
-                            <ToggleButton id="tbg-radio-1" value="scroll" className="custom-toggle-btn">
+                            <ToggleButton variant="dark" id="tbg-radio-1" value="scroll" className="custom-toggle-btn">
                                 Scorrimento
                             </ToggleButton>
-                            <ToggleButton id="tbg-radio-2" value="grid" className="custom-toggle-btn">
+                            <ToggleButton variant="dark" id="tbg-radio-2" value="grid" className="custom-toggle-btn">
                                 Griglia
                             </ToggleButton>
                         </ToggleButtonGroup>
@@ -315,11 +319,12 @@ const ProductsPage = () => {
                                                         style={{ height: "250px", objectFit: "cover" }}
                                                     />
                                                     <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
-                                                        <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
+                                                        <Card.Title  style={{ color: "#343a40", fontWeight: "bold" }}>
                                                             {product.name}
                                                         </Card.Title>
-                                                        <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
+                                                        <Card.Text><strong  style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
                                                         <motion.button
+                                                            variant="dark"
                                                             className="btnCarrello"
                                                             whileHover={{ scale: 1.1 }}
                                                             whileTap={{ scale: 0.9 }}
@@ -346,33 +351,41 @@ const ProductsPage = () => {
                         </>
                     ) : (
                         <Row>
-                            {filteredProducts.map((product) => (
-                                <Col key={product._id} md={4} className="mb-4">
-                                    <Card className="shadow-lg" style={{ borderRadius: "15px", overflow: "hidden" }} onClick={(event) => handleCardClick(product, null, event)}>
-                                        <Card.Img
-                                            variant="top"
-                                            src={product.images}
-                                            alt={product.name}
-                                            style={{ height: "250px", objectFit: "cover" }}
-                                        />
-                                        <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
-                                            <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
-                                                {product.name}
-                                            </Card.Title>
-                                            <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
-                                            <motion.button
-                                                className="btn btn-primary mt-auto"
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={() => addToCart(product._id)}
+                        {filteredProducts.map((product) => (
+                            <Col key={product._id} md={4} className="mb-4">
+                                <Card className="shadow-lg" style={{ borderRadius: "15px", overflow: "hidden" }} onClick={(event) => handleCardClick(product, null, event)}>
+                                    <Card.Img
+                                        variant="top"
+                                        src={product.images}
+                                        alt={product.name}
+                                        style={{ height: "250px", objectFit: "cover" }}
+                                    />
+                                    <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
+                                        <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
+                                            {product.name}
+                                        </Card.Title>
+                                        <Card.Text><strong style={{ color: "#28a745" }}>€{product.price}</strong></Card.Text>
+                                        <motion.button
+                                            className={`btn ${viewMode === "grid" ? "btn-dark" : "btn-primary"} mt-auto`}
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => addToCart(product._id)}
+                                        >
+                                            Aggiungi al carrello
+                                        </motion.button>
+                                        {/* {(product.link3Dios || product.link3Dandroid) && (
+                                            <Button
+                                                variant="dark"
+                                                onClick={() => handleShowQRModal(product.link3Dios || product.link3Dandroid)}
                                             >
-                                                Aggiungi al carrello
-                                            </motion.button>
-                                        </Card.Body>
-                                    </Card>
-                                </Col>
-                            ))}
-                        </Row>
+                                                Visualizza modello 3D
+                                            </Button>
+                                        )} */}
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+                        ))}
+                    </Row>
                     )}
 
                 </>
@@ -456,45 +469,70 @@ const ProductsPage = () => {
                     <Modal.Title>Dettagli Prodotto</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <img src={selectedProduct?.images} alt={selectedProduct?.name} style={{ width: "100%", height: "auto", marginBottom: "20px" }} />
-                    <h4>{selectedProduct?.name.split(" ").slice(0, 2).join(" ")}</h4>
+                    {/* Immagine del prodotto */}
+                    <img
+                        src={selectedProduct?.images[0]} // Usa la prima immagine dell'array
+                        alt={selectedProduct?.name}
+                        style={{ width: "100%", height: "auto", marginBottom: "20px" }}
+                    />
+                    {/* Nome del prodotto */}
+                    <h4>{selectedProduct?.name}</h4>
+                    {/* Prezzo */}
                     <p><strong>Prezzo:</strong> €{selectedProduct?.price}</p>
-                    <p><strong>Descrizione:</strong> {selectedProduct?.description || "Lorem ipsum dolor sit amet, consectetur adipiscing elit."}</p>
-                    <p><strong>Dimensioni:</strong> {selectedProduct?.description.match(/\d+/g)?.join("x") || "200x100x50 cm"}</p>
-                    <p><strong>Categoria:</strong> {selectedProduct?.category.replace(/-/g, ' ')}</p>
-
-                    {/* Bottone per aprire il modale con il QR Code */}
-                    <Button variant="info" className="mt-3" onClick={() => setShowQRModal(true)}>
-                        Visualizza in 3D
-                    </Button>
-
+                    {/* Descrizione */}
+                    <p><strong>Descrizione:</strong> {selectedProduct?.description}</p>
+                    {/* Dimensioni */}
+                    <p><strong>Dimensioni:</strong> {selectedProduct?.dimensioni || "Non specificate"}</p>
+                    {/* Stock */}
+                    <p><strong>Disponibilità:</strong> {selectedProduct?.stock > 0 ? `${selectedProduct.stock} pezzi disponibili` : "Non disponibile"}</p>
+                    {/* Link 3D */}
+                    {(selectedProduct?.link3Dios || selectedProduct?.link3Dandroid) && (
+                        <>
+                            <p><strong>Visualizza in 3D:</strong></p>
+                            {selectedProduct.link3Dios && (
+                                <Button
+                                    variant="dark"
+                                    className="mt-2"
+                                    onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
+                                >
+                                    Visualizza su iOS
+                                </Button>
+                            )}
+                            {selectedProduct.link3Dandroid && (
+                                <Button
+                                    variant="dark"
+                                    className="mt-2"
+                                    onClick={() => handleShowQRModal(selectedProduct.link3Dandroid)}
+                                >
+                                    Visualizza su Android
+                                </Button>
+                            )}
+                        </>
+                    )}
                 </Modal.Body>
-
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleClosePopup}>
                         Chiudi
                     </Button>
-                    <Button variant="primary" onClick={() => addToCart(selectedProduct?._id)}>
+                    <Button variant="dark" onClick={() => addToCart(selectedProduct?._id)}>
                         Aggiungi al carrello
                     </Button>
-
                 </Modal.Footer>
-
             </Modal>
             <Modal show={showQRModal} onHide={() => setShowQRModal(false)} centered>
-    <Modal.Header closeButton>
-        <Modal.Title>Scansiona per vedere in AR</Modal.Title>
-    </Modal.Header>
-    <Modal.Body className="text-center">
-        {/* QR Code che apre il modello in AR direttamente */}
-        <img 
-            src={`https://quickchart.io/qr?text=https%3A%2F%2Fcalossoa.github.io%2F3D%2Findex.html`} 
-            alt="QR Code AR"
-        />
-        <p>Scansiona con la fotocamera del tuo smartphone per visualizzare il modello in realtà aumentata.</p>
+                <Modal.Header closeButton>
+                    <Modal.Title>Scansiona per vedere in AR</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="text-center">
+                    {/* QR Code che apre il modello in AR direttamente */}
+                    <img
+                        src={`https://quickchart.io/qr?text=https%3A%2F%2Fcalossoa.github.io%2F3D%2Findex.html`}
+                        alt="QR Code AR"
+                    />
+                    <p>Scansiona con la fotocamera del tuo smartphone per visualizzare il modello in realtà aumentata.</p>
 
-        {/* Pulsante per aprire in AR */}
-        {/* <Button 
+                    {/* Pulsante per aprire in AR */}
+                    {/* <Button 
             variant="primary" 
             href="https://calossoa.github.io/3D/index.html"
             target="_blank"
@@ -502,24 +540,24 @@ const ProductsPage = () => {
             📱 Apri in AR
         </Button> */}
 
-        {/* Modello 3D interattivo nel browser */}
-        <model-viewer
-            src="https://calossoa.github.io/3D/modello.glb"
-            ios-src="https://calossoa.github.io/3D/modello.usdz"
-            ar
-            ar-modes="webxr scene-viewer quick-look"
-            camera-controls
-            auto-rotate
-            style={{ width: "100%", height: "400px" }}
-        >
-        </model-viewer>
-    </Modal.Body>
-    <Modal.Footer>
-        <Button variant="secondary" onClick={() => setShowQRModal(false)}>
-            Chiudi
-        </Button>
-    </Modal.Footer>
-</Modal>
+                    {/* Modello 3D interattivo nel browser */}
+                    <model-viewer
+                        src="https://calossoa.github.io/3D/modello.glb"
+                        ios-src="https://calossoa.github.io/3D/modello.usdz"
+                        ar
+                        ar-modes="webxr scene-viewer quick-look"
+                        camera-controls
+                        auto-rotate
+                        style={{ width: "100%", height: "400px" }}
+                    >
+                    </model-viewer>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowQRModal(false)}>
+                        Chiudi
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
 
 

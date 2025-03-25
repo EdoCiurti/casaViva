@@ -11,6 +11,7 @@ const CartPage = () => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -21,7 +22,7 @@ const CartPage = () => {
         const response = await axios.get("http://localhost:5000/api/cart", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+  
         const cartData = response.data;
         const productsWithDetails = await Promise.all(
           cartData.products.map(async (item) => {
@@ -32,16 +33,18 @@ const CartPage = () => {
             return { ...productRes.data, quantity: item.quantity, cartItemId: item._id };
           })
         );
-
+  
         setCart(productsWithDetails);
         const totalPrice = productsWithDetails.reduce((sum, item) => sum + item.price * item.quantity, 0);
         setTotal(totalPrice);
       } catch (error) {
         console.error("Errore nel recupero del carrello:", error);
         setError("Errore nel recupero del carrello.");
+      } finally {
+        setLoading(false); // Imposta loading su false dopo il caricamento
       }
     };
-
+  
     fetchCart();
   }, []);
 
@@ -124,66 +127,77 @@ const CartPage = () => {
       <h1 className="text-center mb-4">🛒 Il tuo Carrello</h1>
       {error && <Alert variant="danger">{error}</Alert>}
       <Card className="p-4 shadow-lg border-0">
-        <ListGroup variant="flush">
-          {cart.map((item) => (
-            <ListGroup.Item key={item._id} className="d-flex justify-content-between align-items-center py-3 border-bottom">
-
-              <div className="d-flex align-items-center">
-                <img src={item.images} alt={item.name} className="rounded" style={{ width: "60px", height: "60px", marginRight: "20px" }} />
-                <div>
-                  <h5 className="fw-bold">{item.name}</h5>
-                  <h6 className="fw-bold text-primary">Prezzo Totale: €{(item.price * item.quantity).toFixed(2)}</h6>
+        {loading ? (
+          <div className="text-center py-5">
+            <LoadingSpinner />
+          </div>
+        ) : cart.length === 0 ? (
+          <div className="text-center py-5">
+          <h5 className={isDarkMode ? "text-light" : "text-muted"}>
+            Nessun prodotto nel carrello
+          </h5>
+        </div>
+        ) : (
+          <ListGroup variant="flush">
+            {cart.map((item) => (
+              <ListGroup.Item key={item._id} className="d-flex justify-content-between align-items-center py-3 border-bottom">
+                <div className="d-flex align-items-center">
+                  <img src={item.images} alt={item.name} className="rounded" style={{ width: "60px", height: "60px", marginRight: "20px" }} />
+                  <div>
+                    <h5 className="fw-bold">{item.name}</h5>
+                    <h6 className="fw-bold text-primary">Prezzo Totale: €{(item.price * item.quantity).toFixed(2)}</h6>
+                  </div>
                 </div>
-              </div>
-              <div className="d-flex align-items-center">
-                {item.quantity > 1 ? (
-                  <>
-                    <Button
-                      variant="outline-secondary"
-                      onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                      className="me-2"
-                    >
-                      <Minus size={16} />
-                    </Button>
-                    <span className="mx-2">{item.quantity}</span>
-                    <Button
-                      variant="outline-primary"
-                      onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                      className="me-2"
-                    >
-                      <Plus size={16} />
-                    </Button>
-                    <Button
-                      variant="outline-danger"
-                      onClick={() => handleShowModal(item)}
-                      className="me-2"
-                    >
-                      <Trash size={16} />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="outline-danger"
-                      onClick={() => handleShowModal(item)}
-                      className="me-2"
-                    >
-                      <Trash size={16} />
-                    </Button>
-                    <span className="mx-2">{item.quantity}</span>
-                    <Button
-                      variant="outline-primary"
-                      onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                      className="me-2"
-                    >
-                      <Plus size={16} />
-                    </Button>
-                  </>
-                )}
-              </div>
-            </ListGroup.Item>
-          ))}
-        </ListGroup>
+                <div className="d-flex align-items-center">
+                  {item.quantity > 1 ? (
+                    <>
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                        className="me-2"
+                      >
+                        <Minus size={16} />
+                      </Button>
+                      <span className="mx-2">{item.quantity}</span>
+                      <Button
+                        variant="outline-primary"
+                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                        className="me-2"
+                      >
+                        <Plus size={16} />
+                      </Button>
+                      <Button
+                        variant="outline-danger"
+                        onClick={() => handleShowModal(item)}
+                        className="me-2"
+                      >
+                        <Trash size={16} />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        variant="outline-danger"
+                        onClick={() => handleShowModal(item)}
+                        className="me-2"
+                      >
+                        <Trash size={16} />
+                      </Button>
+                      <span className="mx-2">{item.quantity}</span>
+                      <Button
+                        variant="outline-primary"
+                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                        className="me-2"
+                      >
+                        <Plus size={16} />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+        )}
       </Card>
       <div className="mt-4 text-end">
         <h3 className="fw-bold">Totale: €{total.toFixed(2)}</h3>
@@ -194,7 +208,7 @@ const CartPage = () => {
           🛒 Procedi al Checkout
         </Button>
       </div>
-
+  
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
           <Modal.Title>Conferma Eliminazione</Modal.Title>
@@ -207,19 +221,8 @@ const CartPage = () => {
           <Button variant="danger" onClick={() => removeFromCart(itemToDelete)}>
             Elimina
           </Button>
-
-
         </Modal.Footer>
       </Modal>
-      <>
-                {loading ? (
-                    <LoadingSpinner />
-                ) : (
-                    <Container className="mt-5 text-center position-relative" style={{ zIndex: 0 }}>
-                        {/* Il resto del tuo codice */}
-                    </Container>
-                )}
-            </>
     </div>
   );
 };

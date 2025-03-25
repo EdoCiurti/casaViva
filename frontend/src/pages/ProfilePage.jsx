@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import { Spinner } from 'react-bootstrap';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState({});
@@ -10,6 +11,8 @@ const ProfilePage = () => {
     const [cart, setCart] = useState([]);
     const [username, setUsername] = useState(localStorage.getItem("username"));
     const [currentOrderIndex, setCurrentOrderIndex] = useState(0);
+    const [loadingOrders, setLoadingOrders] = useState(true);
+    const [loadingCart, setLoadingCart] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -30,13 +33,17 @@ const ProfilePage = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setOrders(ordersResponse.data);
+                setLoadingOrders(false); // Fine caricamento ordini
 
                 const cartResponse = await axios.get('http://localhost:5000/api/cart', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setCart(cartResponse.data);
+                setLoadingCart(false); // Fine caricamento carrello
             } catch (error) {
                 console.error('Errore nel recupero dei dati del profilo', error);
+                setLoadingOrders(false);
+                setLoadingCart(false);
             }
         };
 
@@ -48,7 +55,7 @@ const ProfilePage = () => {
         localStorage.removeItem("username");
         setUsername(null);
         navigate("/login");
-        window.location.reload();   
+        window.location.reload();
     };
 
     const handleNextOrder = () => {
@@ -65,7 +72,7 @@ const ProfilePage = () => {
                 <Col md={4}>
                     <Card className="profile-card">
                         <Card.Body>
-                            <Card.Title>Profilo Utente</Card.Title>
+                            <Card.Title >Profilo Utente</Card.Title>
                             <Card.Text><strong>Nome:</strong> {userData.username}</Card.Text>
                             <Card.Text><strong>Email:</strong> {userData.email}</Card.Text>
                             <Button variant="danger" onClick={handleLogout}>Logout</Button>
@@ -76,7 +83,13 @@ const ProfilePage = () => {
                     <Card className="mb-4 order-card">
                         <Card.Body>
                             <Card.Title>Ordini</Card.Title>
-                            {orders.length > 0 ? (
+                            {loadingOrders ? (
+                                <div className="text-center py-3">
+                                    <Spinner animation="border" role="status">
+                                        <span className="visually-hidden">Caricamento...</span>
+                                    </Spinner>
+                                </div>
+                            ) : orders.length > 0 ? (
                                 <div className="order-container">
                                     <FaArrowLeft className="arrow-icon left-arrow" onClick={handlePrevOrder} />
                                     <div className="order-details">
@@ -101,14 +114,25 @@ const ProfilePage = () => {
                     <Card className="cart-card">
                         <Card.Body>
                             <Card.Title>Carrello</Card.Title>
-                            {cart.products && cart.products.length > 0 ? (
-                                <ul>
-                                    {cart.products.map(item => (
-                                        <li key={item._id}>
-                                            {item.quantity} x {item.product.name} - €{item.product.price}
-                                        </li>
-                                    ))}
-                                </ul>
+                            {loadingCart ? (
+                                <div className="text-center py-3">
+                                    <Spinner animation="border" role="status">
+                                        <span className="visually-hidden">Caricamento...</span>
+                                    </Spinner>
+                                </div>
+                            ) : cart.products && cart.products.length > 0 ? (
+                                <>
+                                    <ul>
+                                        {cart.products.map(item => (
+                                            <li key={item._id}>
+                                                {item.quantity} x {item.product.name} - €{item.product.price}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <Button variant="dark" className="mt-3" onClick={() => navigate('/cart')}>
+                                        Vai al Carrello
+                                    </Button>
+                                </>
                             ) : (
                                 <p>Il carrello è vuoto</p>
                             )}
