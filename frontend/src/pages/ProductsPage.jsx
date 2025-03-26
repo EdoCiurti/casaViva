@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,13 +15,15 @@ const ProductsPage = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [filters, setFilters] = useState({ name: "", price: "", category: "" });
-    const [viewMode, setViewMode] = useState("scroll"); // "scroll" or "grid"
+    const [filters, setFilters] = useState({ name: "", price: "", category: "", color: "", dimension: "", has3D: false });
+    const [viewMode, setViewMode] = useState("grid"); // "scroll" or "grid"
     const [showPopup, setShowPopup] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
     const [wishlist, setWishlist] = useState([]); // Stato per la wishlist
+    const [theme, setTheme] = useState("light"); // "light" o "dark"
+    const [mainImage, setMainImage] = useState(null);
 
     const handleShowQRModal = () => setShowQRModal(true);
     const handleCloseQRModal = () => setShowQRModal(false);
@@ -50,57 +51,69 @@ const ProductsPage = () => {
     };
 
     useEffect(() => {
-    const fetchProducts = async () => {
-        try {
-            const response = await axios.get("http://localhost:5000/api/products");
-            setProducts(response.data);
-            setFilteredProducts(response.data);
+        const fetchProducts = async () => {
+            try {
+                const response = await axios.get("http://localhost:5000/api/products");
+                setProducts(response.data);
+                setFilteredProducts(response.data);
 
-            // Extract unique categories from products
-            const uniqueCategories = [...new Set(response.data.map(product => product.category))];
-            setCategories(uniqueCategories);
+                // Extract unique categories from products
+                const uniqueCategories = [...new Set(response.data.map(product => product.category))];
+                setCategories(uniqueCategories);
 
-            // Imposta loading su false dopo il caricamento dei prodotti
-            setLoading(false);
-        } catch (error) {
-            console.error("Errore nel recupero dei prodotti", error);
-        }
-    };
+                // Imposta loading su false dopo il caricamento dei prodotti
+                setLoading(false);
+            } catch (error) {
+                console.error("Errore nel recupero dei prodotti", error);
+            }
+        };
 
-    const fetchWishlist = async () => {
-        try {
-            const token = localStorage.getItem("token");
-            if (!token) return;
-    
-            const response = await axios.get("http://localhost:5000/api/wishlist", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setWishlist(response.data.products.map((item) => item.product._id)); // Salva solo gli ID dei prodotti
-        } catch (error) {
-            console.error("Errore nel recupero della wishlist", error);
-        }
-    };
+        const fetchWishlist = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) return;
 
-    fetchProducts();
-    fetchWishlist();
+                const response = await axios.get("http://localhost:5000/api/wishlist", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setWishlist(response.data.products.map((item) => item.product._id)); // Salva solo gli ID dei prodotti
+            } catch (error) {
+                console.error("Errore nel recupero della wishlist", error);
+            }
+        };
 
-    const handleScroll = () => {
-        if (window.scrollY > 300) {
-            setShowScrollToTop(true);
-        } else {
-            setShowScrollToTop(false);
-        }
-    };
+        fetchProducts();
+        fetchWishlist();
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-}, []);
+        const handleScroll = () => {
+            if (window.scrollY > 300) {
+                setShowScrollToTop(true);
+            } else {
+                setShowScrollToTop(false);
+            }
+
+
+
+
+
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
     useEffect(() => {
         setTimeout(() => {
             // Carica i dati qui
             setLoading(false);
         }, 30000); // Simula un ritardo di 2 secondi
     }, []);
+
+    useEffect(() => {
+        if (selectedProduct && selectedProduct.images.length > 0) {
+            setMainImage(selectedProduct.images[0]); // Imposta la prima immagine come predefinita
+        }
+    }, [selectedProduct]);
+
     const addToCart = async (productId) => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -141,6 +154,22 @@ const ProductsPage = () => {
             });
         }
     };
+    useEffect(() => {
+        const filtered = products.filter((product) => {
+            return (
+                (filters.name === "" || (product.name && product.name.toLowerCase().includes(filters.name.toLowerCase()))) &&
+                (filters.price === "" || (product.price && product.price <= parseFloat(filters.price))) &&
+                (filters.category === "" || product.category === filters.category) &&
+                (filters.color === "" || (product.description && product.description.toLowerCase().includes(filters.color.toLowerCase()))) &&
+                (filters.dimension === "" || (product.dimension && parseFloat(product.dimension) <= parseFloat(filters.dimension))) &&
+                (!filters.has3D || (product.link3Dios || product.link3Dandroid)) // Controlla se il prodotto ha un modello 3D
+            );
+        })
+            .sort((a, b) => b.price - a.price); // Ordina i prodotti dal più caro al meno caro
+
+        setFilteredProducts(filtered);
+        setCurrentIndex(0);
+    }, [filters, products]);
 
     const handleScroll = (direction, increment = itemsPerView) => {
         setCurrentIndex((prev) => {
@@ -169,17 +198,7 @@ const ProductsPage = () => {
         setFilters((prev) => ({ ...prev, [name]: value }));
     };
 
-    useEffect(() => {
-        const filtered = products.filter((product) => {
-            return (
-                (filters.name === "" || product.name.toLowerCase().startsWith(filters.name.toLowerCase())) &&
-                (filters.price === "" || product.price <= parseFloat(filters.price)) &&
-                (filters.category === "" || product.category === filters.category)
-            );
-        });
-        setFilteredProducts(filtered);
-        setCurrentIndex(0);
-    }, [filters, products]);
+
 
     const handleCategoryClick = (category, index) => {
         if (index < currentIndex || index >= currentIndex + itemsPerView) {
@@ -191,26 +210,20 @@ const ProductsPage = () => {
     };
 
     const handleBackToCategories = () => {
-        setSelectedCategory(null);
-        setFilters({ name: "", price: "", category: "" });
+        setSelectedCategory(null); // Deseleziona la categoria
+        setFilters({ name: "", price: "", category: "", color: "", dimension: "" }); // Reimposta i filtri
+        setFilteredProducts(products); // Mostra tutti i prodotti
+        handleClosePopup(); // Chiudi il popup
     };
 
     const handleViewModeChange = (value) => {
         setViewMode(value);
     };
 
-    const handleCardClick = (product, index, event) => {
-        if (event.target.tagName === "BUTTON") {
-            return;
-        }
-        if (viewMode === "scroll" && (index < currentIndex || index >= currentIndex + itemsPerView)) {
-            handleScroll("right");
-        } else {
-            setSelectedProduct(product);
-            setShowPopup(true);
-        }
+    const handleCardClick = (product) => {
+        setSelectedProduct(product); // Imposta il prodotto selezionato
+        window.scrollTo({ top: 0, behavior: "smooth" }); // Scorri verso
     };
-
 
     const handleClosePopup = () => {
         setShowPopup(false);
@@ -274,14 +287,13 @@ const ProductsPage = () => {
 
     return (
         <Container className="mt-5 text-center position-relative" style={{ zIndex: 0 }}>
-            <br></br> <br></br>
             <h1 className="products-title mb-4" style={{ fontWeight: 'bold' }}>
                 I nostri prodotti
             </h1>
             {selectedCategory && (
                 <Form className="mb-4">
                     <Row>
-                        <Col md={4}>
+                        <Col md={3}>
                             <Form.Group controlId="filterName">
                                 <Form.Label>Nome</Form.Label>
                                 <Form.Control
@@ -293,7 +305,7 @@ const ProductsPage = () => {
                                 />
                             </Form.Group>
                         </Col>
-                        <Col md={4}>
+                        <Col md={3}>
                             <Form.Group controlId="filterPrice">
                                 <Form.Label>Prezzo massimo</Form.Label>
                                 <Form.Control
@@ -305,38 +317,170 @@ const ProductsPage = () => {
                                 />
                             </Form.Group>
                         </Col>
-                        <Col md={4}>
-                            <Form.Group controlId="filterCategory">
-                                <Form.Label>Categoria</Form.Label>
+                        <Col md={3}>
+                            <Form.Group controlId="filterColor">
+                                <Form.Label>Colore</Form.Label>
                                 <Form.Control
-                                    as="select"
-                                    name="category"
-                                    value={filters.category}
+                                    type="text"
+                                    placeholder="Cerca per colore"
+                                    name="color"
+                                    value={filters.color}
                                     onChange={handleFilterChange}
-                                >
-                                    <option value="">Tutte le categorie</option>
-                                    {categories.map((category, index) => (
-                                        <option key={index} value={category}>
-                                            {category.replace(/-/g, ' ')}
-                                        </option>
-                                    ))}
-                                </Form.Control>
+                                />
+                            </Form.Group>
+                        </Col>
+                        <Col md={3}>
+                            <Form.Group controlId="filterHas3D">
+                                <Form.Label>Solo con Modello 3D</Form.Label>
+                                <div className="mt-2">
+                                    <Form.Check
+                                        type="checkbox"
+                                        name="has3D"
+                                        checked={filters.has3D}
+                                        onChange={(e) => setFilters((prev) => ({ ...prev, has3D: e.target.checked }))}
+                                    />
+                                </div>
                             </Form.Group>
                         </Col>
                     </Row>
                 </Form>
             )}
+            {selectedProduct ? (
+                // Mostra i dettagli del prodotto selezionato
+
+                <div className="product-details-container position-relative">
+                    <Button
+                        variant="light"
+                        className="close-details-btn mb-4"
+                        onClick={() => setSelectedProduct(null)}
+                        style={{
+                            position: "absolute",
+                            top: "10px",
+                            right: "10px",
+                            border: "none",
+                            background: "transparent",
+                            fontSize: "1.5rem",
+                            fontWeight: "bold",
+                            color: theme === "dark" ? "#fff" : "#000",
+                            cursor: "pointer",
+                            zIndex: 10,
+                        }}
+                    >
+                        ✕
+                    </Button>
+                    <Row>
+                        {/* Colonna sinistra: Foto */}
+                        <Col md={6} className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"}`}>
+                            <div className="text-center">
+{/* Immagine principale */}
+                                <img
+                                    src={mainImage} // Mostra l'immagine principale
+                                    alt={selectedProduct.name}
+                                    className="img-fluid mb-3"
+                                    style={{ maxHeight: "300px", objectFit: "cover", borderRadius: "10px" }}
+                                />
+                                <p className="text-muted">Immagini secondarie:</p>
+                                <div className="similar-images d-flex justify-content-center">
+{/* Miniature */}
+                                    {selectedProduct.images.slice(1, 3).map((image, index) => (
+                                        <img
+                                            key={index}
+                                            src={image} // Mostra le immagini secondarie
+                                            alt={`Immagine secondaria ${index + 1}`}
+                                            className="img-thumbnail mx-2"
+                                            style={{
+                                                maxHeight: "150px", // Aumenta l'altezza massima
+                                                maxWidth: "150px", // Aumenta la larghezza massima
+                                                objectFit: "cover",
+                                                                                                cursor: "pointer",
+                                                border: mainImage === image ? "2px solid blue" : "1px solid #ddd", // Evidenzia l'immagine selezionata
+borderRadius: "10px",
+                                            }}
+                                            onClick={() => {
+                                                // Scambia l'immagine principale con quella cliccata
+                                                const temp = mainImage;
+                                                setMainImage(image); // Imposta la miniatura come immagine principale
+const updatedImages = [...selectedProduct.images];
+                                                updatedImages[0] = image; // Aggiorna la principale
+                                                updatedImages[index + 1] = temp; // Aggiorna la miniatura cliccata
+                                                setSelectedProduct({ ...selectedProduct, images: updatedImages }); // Aggiorna il prodotto
+                                            }}
+                                            />
+                                    ))}
+                                </div>
+                            </div>
+                        </Col>
+
+                        {/* Colonna destra: Dettagli */}
+                        <Col
+md={6}
+className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"} d-flex align-items-center justify-content-center`}
+                        >
+                            <div className="details-content text-center">
+                                <h3>{selectedProduct.name}</h3>
+<p><strong>Prezzo:</strong> €{selectedProduct.price}</p>
+<p><strong>Descrizione:</strong> {selectedProduct.description}</p>
+                                <p><strong>Dimensioni:</strong> {selectedProduct.dimensioni || "Non specificate"}</p>
+<p><strong>Disponibilità:</strong> {selectedProduct.stock > 0 ? `${selectedProduct.stock} pezzi disponibili` : "Non disponibile"}</p>
+<div className="d-flex justify-content-center align-items-center mt-4">
+                                    <Button variant="dark" onClick={() => addToCart(selectedProduct._id)} className="me-3">
+                                        Aggiungi al carrello
+                                    </Button>
+                                    <FaHeart
+                                        size={24}
+                                        color={wishlist.includes(selectedProduct._id) ? "red" : "gray"}
+style={{ cursor: "pointer" }}
+                                        onClick={() => {
+   wishlist.includes(selectedProduct._id)
+                                                ? removeFromWishlist(selectedProduct._id)
+                                                : addToWishlist(selectedProduct._id);
+                                        }}
+                                    />
+                                </div>
+                                {(selectedProduct.link3Dios || selectedProduct.link3Dandroid) && (
+                                    <div className="mt-4">
+                                        <p><strong>Visualizza in 3D:</strong></p>
+                                        {selectedProduct.link3Dios && (
+                                            <Button
+                                                variant="dark"
+className="me-2"
+onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
+                                            >
+                                                Visualizza su iOS
+                                            </Button>
+                                        )}
+                                        {selectedProduct.link3Dandroid && (
+                                            <Button
+                                                variant="dark"
+                                                onClick={() => handleShowQRModal(selectedProduct.link3Dandroid)}
+                                            >
+                                                Visualizza su Android
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </Col>
+                    </Row>
+                </div>
+            ) : null}
+
+
+            {selectedCategory && !selectedProduct && (
+                <Button variant="secondary" className="mb-4" onClick={handleBackToCategories}>
+                    Torna alle categorie
+                </Button>
+            )}
+
             {selectedCategory ? (
                 <>
-                    <Button variant="secondary" className="mb-4" onClick={handleBackToCategories}>
-                        Torna alle categorie
-                    </Button>
-                    <div className="d-flex justify-content-end mb-4">
+
+                    <div className="d-flex justify-content-end mb-4 mt-3">
                         <ToggleButtonGroup type="radio" name="viewMode" value={viewMode} onChange={handleViewModeChange}>
                             <ToggleButton variant="dark" id="tbg-radio-1" value="scroll" className="custom-toggle-btn">
                                 Scorrimento
                             </ToggleButton>
-                            <ToggleButton variant="dark" id="tbg-radio-2" value="grid" className="custom-toggle-btn">
+      <ToggleButton variant="dark" id="tbg-radio-2" value="grid" className="custom-toggle-btn">
                                 Griglia
                             </ToggleButton>
                         </ToggleButtonGroup>
@@ -369,23 +513,23 @@ const ProductsPage = () => {
                                     >
                                         {filteredProducts.map((product, index) => (
                                             <motion.div
-                                            key={product._id}
-                                            className={`product-card ${index >= currentIndex && index < currentIndex + itemsPerView ? "" : "inactive"}`}
-                                            initial={{ opacity: 1, scale: 0.9 }}
-                                            animate={{
-                                                opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
-                                                scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
-                                            }}
-                                            transition={{ duration: 0.5 }}
-                                            onClick={(event) => handleCardClick(product, index, event)}
-                                        >
+                                                key={product._id}
+                                                className={`product-card ${index >= currentIndex && index < currentIndex + itemsPerView ? "" : "inactive"}`}
+                                                initial={{ opacity: 1, scale: 0.9 }}
+                                                animate={{
+                                                    opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
+                                                    scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
+                                                }}
+                                                transition={{ duration: 0.5 }}
+                                                onClick={(event) => handleCardClick(product, index, event)}
+                                            >
                                                 <Card
                                                     className="shadow-lg"
                                                     style={{ borderRadius: "15px", overflow: "hidden", width: "300px", height: "500px" }}
                                                 >
                                                     <Card.Img
                                                         variant="top"
-                                                        src={product.images}
+                                                        src={product.images[0]}
                                                         alt={product.name}
                                                         style={{ height: "250px", objectFit: "cover" }}
                                                     />
@@ -408,16 +552,16 @@ const ProductsPage = () => {
                                                                 Aggiungi al carrello
                                                             </motion.button>
                                                             <FaHeart
-                                                        size={24}
-                                                        color={wishlist.includes(product._id) ? "red" : "gray"} // Cuore rosso se è nella wishlist, grigio altrimenti
-                                                        style={{ cursor: "pointer" }}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation(); // Impedisce la propagazione dell'evento
-                                                            wishlist.includes(product._id)
-                                                                ? removeFromWishlist(product._id) // Rimuovi dalla wishlist
-                                                                : addToWishlist(product._id); // Aggiungi alla wishlist
-                                                        }}
-                                                    />
+                                                                size={24}
+                                                                color={wishlist.includes(product._id) ? "red" : "gray"} // Cuore rosso se è nella wishlist, grigio altrimenti
+                                                                style={{ cursor: "pointer" }}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation(); // Impedisce la propagazione dell'evento
+                                                                    wishlist.includes(product._id)
+                                                                        ? removeFromWishlist(product._id) // Rimuovi dalla wishlist
+                                                                        : addToWishlist(product._id); // Aggiungi alla wishlist
+                                                                }}
+                                                            />
                                                         </div>
                                                     </Card.Body>
                                                 </Card>
@@ -440,10 +584,14 @@ const ProductsPage = () => {
                         <Row>
                             {filteredProducts.map((product) => (
                                 <Col key={product._id} md={4} className="mb-4">
-                                    <Card className="shadow-lg" style={{ borderRadius: "15px", overflow: "hidden" }}>
+                                    <Card
+                                        className="shadow-lg"
+                                        style={{ borderRadius: "15px", overflow: "hidden", cursor: "pointer" }}
+                                        onClick={() => handleCardClick(product)} // Aggiungi l'evento onClick qui
+                                    >
                                         <Card.Img
                                             variant="top"
-                                            src={product.images}
+                                            src={product.images[0]}
                                             alt={product.name}
                                             style={{ height: "250px", objectFit: "cover" }}
                                         />
@@ -459,15 +607,23 @@ const ProductsPage = () => {
                                                     className="btn btn-dark"
                                                     whileHover={{ scale: 1.1 }}
                                                     whileTap={{ scale: 0.9 }}
-                                                    onClick={() => addToCart(product._id)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Impedisce la propagazione del click alla card
+                                                        addToCart(product._id);
+                                                    }}
                                                 >
                                                     Aggiungi al carrello
                                                 </motion.button>
                                                 <FaHeart
                                                     size={24}
-                                                    color="red"
+                                                    color={wishlist.includes(product._id) ? "red" : "gray"} // Cuore rosso se è nella wishlist, grigio altrimenti
                                                     style={{ cursor: "pointer" }}
-                                                    onClick={() => addToWishlist(product._id)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Impedisce la propagazione del click alla card
+                                                        wishlist.includes(product._id)
+                                                            ? removeFromWishlist(product._id) // Rimuovi dalla wishlist
+                                                            : addToWishlist(product._id); // Aggiungi alla wishlist
+                                                    }}
                                                 />
                                             </div>
                                         </Card.Body>
@@ -680,6 +836,31 @@ const ProductsPage = () => {
                     pointer-events: none; /* Disabilita l'interazione */
                     opacity: 0.5; /* Rende il prodotto opaco */
                 }
+                    .product-details-section.dark-mode {
+                        background-color: #2c2c2c; /* Sfondo scuro */
+                        color: #ffffff; /* Testo bianco */
+                        border: 1px solid #555; /* Bordo per maggiore contrasto */
+                        padding: 20px;
+                        border-radius: 10px;
+                    }
+
+                    .product-details-section.light-mode {
+                        background-color:#ffffff; /* Sfondo chiaro */
+                        color:#2c2c2c; /* Testo nero */
+                        border: 1px solid #ddd; /* Bordo per maggiore contrasto */
+                        padding: 20px;
+                        border-radius: 10px;
+                    }
+
+                    .details-content.dark-mode p,
+                    .details-content.dark-mode h3 {
+                        color:rgb(255, 0, 0); /* Colore del testo per maggiore leggibilità */
+                    }
+
+                    .details-content.light-mode p,
+                    .details-content.light-mode h3 {
+                        color:rgb(255, 0, 0); /* Colore del testo nero */
+                    }
             `}</style>
             {viewMode === "grid" && showScrollToTop && (
                 <Button

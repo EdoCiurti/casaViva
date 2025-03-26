@@ -9,10 +9,59 @@ body {
   background-color: #ffffff; /* Light background */
   color: #000000; /* Dark text color */
 }
+.dark-mode-card {
+  background-color: transparent; /* Rimuove lo sfondo */
+}
+.product-details.dark-mode {
+  background-color: transparent; /* Rimuove lo sfondo */
+  color: white; /* Testo bianco per la modalità scura */
+}
 
+.product-details.light-mode {
+  background-color: transparent; /* Rimuove lo sfondo */
+  color: white; /* Testo bianco per la modalità scura */
+}
 .dark-mode {
   background-color: #212529; /* Dark background */
   color: #ffffff; /* Light text color */
+}
+.product-details-container {
+  background-color: transparent;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-images-section {
+  border-right: 1px solid #ddd;
+  padding-right: 20px;
+}
+
+.product-details-section {
+  padding-left: 20px;
+}
+
+.details-content h3 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.details-content p {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.similar-images img {
+  margin-right: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.similar-images img:hover {
+  transform: scale(1.1);
+  border-color: #007bff;
 }
 .custom-toggle-btn {
   background-color: #343a40; /* Grigio scuro */
@@ -214,7 +263,66 @@ main {
   width: 100%;
   bottom: 0;
 }
+.product-details-container {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid #ccc; /* Bordo per modalità giorno */
+}
 
+.product-details-container.dark-mode {
+  background-color: #000000; /* Rimuove lo sfondo */
+  color: #ff0b0b; /* Testo bianco */
+  border: 2px solid #555; /* Bordo per maggiore contrasto */
+}
+
+.product-details-container.dark-mode .details-content p {
+  color: #ddd; /* Colore del testo per maggiore contrasto */
+}
+
+.similar-images img {
+  margin-right: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.similar-images img:hover {
+  transform: scale(1.1);
+  border-color: #007bff;
+}
+
+.close-details-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+.product-details-section.dark-mode {
+  background-color: #2c2c2c; /* Sfondo scuro */
+  color: #ffffff; /* Testo bianco */
+  border: 1px solid #555; /* Bordo per maggiore contrasto */
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.product-details-section.light-mode {
+  background-color: #ffffff; /* Sfondo chiaro */
+  color: #000000; /* Testo nero */
+  border: 1px solid #ddd; /* Bordo per maggiore contrasto */
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.details-content.dark-mode p,
+.details-content.dark-mode h3 {
+  color: #dddddd; /* Colore del testo per maggiore leggibilità */
+}
+
+.details-content.light-mode p,
+.details-content.light-mode h3 {
+  color: #000000; /* Colore del testo nero */
+}
 /* Forza il cambiamento di colore quando il tema cambia */
 footer.dark-mode .footer {
   background-color: #212529 !important;
