@@ -81,6 +81,7 @@ const ProductsPage = () => {
                 console.error("Errore nel recupero della wishlist", error);
             }
         };
+    
 
         fetchProducts();
         fetchWishlist();
