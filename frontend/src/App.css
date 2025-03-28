@@ -299,8 +299,8 @@ main {
   right: 10px;
 }
 .product-details-section.dark-mode {
-  background-color: #2c2c2c; /* Sfondo scuro */
-  color: #ffffff; /* Testo bianco */
+  background-color: #212529; /* Sfondo scuro */
+  color: #1a1010; /* Testo bianco */
   border: 1px solid #555; /* Bordo per maggiore contrasto */
   padding: 20px;
   border-radius: 10px;
@@ -312,6 +312,48 @@ main {
   border: 1px solid #ddd; /* Bordo per maggiore contrasto */
   padding: 20px;
   border-radius: 10px;
+}
+/* Dark mode palette */
+.dark-mode {
+  background-color: #1e1e2f; /* Sfondo scuro */
+  color: #e0e0e0; /* Testo chiaro */
+}
+
+.product-details-section.dark-mode {
+  background-color: #212529; /* Sfondo scuro per i dettagli */
+  color: #e0e0e0; /* Testo chiaro */
+  border: 1px solid #3a3a4d; /* Bordo scuro */
+}
+
+.details-content.dark-mode {
+  background-color: #2a2a3d; /* Sfondo scuro */
+  color: #e0e0e0; /* Testo chiaro */
+}
+/* Testo per la modalità chiara */
+.light-mode-text {
+  color: #000000; /* Testo nero */
+}
+
+/* Testo per la modalità scura */
+.dark-mode-text {
+  color: #e0e0e0; /* Testo grigio chiaro */
+}
+.similar-images img {
+  background-color: #2a2a3d; /* Sfondo scuro per le immagini */
+  border: 1px solid #3a3a4d; /* Bordo scuro */
+}
+
+.similar-images img:hover {
+  border-color: #5a5a7d; /* Colore di hover */
+}
+
+.btnCarrello {
+  background-color: #3a3a4d; /* Sfondo scuro per i pulsanti */
+  color: #e0e0e0; /* Testo chiaro */
+}
+
+.btnCarrello:hover {
+  background-color: #4a4a6d; /* Sfondo più chiaro per hover */
 }
 
 .details-content.dark-mode p,
@@ -444,3 +486,139 @@ footer.dark-mode .footer {
 .success-dark-text {
   color: #000000 !important; /* Black text color */
 }
+
+/* Generale: Modalità chiara e scura */
+.light-mode {
+  background-color: #ffffff; /* Sfondo bianco */
+  color: #000000; /* Testo nero */
+}
+
+.dark-mode {
+  background-color: #212529; /* Sfondo scuro */
+  color: #ffffff; /* Testo bianco */
+}
+
+/* Sezione dei dettagli del prodotto */
+.product-details-section.light-mode {
+  background-color: #ffffff; /* Sfondo bianco */
+  color: #000000; /* Testo nero */
+  border: 1px solid #ddd; /* Bordo grigio chiaro */
+}
+
+.product-details-section.dark-mode {
+  background-color: #212529; /* Sfondo scuro */
+  color: #ffffff; /* Testo bianco */
+  border: 1px solid #555; /* Bordo grigio scuro */
+}
+
+/* Contenuto dei dettagli */
+.details-content.light-mode {
+  color: #000000; /* Testo nero */
+}
+
+.details-content.dark-mode {
+  color: #ffffff; /* Testo bianco */
+}
+
+/* Immagini secondarie */
+.similar-images img {
+  margin-right: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  transition: transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.similar-images img:hover {
+  transform: scale(1.1);
+  border-color: #007bff;
+}
+
+/* Pulsanti */
+.btnCarrello {
+  background-color: #212529; /* Sfondo nero */
+  color: #ffffff; /* Testo bianco */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.btnCarrello:hover {
+  background-color: #000000; /* Sfondo nero più scuro */
+}
+
+/* Titoli */
+.product-details-section h3 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.product-details-section p {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+/* Pulsanti per il tema */
+.theme-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.8rem;
+  transition: transform 0.3s ease-in-out;
+  color: inherit;
+}
+
+.theme-button:hover {
+  transform: rotate(20deg);
+}
+
+@keyframes pulse {
+  0% {
+      transform: scale(1);
+  }
+  50% {
+      transform: scale(1.1);
+  }
+  100% {
+      transform: scale(1);
+  }
+}
+@keyframes ledPulse {
+  0% {
+    box-shadow: 0 0 10px rgb(248, 248, 248), 0 0 30px rgba(255, 255, 255, 0.3), 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgb(248, 248, 248), 0 0 40px rgba(255, 255, 255, 0.5), 0 0 60px rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 10px rgb(248, 248, 248), 0 0 30px rgba(255, 255, 255, 0.3), 0 0 50px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.similar-images {
+  max-width: 100%; /* Assicura che il contenitore non superi la larghezza del genitore */
+  overflow-x: auto; /* Aggiungi uno scroll orizzontale se necessario */
+  padding: 10px; /* Spaziatura interna */
+  display: flex;
+  flex-wrap: wrap; /* Permetti alle immagini di andare a capo */
+  gap: 10px; /* Spaziatura tra le immagini */
+  justify-content: center; /* Centra le immagini */
+}
+
+.similar-images img {
+  transition: transform 0.3s ease-in-out;
+}
+
+.similar-images img:hover {
+  transform: scale(1.1); /* Effetto zoom al passaggio del mouse */
+}
+.led-effect {
+  animation: ledPulse 2s infinite; /* Durata di 2 secondi, ripetizione infinita */
+}
+
+.pulse-animation {
+  animation: pulse 1.5s infinite; /* Durata di 1.5 secondi, ripetizione infinita */
+  display: inline-block; /* Assicura che l'elemento sia visibile */
+}
+

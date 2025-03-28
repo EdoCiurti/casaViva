@@ -2,12 +2,17 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Container, Form, Row, Col, Button, ToggleButtonGroup, ToggleButton, Modal } from "react-bootstrap";
-import { motion } from "framer-motion";
+import { color, motion } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { toast, ToastContainer } from "react-toastify";
 import { FaHeart } from "react-icons/fa"; // Importa l'icona del cuore
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { useRef } from "react"; // Importa useRef
+
+
 
 const ProductsPage = () => {
     const [products, setProducts] = useState([]);
@@ -22,13 +27,16 @@ const ProductsPage = () => {
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
     const [wishlist, setWishlist] = useState([]); // Stato per la wishlist
-    const [theme, setTheme] = useState("light"); // "light" o "dark"
+    const [theme, setTheme] = useState(""); // "light" o "dark"
     const [mainImage, setMainImage] = useState(null);
+
 
     const handleShowQRModal = () => setShowQRModal(true);
     const handleCloseQRModal = () => setShowQRModal(false);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
+    const detailsSectionRef = useRef(null); // Riferimento alla sezione dei dettagli
     const itemsPerView = 3;
 
     const categoryImages = {
@@ -49,6 +57,16 @@ const ProductsPage = () => {
         "librerie": "https://www.garneroarredamenti.com/data/cat/img/1/113.png",
         "cucine-complete": "https://www.garneroarredamenti.com/data/cat/img/p/progetto-senza-titolo.png"
     };
+
+    useEffect(() => {
+        if (location.state && location.state.fromHome) {
+            // Resettiamo tutto se l'utente arriva dalla home
+            setSelectedCategory(null);
+            setSelectedProduct(null);
+            localStorage.removeItem("selectedCategory");
+            localStorage.removeItem("selectedProduct");
+        }
+    }, [location]);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -81,7 +99,7 @@ const ProductsPage = () => {
                 console.error("Errore nel recupero della wishlist", error);
             }
         };
-    
+
 
         fetchProducts();
         fetchWishlist();
@@ -113,6 +131,32 @@ const ProductsPage = () => {
         if (selectedProduct && selectedProduct.images.length > 0) {
             setMainImage(selectedProduct.images[0]); // Imposta la prima immagine come predefinita
         }
+    }, [selectedProduct]);
+
+    useEffect(() => {
+        const handleDarkModeToggle = () => {
+            setTheme(localStorage.getItem("darkMode") === "true" ? "dark" : "light");
+
+            // Ricarica il prodotto selezionato dal localStorage solo se non è già impostato
+            if (!selectedProduct) {
+                const savedProduct = localStorage.getItem("selectedProduct");
+                if (savedProduct) {
+                    const product = JSON.parse(savedProduct);
+                    setSelectedProduct(product);
+                    setMainImage(product.images[0]); // Imposta l'immagine principale
+                }
+            }
+        };
+
+        // Ascolta l'evento personalizzato
+        window.addEventListener("darkModeToggle", handleDarkModeToggle);
+
+        // Imposta il tema iniziale
+        handleDarkModeToggle();
+
+        return () => {
+            window.removeEventListener("darkModeToggle", handleDarkModeToggle);
+        };
     }, [selectedProduct]);
 
     const addToCart = async (productId) => {
@@ -201,34 +245,90 @@ const ProductsPage = () => {
 
 
 
-    const handleCategoryClick = (category, index) => {
-        if (index < currentIndex || index >= currentIndex + itemsPerView) {
-            handleScroll("right");
-        } else {
-            setSelectedCategory(category);
-            setFilters((prev) => ({ ...prev, category }));
-        }
+    const handleCategoryClick = (category) => {
+        setSelectedCategory(category);
+        setFilters((prev) => ({ ...prev, category }));
+        localStorage.setItem("selectedCategory", category);
     };
 
+
     const handleBackToCategories = () => {
-        setSelectedCategory(null); // Deseleziona la categoria
-        setFilters({ name: "", price: "", category: "", color: "", dimension: "" }); // Reimposta i filtri
-        setFilteredProducts(products); // Mostra tutti i prodotti
-        handleClosePopup(); // Chiudi il popup
+        setSelectedCategory(null);
+        setFilters({ name: "", price: "", category: "", color: "", dimension: "" });
+        setFilteredProducts(products);
+        localStorage.removeItem("selectedCategory");
     };
+
+    useEffect(() => {
+        if (selectedProduct) {
+            localStorage.setItem("selectedProduct", JSON.stringify(selectedProduct));
+        }
+    }, [selectedProduct]);
 
     const handleViewModeChange = (value) => {
         setViewMode(value);
     };
 
-    const handleCardClick = (product) => {
-        setSelectedProduct(product); // Imposta il prodotto selezionato
-        window.scrollTo({ top: 0, behavior: "smooth" }); // Scorri verso
+
+    const handleCardClick = async (product) => {
+        setSelectedProduct(product);
+        setMainImage(product.images[0]); // Imposta l'immagine principale
+        localStorage.setItem("selectedProduct", JSON.stringify(product));
+
+        // Recupera immagini simili basate sulla descrizione del prodotto
+        const similarImages = await fetchSimilarImages(product.description);
+
+        // Aggiungi le immagini simili alle immagini secondarie
+        const updatedImages = [...product.images, ...similarImages];
+        setSelectedProduct({ ...product, images: updatedImages });
+
+        // Scorri verso la sezione dei dettagli
+        if (detailsSectionRef.current) {
+            detailsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
     };
+
+    useEffect(() => {
+        const savedProduct = localStorage.getItem("selectedProduct");
+        if (savedProduct) {
+            const product = JSON.parse(savedProduct);
+            setSelectedProduct(product);
+            setMainImage(product.images[0]); // Imposta l'immagine principale
+        }
+    }, []);
+
 
     const handleClosePopup = () => {
         setShowPopup(false);
         setSelectedProduct(null);
+        localStorage.removeItem("selectedProduct");
+    };
+
+    const fetchSimilarImages = async (description) => {
+        try {
+            // Estrai parole chiave dalla descrizione
+            const keywords = description
+                .toLowerCase()
+                .split(" ")
+                .filter((word) => word.length > 3) // Usa solo parole significative
+                .slice(0, 5) // Limita a 5 parole chiave
+                .join(" ");
+
+            const response = await axios.get("https://api.unsplash.com/search/photos", {
+                params: {
+                    query: keywords, // Usa le parole chiave come query
+                    per_page: 3, // Numero di immagini da ottenere
+                },
+                headers: {
+                    Authorization: `Client-ID Zadm82JMaTyQawRZ05DoTAH8omkLuYY7fd-awLH_ffo`, // Sostituisci con la tua chiave API
+                },
+            });
+
+            return response.data.results.map((image) => image.urls.small); // Restituisce le URL delle immagini
+        } catch (error) {
+            console.error("Errore nel recupero delle immagini simili", error);
+            return [];
+        }
     };
 
     const addToWishlist = async (productId) => {
@@ -259,6 +359,14 @@ const ProductsPage = () => {
         }
     };
 
+
+    useEffect(() => {
+        if (!selectedCategory) {
+            // Se nessuna categoria è selezionata, rimuovi il prodotto salvato
+            setSelectedProduct(null);
+            localStorage.removeItem("selectedProduct");
+        }
+    }, [selectedCategory]);
     const removeFromWishlist = async (productId) => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -285,9 +393,32 @@ const ProductsPage = () => {
         }
     };
 
+    useEffect(() => {
+        const savedCategory = localStorage.getItem("selectedCategory");
+        if (savedCategory) {
+            setSelectedCategory(savedCategory);
+            setFilters((prev) => ({ ...prev, category: savedCategory }));
+        }
+    }, []);
 
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 300) {
+                setShowScrollToTop(true); // Rimuove il blur
+            } else {
+                setShowScrollToTop(false); // Mantiene il blur
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
     return (
-        <Container className="mt-5 text-center position-relative" style={{ zIndex: 0 }}>
+        <Container
+            className={`mt-5 text-center position-relative ${selectedProduct && !showScrollToTop ? "blur-background" : "no-blur"
+                }`}
+            style={{ zIndex: 0 }}
+        >
             <h1 className="products-title mb-4" style={{ fontWeight: 'bold' }}>
                 I nostri prodotti
             </h1>
@@ -346,125 +477,187 @@ const ProductsPage = () => {
                     </Row>
                 </Form>
             )}
-            {selectedProduct ? (
-                // Mostra i dettagli del prodotto selezionato
-
-                <div className="product-details-container position-relative">
-                    <Button
-                        variant="light"
-                        className="close-details-btn mb-4"
-                        onClick={() => setSelectedProduct(null)}
-                        style={{
-                            position: "absolute",
-                            top: "10px",
-                            right: "10px",
-                            border: "none",
-                            background: "transparent",
-                            fontSize: "1.5rem",
-                            fontWeight: "bold",
-                            color: theme === "dark" ? "#fff" : "#000",
-                            cursor: "pointer",
-                            zIndex: 10,
-                        }}
-                    >
-                        ✕
-                    </Button>
-                    <Row>
-                        {/* Colonna sinistra: Foto */}
-                        <Col md={6} className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"}`}>
-                            <div className="text-center">
-{/* Immagine principale */}
-                                <img
-                                    src={mainImage} // Mostra l'immagine principale
-                                    alt={selectedProduct.name}
-                                    className="img-fluid mb-3"
-                                    style={{ maxHeight: "300px", objectFit: "cover", borderRadius: "10px" }}
-                                />
-                                <p className="text-muted">Immagini secondarie:</p>
-                                <div className="similar-images d-flex justify-content-center">
-{/* Miniature */}
-                                    {selectedProduct.images.slice(1, 3).map((image, index) => (
-                                        <img
-                                            key={index}
-                                            src={image} // Mostra le immagini secondarie
-                                            alt={`Immagine secondaria ${index + 1}`}
-                                            className="img-thumbnail mx-2"
-                                            style={{
-                                                maxHeight: "150px", // Aumenta l'altezza massima
-                                                maxWidth: "150px", // Aumenta la larghezza massima
-                                                objectFit: "cover",
-                                                                                                cursor: "pointer",
-                                                border: mainImage === image ? "2px solid blue" : "1px solid #ddd", // Evidenzia l'immagine selezionata
-borderRadius: "10px",
-                                            }}
-                                            onClick={() => {
-                                                // Scambia l'immagine principale con quella cliccata
-                                                const temp = mainImage;
-                                                setMainImage(image); // Imposta la miniatura come immagine principale
-const updatedImages = [...selectedProduct.images];
-                                                updatedImages[0] = image; // Aggiorna la principale
-                                                updatedImages[index + 1] = temp; // Aggiorna la miniatura cliccata
-                                                setSelectedProduct({ ...selectedProduct, images: updatedImages }); // Aggiorna il prodotto
-                                            }}
-                                            />
-                                    ))}
-                                </div>
-                            </div>
-                        </Col>
-
-                        {/* Colonna destra: Dettagli */}
-                        <Col
-md={6}
-className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"} d-flex align-items-center justify-content-center`}
+            <AnimatePresence >
+                {selectedProduct && selectedCategory && (
+                    <div ref={detailsSectionRef}>
+                        <motion.div
+                            className="led-effect"
+                            initial={{ opacity: 0, scale: 0.8, rotateX: -15, y: 100 }}
+                            animate={{ opacity: 1, scale: 1, rotateX: 0, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, rotateX: 15, y: 100 }}
+                            transition={{
+                                duration: 0.8,
+                                ease: [0.25, 0.46, 0.45, 0.94],
+                            }}
+                            style={{
+                                perspective: "1000px",
+                                position: "relative",
+                                zIndex: 10,
+                                backgroundColor: theme === "dark" ? "#212529" : "#fff",
+                                padding: "30px",
+                                borderRadius: "15px",
+                                boxShadow: `
+                                    0 0 20px rgb(248, 248, 248), /* Bagliore verde */
+                                    0 0 40px rgba(255, 255, 255, 0.3), 
+                                    0 0 60px rgba(255, 255, 255, 0.2)`, /* Ombra verde*/
+                                maxWidth: "90%",
+                                margin: "0 auto",
+                            }}
                         >
-                            <div className="details-content text-center">
-                                <h3>{selectedProduct.name}</h3>
-<p><strong>Prezzo:</strong> €{selectedProduct.price}</p>
-<p><strong>Descrizione:</strong> {selectedProduct.description}</p>
-                                <p><strong>Dimensioni:</strong> {selectedProduct.dimensioni || "Non specificate"}</p>
-<p><strong>Disponibilità:</strong> {selectedProduct.stock > 0 ? `${selectedProduct.stock} pezzi disponibili` : "Non disponibile"}</p>
-<div className="d-flex justify-content-center align-items-center mt-4">
-                                    <Button variant="dark" onClick={() => addToCart(selectedProduct._id)} className="me-3">
-                                        Aggiungi al carrello
-                                    </Button>
-                                    <FaHeart
-                                        size={24}
-                                        color={wishlist.includes(selectedProduct._id) ? "red" : "gray"}
-style={{ cursor: "pointer" }}
-                                        onClick={() => {
-   wishlist.includes(selectedProduct._id)
-                                                ? removeFromWishlist(selectedProduct._id)
-                                                : addToWishlist(selectedProduct._id);
-                                        }}
-                                    />
-                                </div>
-                                {(selectedProduct.link3Dios || selectedProduct.link3Dandroid) && (
-                                    <div className="mt-4">
-                                        <p><strong>Visualizza in 3D:</strong></p>
-                                        {selectedProduct.link3Dios && (
-                                            <Button
-                                                variant="dark"
-className="me-2"
-onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
-                                            >
-                                                Visualizza su iOS
-                                            </Button>
-                                        )}
-                                        {selectedProduct.link3Dandroid && (
-                                            <Button
-                                                variant="dark"
-                                                onClick={() => handleShowQRModal(selectedProduct.link3Dandroid)}
-                                            >
-                                                Visualizza su Android
-                                            </Button>
-                                        )}
+                            <Row  >
+                                {/* Colonna sinistra: Foto */}
+                                <Col
+                                    md={6}
+                                    className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"}`}
+                                    style={{ backgroundColor: theme === "dark" ? "#212529" : "#fff" }}
+                                >
+                                    <div className="text-center">
+                                        <img
+                                            src={mainImage}
+                                            alt={selectedProduct.name}
+                                            className="img-fluid mb-3"
+                                            style={{
+                                                maxHeight: "400px",
+                                                objectFit: "cover",
+                                                borderRadius: "15px",
+                                                backgroundColor: theme === "dark" ? "#1e1e2f" : "#ffffff",
+                                                color: theme === "dark" ? "#e0e0e0" : "#000000",
+                                                boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.2)",
+                                            }}
+                                        />
+                                        <p
+                                            style={{
+                                                color: theme === "dark" ? "#ffffff" : "#000000",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            Immagini secondarie:
+                                        </p>
+                                        <div className="similar-images d-flex flex-wrap justify-content-center">
+                                            {selectedProduct.images.map((image, index) => (
+                                                <img
+                                                    key={index}
+                                                    src={image}
+                                                    alt={`Immagine secondaria ${index + 1}`}
+                                                    className="img-thumbnail mx-2"
+                                                    style={{
+                                                        maxHeight: "150px", // Riduci l'altezza massima per evitare che escano
+                                                        maxWidth: "150px", // Riduci la larghezza massima
+                                                        objectFit: "cover",
+                                                        cursor: "pointer",
+                                                        border: mainImage === image ? "3px solid blue" : "2px solid #ddd",
+                                                        borderRadius: "10px",
+                                                        backgroundColor: theme === "dark" ? "#2c2c2c" : "#fff",
+                                                        transition: "transform 0.3s ease-in-out",
+                                                    }}
+                                                    onClick={() => {
+                                                        const temp = mainImage;
+                                                        setMainImage(image);
+                                                        const updatedImages = [...selectedProduct.images];
+                                                        updatedImages[0] = image;
+                                                        updatedImages[index] = temp;
+                                                        setSelectedProduct({ ...selectedProduct, images: updatedImages });
+                                                    }}
+                                                    onMouseEnter={(e) => (e.target.style.transform = "scale(1.1)")}
+                                                    onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        </Col>
-                    </Row>
-                </div>
-            ) : null}
+                                </Col>
+                                {/* Colonna destra: Dettagli */}
+                                <Col
+                                    md={6}
+                                    className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"} d-flex align-items-center justify-content-center`}
+                                    style={{ position: "relative", backgroundColor: theme === "dark" ? "#212529" : "#fff" }}
+                                >
+                                    <motion.div
+                                        className="details-content text-center"
+                                        initial={{ opacity: 0, x: 50 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ duration: 0.5, ease: "easeOut" }}
+                                        style={{
+                                            backgroundColor: theme === "dark" ? "#212529" : "#fff",
+                                            color: theme === "dark" ? "#fff" : "#212529",
+                                            padding: "20px",
+                                            borderRadius: "10px",
+                                        }}
+                                    >
+                                        <Button
+                                            variant="light"
+                                            className="close-details-btn"
+                                            onClick={() => {
+                                                setSelectedProduct(null);
+                                                localStorage.removeItem("selectedProduct");
+                                            }}
+                                            style={{
+                                                position: "absolute",
+                                                top: "10px",
+                                                right: "10px",
+                                                border: "none",
+                                                background: "transparent",
+                                                fontSize: "1.5rem",
+                                                fontWeight: "bold",
+                                                cursor: "pointer",
+                                                zIndex: 10,
+                                            }}
+                                        >
+                                            ✕
+                                        </Button>
+                                        <h3>{selectedProduct.name}</h3>
+                                        <p><strong>Prezzo:</strong> €{selectedProduct.price}</p>
+                                        <p><strong>Descrizione:</strong> {selectedProduct.description}</p>
+                                        <p><strong>Dimensioni:</strong> {selectedProduct.dimensioni || "Non specificate"}</p>
+                                        <p><strong>Disponibilità:</strong> {selectedProduct.stock > 0 ? `${selectedProduct.stock} pezzi disponibili` : "Non disponibile"}</p>
+                                        <div className="d-flex justify-content-center align-items-center mt-4">
+                                            <Button
+                                                variant={theme === "dark" ? "light" : "dark"}
+                                                onClick={() => addToCart(selectedProduct._id)}
+                                                className="me-3"
+                                            >
+                                                Aggiungi al carrello
+                                            </Button>
+                                            <FaHeart
+                                                size={24}
+                                                color={wishlist.includes(selectedProduct._id) ? "red" : "gray"}
+                                                style={{ cursor: "pointer" }}
+                                                className="pulse-animation"
+                                                onClick={() => {
+                                                    wishlist.includes(selectedProduct._id)
+                                                        ? removeFromWishlist(selectedProduct._id)
+                                                        : addToWishlist(selectedProduct._id);
+                                                }}
+                                            />
+                                        </div>
+                                        {(selectedProduct.link3Dios || selectedProduct.link3Dandroid) && (
+                                            <div className="mt-4">
+                                                <p><strong>Visualizza in 3D:</strong></p>
+                                                {selectedProduct.link3Dios && (
+                                                    <Button
+                                                        variant={theme === "dark" ? "light" : "dark"}
+                                                        className="me-2"
+                                                        onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
+                                                    >
+                                                        Visualizza su iOS
+                                                    </Button>
+                                                )}
+                                                {selectedProduct.link3Dandroid && (
+                                                    <Button
+                                                        variant={theme === "dark" ? "light" : "dark"}
+                                                        onClick={() => handleShowQRModal(selectedProduct.link3Dandroid)}
+                                                    >
+                                                        Visualizza su Android
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                </Col>
+                            </Row>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
 
             {selectedCategory && !selectedProduct && (
@@ -475,18 +668,13 @@ onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
 
             {selectedCategory ? (
                 <>
-
-                    <div className="d-flex justify-content-end mb-4 mt-3">
-                        <ToggleButtonGroup type="radio" name="viewMode" value={viewMode} onChange={handleViewModeChange}>
-                            <ToggleButton variant="dark" id="tbg-radio-1" value="scroll" className="custom-toggle-btn">
-                                Scorrimento
-                            </ToggleButton>
-      <ToggleButton variant="dark" id="tbg-radio-2" value="grid" className="custom-toggle-btn">
-                                Griglia
-                            </ToggleButton>
-                        </ToggleButtonGroup>
-                    </div>
-                    {viewMode === "scroll" ? (
+                    {filteredProducts.length === 0 ? (
+                        <div className="text-center mt-4">
+                            <p style={{ fontSize: "1.2rem", fontWeight: "bold", color: theme === "dark" ? "#ffffff" : "#000000" }}>
+                                Non ci sono prodotti per i filtri selezionati.
+                            </p>
+                        </div>
+                    ) : viewMode === "scroll" ? (
                         <>
                             <div className="position-relative">
                                 <FaArrowLeft
@@ -554,13 +742,13 @@ onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
                                                             </motion.button>
                                                             <FaHeart
                                                                 size={24}
-                                                                color={wishlist.includes(product._id) ? "red" : "gray"} // Cuore rosso se è nella wishlist, grigio altrimenti
+                                                                color={wishlist.includes(product._id) ? "red" : "gray"}
                                                                 style={{ cursor: "pointer" }}
                                                                 onClick={(e) => {
-                                                                    e.stopPropagation(); // Impedisce la propagazione dell'evento
+                                                                    e.stopPropagation();
                                                                     wishlist.includes(product._id)
-                                                                        ? removeFromWishlist(product._id) // Rimuovi dalla wishlist
-                                                                        : addToWishlist(product._id); // Aggiungi alla wishlist
+                                                                        ? removeFromWishlist(product._id)
+                                                                        : addToWishlist(product._id);
                                                                 }}
                                                             />
                                                         </div>
@@ -588,7 +776,7 @@ onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
                                     <Card
                                         className="shadow-lg"
                                         style={{ borderRadius: "15px", overflow: "hidden", cursor: "pointer" }}
-                                        onClick={() => handleCardClick(product)} // Aggiungi l'evento onClick qui
+                                        onClick={() => handleCardClick(product)}
                                     >
                                         <Card.Img
                                             variant="top"
@@ -609,7 +797,7 @@ onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
                                                     whileHover={{ scale: 1.1 }}
                                                     whileTap={{ scale: 0.9 }}
                                                     onClick={(e) => {
-                                                        e.stopPropagation(); // Impedisce la propagazione del click alla card
+                                                        e.stopPropagation();
                                                         addToCart(product._id);
                                                     }}
                                                 >
@@ -617,13 +805,13 @@ onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
                                                 </motion.button>
                                                 <FaHeart
                                                     size={24}
-                                                    color={wishlist.includes(product._id) ? "red" : "gray"} // Cuore rosso se è nella wishlist, grigio altrimenti
+                                                    color={wishlist.includes(product._id) ? "red" : "gray"}
                                                     style={{ cursor: "pointer" }}
                                                     onClick={(e) => {
-                                                        e.stopPropagation(); // Impedisce la propagazione del click alla card
+                                                        e.stopPropagation();
                                                         wishlist.includes(product._id)
-                                                            ? removeFromWishlist(product._id) // Rimuovi dalla wishlist
-                                                            : addToWishlist(product._id); // Aggiungi alla wishlist
+                                                            ? removeFromWishlist(product._id)
+                                                            : addToWishlist(product._id);
                                                     }}
                                                 />
                                             </div>
@@ -759,14 +947,14 @@ onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
             </Modal>
             <Modal show={showQRModal} onHide={() => setShowQRModal(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Scansiona per vedere in AR</Modal.Title>
+                    <Modal.Title >Scansiona per vedere in AR</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="text-center">
                     <img
                         src={`https://quickchart.io/qr?text=https%3A%2F%2Fcalossoa.github.io%2F3D%2Findex.html`}
                         alt="QR Code AR"
                     />
-                    <p>Scansiona con la fotocamera del tuo smartphone per visualizzare il modello in realtà aumentata.</p>
+                    <p style={{ color: "#000" }}>Scansiona con la fotocamera del tuo smartphone per visualizzare il modello in realtà aumentata.</p>
                     <model-viewer
                         src="https://calossoa.github.io/3D/modello.glb"
                         ios-src="https://calossoa.github.io/3D/modello.usdz"
@@ -837,31 +1025,84 @@ onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
                     pointer-events: none; /* Disabilita l'interazione */
                     opacity: 0.5; /* Rende il prodotto opaco */
                 }
-                    .product-details-section.dark-mode {
-                        background-color: #2c2c2c; /* Sfondo scuro */
-                        color: #ffffff; /* Testo bianco */
-                        border: 1px solid #555; /* Bordo per maggiore contrasto */
-                        padding: 20px;
-                        border-radius: 10px;
-                    }
+                   /* Generale: Modalità chiara e scura */
+.light-mode {
+  background-color: #ffffff; /* Sfondo bianco */
+  color: #000000; /* Testo nero */
+}
 
-                    .product-details-section.light-mode {
-                        background-color:#ffffff; /* Sfondo chiaro */
-                        color:#2c2c2c; /* Testo nero */
-                        border: 1px solid #ddd; /* Bordo per maggiore contrasto */
-                        padding: 20px;
-                        border-radius: 10px;
-                    }
+.dark-mode {
+  background-color: #212529; /* Sfondo scuro */
+  color: #ffffff; /* Testo bianco */
+}
 
-                    .details-content.dark-mode p,
-                    .details-content.dark-mode h3 {
-                        color:rgb(255, 0, 0); /* Colore del testo per maggiore leggibilità */
-                    }
+/* Sezione dei dettagli del prodotto */
+.product-details-section.light-mode {
+  background-color: #ffffff; /* Sfondo bianco */
+  color: #000000; /* Testo nero */
+  border: 1px solid #ddd; /* Bordo grigio chiaro */
+}
 
-                    .details-content.light-mode p,
-                    .details-content.light-mode h3 {
-                        color:rgb(255, 0, 0); /* Colore del testo nero */
-                    }
+.product-details-section.dark-mode {
+  background-color: #2c2c2c; /* Sfondo scuro */
+  color: #ffffff; /* Testo bianco */
+  border: 1px solid #555; /* Bordo grigio scuro */
+}
+
+/* Contenuto dei dettagli */
+.details-content.light-mode {
+  color: #000000; /* Testo nero */
+}
+
+.details-content.dark-mode {
+  color: #ffffff; /* Testo bianco */
+}
+
+
+.similar-images img:hover {
+  transform: scale(1.1);
+  border-color: #007bff;
+}
+
+/* Pulsanti */
+.btnCarrello {
+  background-color: #212529; /* Sfondo nero */
+  color: #ffffff; /* Testo bianco */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.btnCarrello:hover {
+  background-color: #000000; /* Sfondo nero più scuro */
+}
+
+/* Titoli */
+.product-details-section h3 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.product-details-section p {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+/* Pulsanti per il tema */
+.theme-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.8rem;
+  transition: transform 0.3s ease-in-out;
+  color: inherit;
+}
+
+.theme-button:hover {
+  transform: rotate(20deg);
+}
             `}</style>
             {viewMode === "grid" && showScrollToTop && (
                 <Button
