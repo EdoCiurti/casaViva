@@ -424,9 +424,8 @@ footer.dark-mode .footer {
   padding: 0px;
 }
 
-.card:hover {
-  transform: translateY(-10px);
-}
+
+
 
 .card-header {
   font-size: 1.5em;
@@ -596,6 +595,8 @@ footer.dark-mode .footer {
   }
 }
 
+
+
 .similar-images {
   max-width: 100%; /* Assicura che il contenitore non superi la larghezza del genitore */
   overflow-x: auto; /* Aggiungi uno scroll orizzontale se necessario */
@@ -622,3 +623,145 @@ footer.dark-mode .footer {
   display: inline-block; /* Assicura che l'elemento sia visibile */
 }
 
+ 
+
+
+.category-card {
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transizione per l'effetto hover */
+}
+
+.category-card:hover {
+ 
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Ombra per effetto di profondità */
+}
+
+.category-card .card-title {
+  font-size: 1.2rem; /* Dimensione del font */
+  font-weight: bold; /* Grassetto */
+  color: #343a40; /* Colore del testo */
+}
+
+
+/* Contenitore principale */
+.category-slider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 80%;
+  max-width: 1200px;
+}
+
+/* Contenitore delle categorie */
+.categories-container {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  max-width: 100%;
+  cursor: grab;
+}
+
+/* Wrapper con animazione */
+.categories-wrapper {
+  display: flex;
+  gap: 30px;
+}
+.card-title-overlay {
+  position: absolute;
+  bottom: 10px; /* Posiziona il titolo in basso */
+  left: 50%; /* Centra orizzontalmente */
+  width: 300px;
+  transform: translateX(-50%); /* Centra il testo */
+  background-color: transparent; /* Sfondo semi-trasparente */
+  color: #212529; /* Colore del testo */
+  padding: 5px 10px; /* Spaziatura interna */
+  border-radius: 5px; /* Angoli arrotondati */
+  font-size: 1.2rem; /* Dimensione del font */
+  font-weight: bold; /* Grassetto */
+  text-align: center; /* Allinea il testo al centro */
+}
+.category-card img {
+  width: 100%; /* Riempie tutta la larghezza del contenitore */
+  height: 100%; /* Riempie tutta l'altezza del contenitore */
+  object-fit: cover; /* Adatta l'immagine senza distorsioni */
+}
+/* Card delle categorie */
+.category-card {
+  width: 300px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Effetto Glow */
+.glowing-card {
+  border-radius: 15px;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease-in-out;
+}
+
+.glowing-card:hover {
+  box-shadow: 0px 0px 20px rgb(255, 255, 255);
+  transform: scale(1.05);
+}
+
+/* Immagini delle categorie */
+.glowing-card img {
+  height: 150px;
+  object-fit: cover;
+}
+
+/* Titolo */
+.glowing-card .card-body {
+  background-color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+}
+.glowing-card:hover {
+  box-shadow: 0px 0px 20px rgb(255, 255, 255);
+  transform: scale(1.02); /* Ridotto da 1.05 a 1.02 */
+}
+.glowing-card img:hover {
+  transform: scale(1.02); /* Ridotto da 1.1 o altro valore */
+  transition: transform 0.3s ease-in-out; /* Mantieni una transizione fluida */
+}
+
+.category-card.focused {
+  transform: scale(1.1); /* Ingrandisci leggermente la card in focus */
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* Aggiungi un'ombra per evidenziare */
+  z-index: 2; /* Porta la card in primo piano */
+}
+
+.glowing-card .card-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: rgb(255, 255, 255);
+  text-shadow: 0px 0px 10px rgb(0, 0, 0);
+}
+
+/* Frecce */
+.arrow-icon {
+  font-size: 2rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.arrow-icon.left {
+  left: -50px;
+}
+
+.arrow-icon.right {
+  right: 10px;
+}
+
+.arrow-icon:hover {
+  color: cyan;
+  text-shadow: 0px 0px 10px rgb(255, 255, 255);
+}

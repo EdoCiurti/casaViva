@@ -29,6 +29,7 @@ const ProductsPage = () => {
     const [wishlist, setWishlist] = useState([]); // Stato per la wishlist
     const [theme, setTheme] = useState(""); // "light" o "dark"
     const [mainImage, setMainImage] = useState(null);
+    const [hoveredCategory, setHoveredCategory] = useState(null);
 
 
     const handleShowQRModal = () => setShowQRModal(true);
@@ -218,11 +219,30 @@ const ProductsPage = () => {
 
     const handleScroll = (direction, increment = itemsPerView) => {
         setCurrentIndex((prev) => {
-            if (direction === "right") {
-                return Math.min(prev + increment, selectedCategory ? filteredProducts.length - itemsPerView : categories.length - itemsPerView);
-            } else {
-                return Math.max(prev - increment, 0);
+            const newIndex =
+                direction === "right"
+                    ? Math.min(
+                          prev + increment,
+                          selectedCategory
+                              ? filteredProducts.length - itemsPerView
+                              : categories.length - itemsPerView
+                      )
+                    : Math.max(prev - increment, 0);
+    
+            // Evidenzia la card centrale
+            const container = document.querySelector(".categories-wrapper");
+            if (container) {
+                const cards = Array.from(container.children);
+                cards.forEach((card, index) => {
+                    if (index === newIndex) {
+                        card.classList.add("focused");
+                    } else {
+                        card.classList.remove("focused");
+                    }
+                });
             }
+    
+            return newIndex;
         });
     };
 
@@ -243,9 +263,12 @@ const ProductsPage = () => {
         setFilters((prev) => ({ ...prev, [name]: value }));
     };
 
-
+    const handleCategoryHover = (category) => {
+        setHoveredCategory(category);
+    };
 
     const handleCategoryClick = (category) => {
+        // Filtra i prodotti per la categoria selezionata
         setSelectedCategory(category);
         setFilters((prev) => ({ ...prev, category }));
         localStorage.setItem("selectedCategory", category);
@@ -257,6 +280,7 @@ const ProductsPage = () => {
         setFilters({ name: "", price: "", category: "", color: "", dimension: "" });
         setFilteredProducts(products);
         localStorage.removeItem("selectedCategory");
+        localStorage.removeItem("selectedProduct"); // 🔹 Rimuove il prodotto salvat
     };
 
     useEffect(() => {
@@ -269,18 +293,18 @@ const ProductsPage = () => {
         setViewMode(value);
     };
 
-
     const handleCardClick = async (product) => {
         setSelectedProduct(product);
         setMainImage(product.images[0]); // Imposta l'immagine principale
-        localStorage.setItem("selectedProduct", JSON.stringify(product));
+        localStorage.setItem("selectedProduct", JSON.stringify(product)); // Salva il prodotto selezionato nel localStorage
 
-        // Recupera immagini simili basate sulla descrizione del prodotto
-        const similarImages = await fetchSimilarImages(product.description);
+        // Recupera immagini da Google basate sulla descrizione del prodotto
+        // const googleImages = await fetchGoogleImages(product.description);
 
-        // Aggiungi le immagini simili alle immagini secondarie
-        const updatedImages = [...product.images, ...similarImages];
-        setSelectedProduct({ ...product, images: updatedImages });
+        // Aggiungi le immagini di Google alle immagini secondarie, se disponibili
+        // const updatedImages = [...product.images, ...googleImages];
+
+        // setSelectedProduct({ ...product, images: updatedImages });
 
         // Scorri verso la sezione dei dettagli
         if (detailsSectionRef.current) {
@@ -298,38 +322,32 @@ const ProductsPage = () => {
     }, []);
 
 
+
     const handleClosePopup = () => {
         setShowPopup(false);
-        setSelectedProduct(null);
+        setSelectedProduct(null); // Resetta il prodotto selezionato
         localStorage.removeItem("selectedProduct");
     };
 
-    const fetchSimilarImages = async (description) => {
-        try {
-            // Estrai parole chiave dalla descrizione
-            const keywords = description
-                .toLowerCase()
-                .split(" ")
-                .filter((word) => word.length > 3) // Usa solo parole significative
-                .slice(0, 5) // Limita a 5 parole chiave
-                .join(" ");
+    // const fetchGoogleImages = async (description) => {
+    //     try {
+    //         const response = await axios.get("https://www.googleapis.com/customsearch/v1", {
+    //             params: {
+    //                 q: description, // Query basata sulla descrizione del prodotto
+    //                 searchType: "image", // Cerca solo immagini
+    //                 cx: "26fd197d4bac947f6", // Sostituisci con il tuo ID del motore di ricerca
+    //                 key: "AIzaSyB5S5rU7-YvS35aklX3HpzU4XU_NCKTN0c", // Sostituisci con la tua chiave API
+    //                 num: 3, // Ottieni fino a 3 immagini
+    //             },
+    //         });
 
-            const response = await axios.get("https://api.unsplash.com/search/photos", {
-                params: {
-                    query: keywords, // Usa le parole chiave come query
-                    per_page: 3, // Numero di immagini da ottenere
-                },
-                headers: {
-                    Authorization: `Client-ID Zadm82JMaTyQawRZ05DoTAH8omkLuYY7fd-awLH_ffo`, // Sostituisci con la tua chiave API
-                },
-            });
-
-            return response.data.results.map((image) => image.urls.small); // Restituisce le URL delle immagini
-        } catch (error) {
-            console.error("Errore nel recupero delle immagini simili", error);
-            return [];
-        }
-    };
+    //         // Restituisci gli URL delle immagini
+    //         return response.data.items.map((item) => item.link).slice(0, 3);
+    //     } catch (error) {
+    //         console.error("Errore nel recupero delle immagini da Google", error);
+    //         return [];
+    //     }
+    // };
 
     const addToWishlist = async (productId) => {
         const token = localStorage.getItem("token");
@@ -419,9 +437,7 @@ const ProductsPage = () => {
                 }`}
             style={{ zIndex: 0 }}
         >
-            <h1 className="products-title mb-4" style={{ fontWeight: 'bold' }}>
-                I nostri prodotti
-            </h1>
+
             {selectedCategory && (
                 <Form className="mb-4">
                     <Row>
@@ -541,8 +557,8 @@ const ProductsPage = () => {
                                                     alt={`Immagine secondaria ${index + 1}`}
                                                     className="img-thumbnail mx-2"
                                                     style={{
-                                                        maxHeight: "150px", // Riduci l'altezza massima per evitare che escano
-                                                        maxWidth: "150px", // Riduci la larghezza massima
+                                                        maxHeight: "100px", // Altezza massima ridotta
+                                                        maxWidth: "100px", // Larghezza massima ridotta
                                                         objectFit: "cover",
                                                         cursor: "pointer",
                                                         border: mainImage === image ? "3px solid blue" : "2px solid #ddd",
@@ -665,7 +681,34 @@ const ProductsPage = () => {
                     Torna alle categorie
                 </Button>
             )}
-
+            {/* Bottoni per cambiare modalità di visualizzazione */}
+            {!selectedProduct && (
+                <div className="view-mode-toggle mb-4">
+                    <ToggleButtonGroup
+                        type="radio"
+                        name="viewMode"
+                        value={viewMode}
+                        onChange={handleViewModeChange}
+                    >
+                        <ToggleButton
+                            id="grid-view"
+                            value="grid"
+                            variant={"dark"}
+                            style={{ border: "2px solid #343a40" }}
+                        >
+                            Griglia
+                        </ToggleButton>
+                        <ToggleButton
+                            id="scroll-view"
+                            value="scroll"
+                            variant={"dark"}
+                            style={{ border: "2px solid #343a40" }}
+                        >
+                            Scorrimento
+                        </ToggleButton>
+                    </ToggleButtonGroup>
+                </div>
+            )}
             {selectedCategory ? (
                 <>
                     {filteredProducts.length === 0 ? (
@@ -837,63 +880,53 @@ const ProductsPage = () => {
                             opacity: currentIndex === 0 ? 0.5 : 1,
                         }}
                     />
-                    <div
-                        className="d-flex align-items-center overflow-hidden position-relative"
-                        style={{ maxWidth: "100%", cursor: "grab" }}
-                        onWheel={(e) => handleScroll(e.deltaY > 0 ? "right" : "left")}
-                    >
+                    <div className="categories-container" onWheel={(e) => handleScroll(e.deltaY > 0 ? "right" : "left")}>
                         <motion.div
-                            className="d-flex"
-                            style={{ display: "flex", gap: "20px" }}
+                            className="categories-wrapper"
                             animate={{ x: -currentIndex * 320 }}
                             transition={{ type: "spring", stiffness: 100, damping: 20 }}
                             drag="x"
                             dragConstraints={{ left: -((categories.length - itemsPerView) * 320), right: 0 }}
-                            onDragEnd={handleDragEnd}
                         >
                             {categories.map((category, index) => (
                                 <motion.div
                                     key={index}
                                     className="category-card"
-                                    initial={{ opacity: 1, scale: 0.9 }}
                                     animate={{
                                         opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
                                         scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
                                     }}
                                     transition={{ duration: 0.5 }}
-                                    onClick={() => handleCategoryClick(category, index)}
+                                    onClick={() => setCurrentIndex(index)}
+                                    whileHover={{ scale: 1.05 }}
                                 >
-                                    <Card
-                                        className="shadow-lg"
-                                        style={{ borderRadius: "15px", overflow: "hidden", width: "300px", height: "200px", cursor: "pointer", backgroundColor: "#f0f0f0" }}
-                                    >
+                                    {/* filepath: c:\Users\edocu\Desktop\casaViva\frontend\src\pages\ProductsPage.jsx */}
+                                    <Card className="glowing-card" style={{ height: "300px", overflow: "hidden", position: "relative" }}>
                                         <Card.Img
                                             variant="top"
                                             src={categoryImages[category]}
                                             alt={category}
-                                            style={{ height: "150px", objectFit: "cover" }}
+                                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
                                         />
-                                        <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
-                                            <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>{category.replace(/-/g, ' ')}</Card.Title>
-                                        </Card.Body>
+                                        <Card.Title className="card-title-overlay">{category}</Card.Title>
                                     </Card>
                                 </motion.div>
                             ))}
                         </motion.div>
+                        <FaArrowRight
+                            className="arrow-icon position-absolute"
+                            onClick={() => handleScroll("right")}
+                            style={{
+                                cursor: currentIndex >= categories.length - itemsPerView ? "default" : "pointer",
+                                fontSize: "2rem",
+                                right: "10px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                zIndex: 1,
+                                opacity: currentIndex >= categories.length - itemsPerView ? 0.5 : 1,
+                            }}
+                        />
                     </div>
-                    <FaArrowRight
-                        className="arrow-icon position-absolute"
-                        onClick={() => handleScroll("right")}
-                        style={{
-                            cursor: currentIndex >= categories.length - itemsPerView ? "default" : "pointer",
-                            fontSize: "2rem",
-                            right: "10px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            zIndex: 1,
-                            opacity: currentIndex >= categories.length - itemsPerView ? 0.5 : 1,
-                        }}
-                    />
                 </>
             )}
             <ToastContainer />
