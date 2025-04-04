@@ -901,7 +901,7 @@ const ProductsPage = () => {
                                     whileHover={{ scale: 1.05 }}
                                 >
                                     {/* filepath: c:\Users\edocu\Desktop\casaViva\frontend\src\pages\ProductsPage.jsx */}
-                                    <Card className="glowing-card" style={{ height: "300px", overflow: "hidden", position: "relative" }}>
+                                    <Card className="glowing-card" style={{ height: "300px", overflow: "hidden", position: "relative" }} onClick={() => handleCategoryClick(category)}>
                                         <Card.Img
                                             variant="top"
                                             src={categoryImages[category]}
