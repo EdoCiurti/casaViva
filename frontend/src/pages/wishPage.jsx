@@ -238,9 +238,9 @@ const WishlistPage = () => {
           variant="success"
           size="lg"
           className="shadow-sm"
-          onClick={() => navigate("/products")}
+          onClick={() => navigate("/", { state: { scrollToProducts: true } })}
         >
-          🛒 Vai ai Prodotti
+          🛒 Torna ai Prodotti
         </Button>
       </div>
 

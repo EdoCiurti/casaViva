@@ -11,6 +11,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useRef } from "react"; // Importa useRef
+import QRCode from "qrcode";
 
 
 
@@ -1159,6 +1160,17 @@ const ProductsPage = () => {
     );
 };
 
+const generateQRCode = (url) => {
+  let qrCodeDataURL = "";
+  QRCode.toDataURL(url, { width: 150, margin: 2 }, (err, url) => {
+    if (err) {
+      console.error("Errore nella generazione del QR Code:", err);
+      return;
+    }
+    qrCodeDataURL = url;
+  });
+  return qrCodeDataURL;
+};
 
 
 export default ProductsPage;

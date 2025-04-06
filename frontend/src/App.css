@@ -9,6 +9,7 @@ body {
   background-color: #ffffff; /* Light background */
   color: #000000; /* Dark text color */
 }
+
 .dark-mode-card {
   background-color: transparent; /* Rimuove lo sfondo */
 }
@@ -216,7 +217,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: #212529; /* Dark background */
+  background-color: #ff0000; /* Dark background */
   color: #ffffff; /* Light text color */
 }
 
@@ -762,4 +763,96 @@ footer.dark-mode .footer {
 .arrow-icon:hover {
   color: cyan;
   text-shadow: 0px 0px 10px rgb(255, 255, 255);
+}
+/* Rimuovi bordi indesiderati */
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Centra il contenuto */
+.container-fluid {
+  padding: 0;
+  margin: 0 auto;
+  max-width: 1200px;
+}
+
+/* Card delle categorie */
+.card {
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+/* Pulsanti */
+button {
+  border-radius: 5px;
+}
+
+/* Stile per il contenitore dei filtri */
+.filters-container {
+  background-color: #2c2f33;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Stile per le etichette dei filtri */
+.filter-label {
+  color: #ffffff;
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+}
+
+/* Stile per gli input dei filtri */
+.filter-input {
+  background-color: #343a40;
+  color: #ffffff;
+  border: 1px solid #495057;
+  border-radius: 5px;
+  padding: 10px;
+  transition: border-color 0.3s ease-in-out;
+}
+
+.filter-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Stile per il checkbox */
+.filter-checkbox {
+  accent-color: #007bff;
+}
+
+/* Stile per il range di prezzo */
+.price-range {
+  display: flex;
+  justify-content: space-between;
+  color: #ffffff;
+  margin-top: 10px;
+}
+
+/* Stile per i pulsanti */
+.filter-toggle-btn,
+.reset-filters-btn {
+  font-size: 1rem;
+  padding: 10px 20px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.filter-toggle-btn:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+.reset-filters-btn:hover {
+  background-color: #c82333;
+  transform: scale(1.05);
 }
