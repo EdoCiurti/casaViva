@@ -856,3 +856,22 @@ button {
   background-color: #c82333;
   transform: scale(1.05);
 }
+
+.category-card {
+  width: 100px;
+  height: 100px;
+}
+
+@media (min-width: 768px) {
+  .category-card {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 767px) {
+  .category-card {
+    width: 100px;
+    height: 100px;
+  }
+}

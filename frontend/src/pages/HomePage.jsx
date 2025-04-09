@@ -28,7 +28,7 @@ const HomePage = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [filters, setFilters] = useState({ name: "", price: [0, 10000], color: "", has3D: false, categories: [] });
   const [visibleProducts, setVisibleProducts] = useState(9);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState(null); // Per i dettagli del prodotto
   const [wishlist, setWishlist] = useState([]);
@@ -383,7 +383,7 @@ const toggleWishlist = async (productId) => {
                   </Col>
                   <Col md={10}>
                     <div className="d-flex justify-content-center">
-                      {categories.slice(currentCategoryIndex, currentCategoryIndex + 5).map((category) => (
+                      {categories.slice(currentCategoryIndex, currentCategoryIndex + 3).map((category) => (
                         <div
                           key={category}
                           className="text-center mx-2 category-card"
