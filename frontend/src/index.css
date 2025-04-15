@@ -48,6 +48,7 @@ body {
   z-index: 1000;
 }
 
+
 .theme-toggle button {
   background: none;
   border: none;
@@ -61,8 +62,33 @@ body {
   transform: scale(1.2);
 }
 
+
 .theme-toggle button:focus {
   outline: none;
+}
+.dark-mode {
+  background-color: #212529 !important;
+  color: #ffffff !important;
+}
+
+.light-mode {
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
+}
+
+
+.category-title {
+  text-shadow: 0px 0px 4px rgba(0, 0, 0, 1); /* Aggiunge un'ombra nera */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: center;
+  opacity: 1;
+  transition: opacity 0.3s ease;
 }
 
 main {
@@ -102,6 +128,11 @@ footer.dark-mode .footer {
     opacity: 0;
   }
   to {
+
+
+
+
+    
     transform: translateY(0);
     opacity: 1;
   }

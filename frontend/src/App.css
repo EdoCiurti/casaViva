@@ -4,6 +4,16 @@ body {
   margin: 0;
   padding: 0;
 }
+.dark-mode {
+  background-color: #212529 !important;
+  color: #ffffff !important;
+}
+
+.light-mode {
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
+}
+
 
 .light-mode {
   background-color: #ffffff; /* Light background */
@@ -568,7 +578,16 @@ footer.dark-mode .footer {
   transition: transform 0.3s ease-in-out;
   color: inherit;
 }
+/* Stile per il nome delle categorie */
+.category-title {
+  opacity: 1; /* Mostra il nome di default */
+  transition: opacity 0.3s ease-in-out; /* Transizione fluida */
+}
 
+/* Nascondi il nome quando passi sopra con il mouse */
+.category-card:hover .category-title {
+  opacity: 0; /* Nascondi il nome */
+}
 .theme-button:hover {
   transform: rotate(20deg);
 }
@@ -582,17 +601,6 @@ footer.dark-mode .footer {
   }
   100% {
       transform: scale(1);
-  }
-}
-@keyframes ledPulse {
-  0% {
-    box-shadow: 0 0 10px rgb(248, 248, 248), 0 0 30px rgba(255, 255, 255, 0.3), 0 0 50px rgba(255, 255, 255, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 20px rgb(248, 248, 248), 0 0 40px rgba(255, 255, 255, 0.5), 0 0 60px rgba(255, 255, 255, 0.3);
-  }
-  100% {
-    box-shadow: 0 0 10px rgb(248, 248, 248), 0 0 30px rgba(255, 255, 255, 0.3), 0 0 50px rgba(255, 255, 255, 0.2);
   }
 }
 
@@ -614,9 +622,6 @@ footer.dark-mode .footer {
 
 .similar-images img:hover {
   transform: scale(1.1); /* Effetto zoom al passaggio del mouse */
-}
-.led-effect {
-  animation: ledPulse 2s infinite; /* Durata di 2 secondi, ripetizione infinita */
 }
 
 .pulse-animation {
@@ -662,13 +667,54 @@ footer.dark-mode .footer {
   position: relative;
   max-width: 100%;
   cursor: grab;
+  scroll-behavior: smooth; /* Aggiunge uno scorrimento fluido */
 }
 
 /* Wrapper con animazione */
 .categories-wrapper {
   display: flex;
   gap: 30px;
+  transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); /* Animazione fluida */
 }
+
+/* Card delle categorie */
+.category-card {
+  width: 150px;
+  height: 150px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transizione per l'effetto hover */
+}
+
+.category-card:hover {
+  transform: scale(1.1); /* Ingrandisce leggermente al passaggio del mouse */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Ombra per effetto di profondità */
+}
+
+/* Frecce */
+.arrow-icon {
+  font-size: 2rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  cursor: pointer;
+  transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+.arrow-icon.left {
+  left: -50px;
+}
+
+.arrow-icon.right {
+  right: -50px;
+}
+
+.arrow-icon:hover {
+  transform: translateY(-50%) scale(1.2); /* Ingrandisce leggermente al passaggio del mouse */
+  color: cyan; /* Cambia colore al passaggio del mouse */
+  text-shadow: 0px 0px 10px rgba(0, 255, 255, 0.8); /* Aggiunge un'ombra luminosa */
+}
+
 .card-title-overlay {
   position: absolute;
   bottom: 10px; /* Posiziona il titolo in basso */
@@ -837,19 +883,61 @@ button {
   color: #ffffff;
   margin-top: 10px;
 }
+.reset-filters-btn{
+  margin-bottom: 50px;
+}
+/* Consolidamento delle regole per dark mode */
+.dark-mode {
+  background-color: #212529; /* Sfondo scuro */
+  color: #ffffff; /* Testo bianco */
+}
+
+
+/* Regole per le card */
+.dark-mode .card {
+  background-color: #343a40; /* Sfondo grigio scuro */
+  color: #ffffff; /* Testo bianco */
+}
+
+/* Regole per i dettagli del prodotto */
+.dark-mode .product-details-section,
+.dark-mode .details-content {
+  background-color: #212529; /* Sfondo scuro */
+  color: #ffffff; /* Testo bianco */
+}
+
+/* Regole per i pulsanti */
+.dark-mode button {
+  background-color: #ffffff; /* Sfondo grigio scuro */
+  color: #212529; /* Testo bianco */
+}
+
+/* Regole per i link */
+.dark-mode a {
+  color: #ffffff; /* Testo bianco */
+  text-decoration: none;
+}
+
+.dark-mode a:hover {
+  text-decoration: underline;
+}
+
+
+
 
 /* Stile per i pulsanti */
 .filter-toggle-btn,
 .reset-filters-btn {
+  margin-top: -30px;
   font-size: 1rem;
-  padding: 10px 20px;
   border-radius: 5px;
   transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
 }
 
 .filter-toggle-btn:hover {
-  background-color: #0056b3;
-  transform: scale(1.05);
+  background-color: #f8f9fa; /* Light background on hover */
+  color: #212529; /* Dark text color on hover */
+  border-radius: 4px;
 }
 
 .reset-filters-btn:hover {
@@ -875,3 +963,220 @@ button {
     height: 100px;
   }
 }
+
+
+
+
+/* Contenitore del pop-up */
+.chat-popup-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* Bottone per aprire la chat */
+.chat-popup-button {
+  display: flex;
+  align-items: center;
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  padding: 10px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.chat-popup-button:hover {
+  transform: scale(1.05);
+  background-color: var(--button-hover-bg-color);
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+/* Finestra della chat */
+.chat-popup {
+  width: 300px;
+  background-color: var(--popup-bg-color);
+  color: var(--popup-text-color);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header della chat */
+.chat-header {
+  background-color: var(--header-bg-color);
+  color: var(--header-text-color);
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header h4 {
+  margin: 0;
+}
+
+.close-chat-btn {
+  background: none;
+  border: none;
+  color: var(--header-text-color);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+/* Corpo della chat */
+.chat-body {
+  padding: 15px;
+  font-size: 0.9rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.chat-body p {
+  margin-bottom: 10px;
+}
+
+.chat-body ul {
+  list-style: none;
+  padding: 0;
+}
+
+.chat-body ul li {
+  padding: 10px;
+  background-color: var(--list-item-bg-color);
+  margin-bottom: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.chat-body ul li:hover {
+  background-color: var(--list-item-hover-bg-color);
+  color: var(--list-item-hover-text-color);
+}
+
+/* Footer della chat */
+.chat-footer {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid var(--footer-border-color);
+}
+
+.chat-footer input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--input-border-color);
+  border-radius: 5px;
+  margin-right: 10px;
+  background-color: var(--input-bg-color);
+  color: var(--input-text-color);
+}
+
+.chat-footer button {
+  padding: 10px 15px;
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.chat-footer button:hover {
+  background-color: var(--button-hover-bg-color);
+}
+
+.chat-footer button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Messaggi */
+.chat-message {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.user-message {
+  background-color: var(--user-message-bg-color);
+  color: var(--user-message-text-color);
+  align-self: flex-end;
+}
+
+.ai-message {
+  background-color: var(--ai-message-bg-color);
+  color: var(--ai-message-text-color);
+  align-self: flex-start;
+}
+
+
+/* Modalità chiara */
+.light-mode {
+  --button-bg-color: #007bff;
+  --button-text-color: #fff;
+  --button-hover-bg-color: #0056b3;
+  --popup-bg-color: #fff;
+  --popup-text-color: #000;
+  --header-bg-color: #007bff;
+  --header-text-color: #fff;
+  --list-item-bg-color: #f8f9fa;
+  --list-item-hover-bg-color: #007bff;
+  --list-item-hover-text-color: #fff;
+  --footer-border-color: #ddd;
+  --input-border-color: #ddd;
+  --input-bg-color: #fff;
+  --input-text-color: #000;
+  --user-message-bg-color: #007bff;
+  --user-message-text-color: #fff;
+  --ai-message-bg-color: #f1f1f1;
+  --ai-message-text-color: #000;
+}
+
+/* Modalità scura */
+.dark-mode {
+  --button-bg-color: #444;
+  --button-text-color: #fff;
+  --button-hover-bg-color: #666;
+  --popup-bg-color: #333;
+  --popup-text-color: #fff;
+  --header-bg-color: #444;
+  --header-text-color: #fff;
+  --list-item-bg-color: #555;
+  --list-item-hover-bg-color: #007bff;
+  --list-item-hover-text-color: #fff;
+  --footer-border-color: #555;
+  --input-border-color: #555;
+  --input-bg-color: #444;
+  --input-text-color: #fff;
+  --user-message-bg-color: #007bff;
+  --user-message-text-color: #fff;
+  --ai-message-bg-color: #555;
+  --ai-message-text-color: #fff;
+}
+
+
+/* Evidenzia il prodotto cliccato */
+.highlighted-product {
+  animation: highlight 0.5s ease-in-out;
+}
+
+@keyframes highlight {
+  0% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+

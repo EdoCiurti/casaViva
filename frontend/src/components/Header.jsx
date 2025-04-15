@@ -49,7 +49,13 @@ const Header = () => {
       variant={darkMode ? "dark" : "light"}
       expand="lg"
       className="py-3"
-      style={{ width: '100%', position: 'fixed', top: 0, zIndex: 1 }}
+      style={{
+        width: '100%',
+        position: 'fixed',
+        top: 0,
+        zIndex: 1000, // Assicura che la navbar sia sopra tutto
+        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)', // Aggiungi un'ombra
+      }}
     >
       <Container>
         <Navbar.Brand as={Link} to="/" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
@@ -76,16 +82,16 @@ const Header = () => {
                 className="custom-dropdown"
                 style={{ fontSize: '1.2rem', borderRadius: '10px', overflow: 'show', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
               >
-                <NavDropdown.Item as={Link} to="/profile" className="custom-dropdown-item">
+                <NavDropdown.Item as={Link} to="/profile" className="custom-dropdown-item" style={{color: 'black'}}>
                   👤 Profilo
                 </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/cart" className="custom-dropdown-item">
+                <NavDropdown.Item as={Link} to="/cart" className="custom-dropdown-item" style={{color: 'black'}}>
                   🛒 Carrello
                 </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/wishlist" className="custom-dropdown-item"> {/* Aggiungi la wishlist */}
+                <NavDropdown.Item as={Link} to="/wishlist" className="custom-dropdown-item" style={{color: 'black'}}> {/* Aggiungi la wishlist */}
                   💖 Wishlist
                 </NavDropdown.Item>
-                <NavDropdown.Item onClick={handleLogout} className="custom-dropdown-item">
+                <NavDropdown.Item onClick={handleLogout} className="custom-dropdown-item" style={{color: 'black'}}>
                   🚪 Logout
                 </NavDropdown.Item>
               </NavDropdown>
