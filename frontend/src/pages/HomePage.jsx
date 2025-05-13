@@ -45,9 +45,9 @@ const HomePage = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-
   const productsSectionRef = useRef(null);
   const productRefs = useRef([]); // Array di riferimenti per i prodotti
+  const filtersContainerRef = useRef(null); // Aggiungi un ref alla sezione dei filtri
   const location = useLocation();
 
   const categoryImages = {
@@ -68,12 +68,15 @@ const HomePage = () => {
     "librerie": "https://www.garneroarredamenti.com/data/cat/img/1/113.png",
     "cucine-complete": "https://www.garneroarredamenti.com/data/cat/img/p/progetto-senza-titolo.png"
   };
+
   useEffect(() => {
     const handleScroll = () => {
-      const filtri = document.getElementById("filters-collapse");
-      if (filtri) {
-        const rect = filtri.getBoundingClientRect();
-        setShowScrollTop(rect.bottom < 0);
+      // Usa il riferimento invece di cercare l'elemento per ID
+      if (filtersContainerRef.current) {
+        const rect = filtersContainerRef.current.getBoundingClientRect();
+        const isScrolledPastFilters = rect.bottom < 0;
+        setShowScrollTop(isScrolledPastFilters);
+        console.log("Filtri container bottom:", rect.bottom, "ShowScrollTop:", isScrolledPastFilters);
       }
     };
 
@@ -250,7 +253,7 @@ const HomePage = () => {
     setVisibleProducts((prev) => prev + 9);
   };
 
-  const handleProductClick = (product, index) => {
+  const handleProductClick = async (product, index) => {
     setSelectedProduct(product); // Imposta il prodotto selezionato
     setMainImage(product.images[0]); // Imposta l'immagine principale
     setHighlightedProductId(product._id); // Evidenzia il prodotto cliccato
@@ -265,40 +268,40 @@ const HomePage = () => {
     localStorage.setItem("selectedProduct", JSON.stringify(product)); // Salva il prodotto selezionato nel localStorage 
 
     // // Recupera immagini da Google basate sulla descrizione del prodotto
-    // const googleImages = await fetchGoogleImages(product.description);
+    const googleImages = await fetchGoogleImages(product.description);
 
     // // Aggiungi le immagini di Google alle immagini secondarie, se disponibili
-    // const updatedImages = [...product.images, ...googleImages];
+    const updatedImages = [...product.images, ...googleImages];
 
-    // setSelectedProduct({ ...product, images: updatedImages });
+    setSelectedProduct({ ...product, images: updatedImages });
 
     // // Scorri verso la sezione dei dettagli
-    // if (detailsSectionRef.current) {
-    //   detailsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    // }
+    if (detailsSectionRef.current) {
+      detailsSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
 
 
-  // const fetchGoogleImages = async (description) => {
-  //       try {
-  //           const response = await axios.get("https://www.googleapis.com/customsearch/v1", {
-  //               params: {
-  //                   q: description, // Query basata sulla descrizione del prodotto
-  //                   searchType: "image", // Cerca solo immagini
-  //                   cx: "26fd197d4bac947f6", // Sostituisci con il tuo ID del motore di ricerca
-  //                   key: "AIzaSyB5S5rU7-YvS35aklX3HpzU4XU_NCKTN0c", // Sostituisci con la tua chiave API
-  //                   num: 3, // Ottieni fino a 3 immagini
-  //               },
-  //           });
+  const fetchGoogleImages = async (description) => {
+        try {
+            const response = await axios.get("https://www.googleapis.com/customsearch/v1", {
+                params: {
+                    q: description, // Query basata sulla descrizione del prodotto
+                    searchType: "image", // Cerca solo immagini
+                    cx: "26fd197d4bac947f6", // Sostituisci con il tuo ID del motore di ricerca
+                    key: "AIzaSyB5S5rU7-YvS35aklX3HpzU4XU_NCKTN0c", // Sostituisci con la tua chiave API
+                    num: 3, // Ottieni fino a 3 immagini
+                },
+            });
 
-  //           // Restituisci gli URL delle immagini
-  //           return response.data.items.map((item) => item.link).slice(0, 3);
-  //       } catch (error) {
-  //           console.error("Errore nel recupero delle immagini da Google", error);
-  //           return [];
-  //       }
-  //   };
+            // Restituisci gli URL delle immagini
+            return response.data.items.map((item) => item.link).slice(0, 3);
+        } catch (error) {
+            console.error("Errore nel recupero delle immagini da Google", error);
+            return [];
+        }
+    };
 
 
 
@@ -519,7 +522,7 @@ const HomePage = () => {
               {/* Colonna destra: Dettagli */}
               <Col md={6} className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"}`}>
                 <motion.div
-                  className="details-content text-center" // Rimuovi "led-effect" da qui
+                  className="details-content text-center"
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
@@ -541,7 +544,7 @@ const HomePage = () => {
                       fontSize: "1.5rem",
                       fontWeight: "bold",
                       cursor: "pointer",
-                      color: theme === "dark" ? "#fff" : "#000", // Cambia colore in base al tema
+                      color: theme === "dark" ? "#fff" : "#000",
                     }}
                   >
                     ✕
@@ -550,18 +553,50 @@ const HomePage = () => {
                   <p><strong>Prezzo:</strong> €{selectedProduct.price}</p>
                   <p><strong>Descrizione:</strong> {selectedProduct.description}</p>
                   <p><strong>Dettagli aggiuntivi:</strong> {selectedProduct.additionalDetails || "Non disponibili"}</p>
-                  <Button variant={theme === "dark" ? "light" : "dark"} onClick={() => addToCart(selectedProduct._id)}>
-                    Aggiungi al carrello
-                  </Button>
-                  <FaHeart
-                    size={24}
-                    color={wishlist.includes(selectedProduct._id) ? "red" : "gray"}
-                    style={{ cursor: "pointer" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleWishlist(selectedProduct._id);
-                    }}
-                  />
+                  
+                  {/* QR Codes per i modelli 3D */}
+                  {(selectedProduct.link3Dios || selectedProduct.link3Dandroid) && (
+                    <div className="qr-codes-container mt-4">
+                      <h5>Visualizza il modello 3D</h5>
+                      <div className="d-flex justify-content-center mt-3">
+                        {selectedProduct.link3Dios && (
+                          <div className="qr-code-item mx-3">
+                            <p><strong>iOS</strong></p>
+                            <img
+                              src={generateQRCode(selectedProduct.link3Dios)}
+                              alt="QR Code per iOS"
+                              style={{ width: 120, height: 120 }}
+                            />
+                          </div>
+                        )}
+                        {selectedProduct.link3Dandroid && (
+                          <div className="qr-code-item mx-3">
+                            <p><strong>Android</strong></p>
+                            <img
+                              src={generateQRCode(selectedProduct.link3Dandroid)}
+                              alt="QR Code per Android"
+                              style={{ width: 120, height: 120 }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-4">
+                    <Button variant={theme === "dark" ? "light" : "dark"} onClick={() => addToCart(selectedProduct._id)}>
+                      Aggiungi al carrello
+                    </Button>
+                    <FaHeart
+                      size={24}
+                      color={wishlist.includes(selectedProduct._id) ? "red" : "gray"}
+                      style={{ cursor: "pointer", marginLeft: "15px" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleWishlist(selectedProduct._id);
+                      }}
+                    />
+                  </div>
                 </motion.div>
               </Col>
             </Row>
@@ -580,10 +615,14 @@ const HomePage = () => {
             fontWeight: "bold",
           }}>Prodotti</h2>
           {/* Filters Section */}
-          <div style={{
-            backgroundColor: theme === "dark" ? "#212529" : "#fff", color: theme === "dark" ? "#fff" : "#000",
-            boxShadow: "10px 10px 5px rgba(0,0,0,0.5)",
-          }}>
+          <div 
+            ref={filtersContainerRef}
+            style={{
+              backgroundColor: theme === "dark" ? "#212529" : "#fff", 
+              color: theme === "dark" ? "#fff" : "#000",
+              boxShadow: "10px 10px 5px rgba(0,0,0,0.5)",
+            }}
+          >
             <Container fluid>
               <div className="text-center mb-3" >
                 <Button
@@ -596,7 +635,7 @@ const HomePage = () => {
                 >
                   <FaFilter /> Filtri
                 </Button>
-                {showFilters && ( // Mostra il bottone solo se showFilters è true
+                {showFilters && (
                   <Button
                     variant="danger"
                     style={{ marginBottom: "30px" }}
@@ -607,8 +646,12 @@ const HomePage = () => {
                   </Button>
                 )}
               </div>
-              <Collapse in={showFilters} ref={productsSectionRef} style={{ backgroundColor: theme === "dark" ? "#212529" : "#fff", color: theme === "dark" ? "#fff" : "#000" }}  >
-                <div id="filters-collapse" className="filters-container"  >
+              <Collapse 
+                in={showFilters} 
+                id="filtri"
+                style={{ backgroundColor: theme === "dark" ? "#212529" : "#fff", color: theme === "dark" ? "#fff" : "#000" }}
+              >
+                <div id="filters-collapse" className="filters-container">
                   <Form>
                     <Row className="gy-3">
                       <Col md={3}>
@@ -900,15 +943,15 @@ const HomePage = () => {
       {showScrollTop && (
   <button
     onClick={() => {
-      const filtri = document.getElementById("filters-collapse");
-      if (filtri) {
-        filtri.scrollIntoView({ behavior: "smooth" });
+      // Scorri all'intera sezione dei filtri, non solo all'elemento con id="filtri"
+      if (filtersContainerRef.current) {
+        filtersContainerRef.current.scrollIntoView({ behavior: "smooth" });
       }
     }}
     style={{
       position: "fixed",
       bottom: "20px",
-      left: "20px", // 👈 In basso a sinistra
+      left: "20px",
       zIndex: 1000,
       borderRadius: "50%",
       width: "50px",
@@ -920,7 +963,7 @@ const HomePage = () => {
       cursor: "pointer",
       boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
     }}
-    aria-label="Torna su"
+    aria-label="Torna ai filtri"
   >
     ↑
   </button>

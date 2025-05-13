@@ -7,10 +7,15 @@ const router = express.Router();
 // 🔥 Ottenere il carrello dell'utente
 router.get("/", authMiddleware, async (req, res) => {
     try {
+        console.log("Richiesta per ottenere il carrello dell'utente:", req.user);
         const cart = await Cart.findOne({ user: req.user.userId }).populate("products.product");
-        if (!cart) return res.json({ products: [] });
+        if (!cart) {
+            console.warn("Carrello non trovato per l'utente:", req.user.userId);
+            return res.json({ products: [] });
+        }
         res.json(cart);
     } catch (err) {
+        console.error("Errore durante il recupero del carrello:", err);
         res.status(500).json({ error: "Errore nel recupero del carrello" });
     }
 });

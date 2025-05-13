@@ -24,8 +24,13 @@ const CartPage = () => {
         });
   
         const cartData = response.data;
+        // Aggiunta di controllo per item.product
         const productsWithDetails = await Promise.all(
           cartData.products.map(async (item) => {
+            if (!item.product || !item.product._id) {
+              console.warn("Prodotto non trovato o non valido:", item);
+              return null; // Ignora prodotti non validi
+            }
             const productId = item.product._id;
             const productRes = await axios.get(
               `http://localhost:5000/api/products/${productId}`
@@ -33,9 +38,11 @@ const CartPage = () => {
             return { ...productRes.data, quantity: item.quantity, cartItemId: item._id };
           })
         );
-  
-        setCart(productsWithDetails);
-        const totalPrice = productsWithDetails.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+        // Filtra prodotti nulli
+        const validProducts = productsWithDetails.filter(item => item !== null);
+        setCart(validProducts);
+        const totalPrice = validProducts.reduce((sum, item) => sum + item.price * item.quantity, 0);
         setTotal(totalPrice);
       } catch (error) {
         console.error("Errore nel recupero del carrello:", error);

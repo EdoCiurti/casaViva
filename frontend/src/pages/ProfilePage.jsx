@@ -20,6 +20,7 @@ const ProfilePage = () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
+                    console.warn("Token non trovato, reindirizzamento al login.");
                     navigate('/login');
                     return;
                 }
@@ -33,15 +34,16 @@ const ProfilePage = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setOrders(ordersResponse.data);
-                setLoadingOrders(false); // Fine caricamento ordini
+                setLoadingOrders(false);
 
                 const cartResponse = await axios.get('http://localhost:5000/api/cart', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setCart(cartResponse.data);
-                setLoadingCart(false); // Fine caricamento carrello
+                setLoadingCart(false);
             } catch (error) {
-                console.error('Errore nel recupero dei dati del profilo', error);
+                console.error('Errore nel recupero dei dati del profilo:', error);
+                alert('Si è verificato un errore durante il caricamento dei dati. Riprova più tardi.');
                 setLoadingOrders(false);
                 setLoadingCart(false);
             }
@@ -125,7 +127,7 @@ const ProfilePage = () => {
                                     <ul>
                                         {cart.products.map(item => (
                                             <li key={item._id}>
-                                                {item.quantity} x {item.product.name} - €{item.product.price}
+                                                {item.quantity} x {item.product ? item.product.name : 'Prodotto non disponibile'} - €{item.product ? item.product.price : 'N/A'}
                                             </li>
                                         ))}
                                     </ul>

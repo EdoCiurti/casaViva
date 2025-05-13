@@ -42,31 +42,31 @@ const OrderPage = () => {
     };
   }, []);
 
-  // useEffect(() => {
-  //   const loadScript = (url, callback) => {
-  //     const script = document.createElement("script");
-  //     script.type = "text/javascript";
-  //     script.src = url;
-  //     script.onload = callback;
-  //     document.head.appendChild(script);
-  //   };
+  useEffect(() => {
+    const loadScript = (url, callback) => {
+      const script = document.createElement("script");
+      script.type = "text/javascript";
+      script.src = url;
+      script.onload = callback;
+      document.head.appendChild(script);
+    };
 
-  //   loadScript(`https://maps.googleapis.com/maps/api/js?key=AIzaSyBUSCdPDCz0xe58_cHSoQWU5zLy4lE_IqE&libraries=places`, () => {
-  //     const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-  //       types: ["address"],
-  //     });
+    loadScript(`https://maps.googleapis.com/maps/api/js?key=AIzaSyBUSCdPDCz0xe58_cHSoQWU5zLy4lE_IqE&libraries=places`, () => {
+      const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+        types: ["address"],
+      });
 
-  //     autocomplete.addListener("place_changed", () => {
-  //       const place = autocomplete.getPlace();
-  //       const address = place.formatted_address;
-  //       const city = place.address_components.find(component => component.types.includes("locality"))?.long_name || "";
-  //       const postalCode = place.address_components.find(component => component.types.includes("postal_code"))?.long_name || "";
-  //       const country = place.address_components.find(component => component.types.includes("country"))?.long_name || "";
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        const address = place.formatted_address;
+        const city = place.address_components.find(component => component.types.includes("locality"))?.long_name || "";
+        const postalCode = place.address_components.find(component => component.types.includes("postal_code"))?.long_name || "";
+        const country = place.address_components.find(component => component.types.includes("country"))?.long_name || "";
 
-  //       setShippingInfo({ address, city, postalCode, country });
-  //     });
-  //   });
-  // }, []);
+        setShippingInfo({ address, city, postalCode, country });
+      });
+    });
+  }, []);
 
   const createOrder = async () => {
     try {
