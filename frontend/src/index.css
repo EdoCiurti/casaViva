@@ -128,11 +128,6 @@ footer.dark-mode .footer {
     opacity: 0;
   }
   to {
-
-
-
-
-    
     transform: translateY(0);
     opacity: 1;
   }
@@ -217,4 +212,119 @@ footer.dark-mode .footer {
 
 .success-dark-text {
   color: #000000 !important; /* Black text color */
+}
+
+/* Aggiungi questi stili al tuo CSS globale */
+
+/* Effetti per le card dei prodotti */
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+.wishlist-icon:hover {
+  transform: scale(1.2);
+  color: #dc3545 !important;
+}
+
+.add-to-cart-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Stile migliorato per la sezione filtri */
+.filters-container {
+  padding: 20px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Transizioni fluide per tutti gli elementi */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Stile per le categorie */
+.category-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  color: white;
+  padding: 15px 10px 10px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.category-card:hover img {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* Da aggiungere al tuo file CSS globale */
+
+/* Styling per le categorie */
+.category-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+.category-card:hover img {
+  opacity: 1;
+}
+
+.category-title {
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 70%, transparent 100%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0px 1px 2px rgba(0,0,0,0.8);
+  font-size: 14px;
+}
+
+/* Animazioni più fluide per le card dei prodotti */
+.product-card {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Stilizzazione per i pulsanti principali */
+.btn-primary, .btn-dark, .btn-light {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.btn-primary:hover, .btn-dark:hover, .btn-light:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Miglioramento estetica dei filtri sempre aperti */
+.filters-container {
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(200,200,200,0.1);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* Miglioramento scorrimento categorie */
+.categories-container {
+  overflow: hidden;
+  margin: 20px 0;
+  position: relative;
+}
+/* Styles per i prodotti consigliati dall'IA */
+.recommendations-grid .recommendation-card:hover .recommendation-image {
+  transform: scale(1.05);
+}
+
+.recommendations-grid .view-details {
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+.recommendations-grid .recommendation-card:hover .view-details {
+  opacity: 1;
+  transform: translateX(3px);
 }
