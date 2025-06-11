@@ -14,6 +14,7 @@ import AdminHomePage from "./pages/AdminHomePage";
 import WishlistPage from "./pages/wishPage"; // Importa la pagina della wishlist
 import Footer from "./components/Footer";
 import "./App.css";
+import "./glassmorphism.css";
 
 function App() {
   const location = useLocation();
@@ -29,7 +30,6 @@ function App() {
       window.removeEventListener("darkModeToggle", handleDarkModeToggle);
     };
   }, []);
-
   return (
     <motion.div
       key={darkMode} // Permette l'animazione tra light/dark mode
@@ -37,7 +37,7 @@ function App() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4, ease: "easeInOut" }}
-      className={darkMode ? "dark-mode" : "light-mode"}
+      className={`glassmorphism-background ${darkMode ? "dark-mode" : "light-mode"}`}
       style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
     >
       <Layout>

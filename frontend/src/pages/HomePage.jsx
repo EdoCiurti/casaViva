@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Container, Button, Card, Row, Col, Form, Collapse } from "react-bootstrap";
-import { FaHeart, FaFilter, FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaHeart, FaFilter, FaArrowLeft, FaArrowRight, FaSearch } from "react-icons/fa";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
@@ -17,11 +17,9 @@ import { analyzeImage, generateRecommendations as generateAIRecommendations } fr
 import { generateRecommendations, findMatchingProducts, generateProductReason } from '../services/furnitureRecommendationService';
 
 const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProducts, handleProductRecommendationClick }) => {
-  const [step, setStep] = useState(1); 
-  const [uploadedImage, setUploadedImage] = useState(null);
+  const [step, setStep] = useState(1);   const [uploadedImage, setUploadedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageElement, setImageElement] = useState(null);
-  const [requirements, setRequirements] = useState("");
   const [furnitureType, setFurnitureType] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
@@ -52,10 +50,9 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
       reader.readAsDataURL(file);
     }
   };
-
   // Gestione invio richiesta
   const handleSubmit = async () => {
-    if (!uploadedImage || !furnitureType || !requirements) {
+    if (!uploadedImage || !furnitureType) {
       toast.error("Completa tutti i campi prima di continuare", {
         position: "top-right",
         autoClose: 3000,
@@ -67,25 +64,21 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
     setIsLoading(true);
     setProcessingStage("Caricamento dell'immagine...");
 
-    try {
-      // Prepara i dati per l'invio
+    try {      // Prepara i dati per l'invio
       const formData = new FormData();
       formData.append('image', uploadedImage);
       formData.append('furnitureType', furnitureType);
-      formData.append('requirements', requirements);
-
-      // Estrai esplicitamente colori e tipi dai requisiti dell'utente
-      const userColorRequirements = extractKeywordsByCategory(requirements, 'colors');
-      const userTypeRequirements = extractKeywordsByCategory(requirements, 'types');
+      formData.append('requirements', ''); // Empty requirements since we now rely on color detection      // Since requirements field is removed, we don't extract explicit color requirements from user text
+      // The system now relies entirely on color detection from the image
+      const userColorRequirements = [];
+      const userTypeRequirements = [];
       
       console.log("Requisiti colore rilevati:", userColorRequirements);
       console.log("Requisiti tipo rilevati:", userTypeRequirements);
       
       // Aggiungi questi parametri all'API call
       formData.append('explicitColors', JSON.stringify(userColorRequirements));
-      formData.append('explicitTypes', JSON.stringify(userTypeRequirements));
-
-      // Analisi dell'immagine lato client
+      formData.append('explicitTypes', JSON.stringify(userTypeRequirements));      // Analisi dell'immagine lato client
       setProcessingStage("Analisi dei colori e dello stile della stanza...");
       
       // Verifica che l'elemento immagine sia pronto
@@ -93,12 +86,12 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
         throw new Error("L'elemento immagine non è valido o non è ancora caricato completamente");
       }
       
-      // Genera analisi e raccomandazioni reali basate sull'immagine
-      const styleAnalysis = await generateRecommendations(
-        imageElement,
-        furnitureType,
-        requirements
-      );
+      // Estrai i colori dominanti dall'immagine
+      const detectedColors = extractColorsFromImage(imageElement);
+      console.log("Colori rilevati dall'immagine:", detectedColors);
+      
+      // Aggiungi i colori rilevati ai dati del form
+      formData.append('detectedColors', JSON.stringify(detectedColors.map(color => color.hex)));
       
       setProcessingStage("Ricerca dei prodotti più adatti...");
       
@@ -108,11 +101,39 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
           'Content-Type': 'multipart/form-data',
         },
       });
-      
-      // Aggiungi controlli di sicurezza
+        // Aggiungi controlli di sicurezza e gestisci la risposta del backend
       const productList = response.data?.products || [];
+      const backendMessage = response.data?.message || null;
       
-      // Filtra i prodotti per rispettare i requisiti ESPLICITI dell'utente
+      console.log(`Ricevuti ${productList.length} prodotti dal backend`);
+      
+      // Se il backend ha restituito un messaggio (es. "no products available")
+      if (backendMessage && productList.length === 0) {
+        console.log("Messaggio dal backend:", backendMessage);
+        
+        // Mostra i risultati dell'analisi ma senza prodotti
+        setRecommendations([]);
+        setAnalysisData({
+          colorPalette: detectedColors.map(color => color.hex),
+          detectedColors: detectedColors,
+          keyFeatures: [],
+          roomStyle: "Analisi basata sui colori",
+          styleDescription: `Colori dominanti rilevati: ${detectedColors.slice(0, 3).map(c => c.name).join(', ')}`,
+          noProductsMessage: backendMessage // Aggiungi il messaggio del backend
+        });
+        setStep(3);
+
+        // Mostra un toast informativo invece di successo
+        toast.info(backendMessage, {
+          position: "top-right",
+          autoClose: 5000,
+          theme: "colored",
+        });
+        
+        return; // Esce dalla funzione
+      }
+      
+      // Filtra i prodotti per rispettare i requisiti ESPLICITI dell'utente (filtro aggiuntivo frontend)
       const matchingProducts = productList.filter(product => {
         const productText = `${product.name} ${product.description} ${product.color || ''}`
           .toLowerCase();
@@ -133,27 +154,42 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
         return true;
       });
       
-      console.log(`Trovati ${matchingProducts.length} prodotti che corrispondono esattamente ai requisiti`);
+      console.log(`Dopo filtro frontend: ${matchingProducts.length} prodotti che corrispondono esattamente ai requisiti`);
       
-      // Genera raccomandazioni personalizzate per ogni prodotto
-      const productRecommendations = productList.length > 0 
-        ? productList.slice(0, 5).map(product => ({
+      // Genera raccomandazioni personalizzate per ogni prodotto usando i colori rilevati
+      const productRecommendations = matchingProducts.length > 0 
+        ? matchingProducts.slice(0, 5).map(product => ({
             ...product,
-            reason: generateProductReason(product, styleAnalysis, furnitureType),
+            reason: generateProductReason(product, { detectedColors }, furnitureType),
             matchScore: product.compatibilityScore || 100
           }))
         : [];
 
       // Mostra i risultati
       setRecommendations(productRecommendations);
-      setAnalysisData(styleAnalysis);
+      setAnalysisData({
+        colorPalette: detectedColors.map(color => color.hex),
+        detectedColors: detectedColors,
+        keyFeatures: [],
+        roomStyle: "Analisi basata sui colori",
+        styleDescription: `Colori dominanti rilevati: ${detectedColors.slice(0, 3).map(c => c.name).join(', ')}`
+      });
       setStep(3);
 
-      toast.success("Suggerimenti generati con successo!", {
-        position: "top-right",
-        autoClose: 3000,
-        theme: "colored",
-      });
+      // Toast di successo solo se ci sono prodotti
+      if (productRecommendations.length > 0) {
+        toast.success(`Trovati ${productRecommendations.length} prodotti perfetti per la tua stanza!`, {
+          position: "top-right",
+          autoClose: 3000,
+          theme: "colored",
+        });
+      } else {
+        toast.warning("Analisi completata, ma nessun prodotto corrisponde perfettamente ai tuoi criteri specifici.", {
+          position: "top-right",
+          autoClose: 5000,
+          theme: "colored",
+        });
+      }
     } catch (error) {
       console.error("Errore durante l'elaborazione della richiesta:", error);
       toast.error("Errore durante l'elaborazione. Riprova più tardi.", {
@@ -168,7 +204,114 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
       setProcessingStage("");
     }
   };
+  // Funzione per estrarre i colori dominanti dall'immagine con algoritmo migliorato
+  const extractColorsFromImage = (imageElement) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Ridimensiona per performance migliori ma mantieni qualità sufficiente
+    const targetWidth = 300;
+    const targetHeight = (imageElement.height / imageElement.width) * targetWidth;
+    
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    
+    // Disegna l'immagine sul canvas
+    ctx.drawImage(imageElement, 0, 0, targetWidth, targetHeight);
+    
+    // Estrai i dati dei pixel
+    const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+    const data = imageData.data;
+    
+    // Conta i colori con campionamento più denso per migliore accuratezza
+    const colorCount = {};
+    const step = 8; // Campiona ogni 8 pixel (ridotto da 16)
+    
+    console.log(`Analizzando ${data.length / 4} pixel totali, campionando ogni ${step}`);
+    
+    for (let i = 0; i < data.length; i += step * 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      
+      // Ignora pixel trasparenti o quasi trasparenti
+      if (a < 128) continue;
+      
+      // Ignora pixel troppo chiari o troppo scuri per evitare rumore
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      if (luminance > 0.95 || luminance < 0.05) continue;
+      
+      // Raggruppa colori simili con granularità più fine per rossi
+      let groupedR, groupedG, groupedB;
+      
+      // Per i rossi, usa granularità più fine
+      if (r > Math.max(g, b) * 1.1) {
+        groupedR = Math.floor(r / 16) * 16;
+        groupedG = Math.floor(g / 20) * 20;
+        groupedB = Math.floor(b / 20) * 20;
+      } else {
+        groupedR = Math.floor(r / 24) * 24;
+        groupedG = Math.floor(g / 24) * 24;
+        groupedB = Math.floor(b / 24) * 24;
+      }
+      
+      const colorKey = `${groupedR},${groupedG},${groupedB}`;
+      colorCount[colorKey] = (colorCount[colorKey] || 0) + 1;
+    }
+    
+    console.log(`Trovati ${Object.keys(colorCount).length} colori unici`);
+    
+    // Ordina per frequenza e prendi i primi 10 colori per migliore analisi
+    const sortedColors = Object.entries(colorCount)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10)
+      .map(([color, count]) => {
+        const [r, g, b] = color.split(',').map(Number);
+        const hex = rgbToHex(r, g, b);
+        const name = getColorName(hex);
+        
+        console.log(`Colore estratto: ${hex} (${name}) - frequenza: ${count}`);
+        
+        return {
+          rgb: `rgb(${r}, ${g}, ${b})`,
+          hex,
+          count,
+          name
+        };
+      });
+    
+    // Filtra i colori per rimuovere duplicati molto simili e prioritizzare i rossi
+    const uniqueColors = [];
+    const seenNames = new Set();
+    
+    // Prima passa: aggiungi colori non neutri
+    for (const color of sortedColors) {
+      if (!seenNames.has(color.name) && color.name !== 'neutro') {
+        uniqueColors.push(color);
+        seenNames.add(color.name);
+        
+        if (uniqueColors.length >= 6) break;
+      }
+    }
+    
+    // Seconda passa: aggiungi neutri se necessario
+    for (const color of sortedColors) {
+      if (!seenNames.has(color.name) && uniqueColors.length < 8) {
+        uniqueColors.push(color);
+        seenNames.add(color.name);
+      }
+    }
+    
+    console.log('Colori finali estratti:', uniqueColors.map(c => `${c.name} (${c.hex})`));
+    
+    return uniqueColors;
+  };
 
+  // Funzione per convertire RGB in HEX
+  const rgbToHex = (r, g, b) => {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  };
 
   // Funzione per analizzare l'immagine
   const analyzeImage = async (image) => {
@@ -180,60 +323,79 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
       throw error;
     }
   };
-  
-  // Funzione di utility per ottenere il nome del colore da un valore esadecimale
+    // Funzione avanzata per ottenere il nome del colore da un valore esadecimale
   function getColorName(hexColor) {
-    // Mappa semplificata dei colori principali
-    const colorMap = {
-      '#FF0000': 'rosso',
-      '#00FF00': 'verde',
-      '#0000FF': 'blu',
-      '#FFFF00': 'giallo',
-      '#FF00FF': 'magenta',
-      '#00FFFF': 'ciano',
-      '#FFFFFF': 'bianco',
-      '#000000': 'nero',
-      '#808080': 'grigio',
-      '#A52A2A': 'marrone',
-      '#FFA500': 'arancione',
-      '#800080': 'viola',
-      '#FFB6C1': 'rosa',
-      '#8B4513': 'marrone',
-    };
+    // Converti hex a RGB
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+
+    console.log(`Analizzando colore ${hexColor}: R=${r}, G=${g}, B=${b}`);
+
+    // Calcola la luminosità per identificare grigi/bianchi/neri
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     
-    // Semplifica il colore arrotondando i valori RGB
-    const simplifyColor = (hex) => {
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
-      
-      // Arrotonda al valore più vicino tra 0, 128, 255
-      const roundTo = (value) => {
-        if (value < 64) return 0;
-        if (value < 192) return 128;
-        return 255;
-      };
-      
-      const rr = roundTo(r).toString(16).padStart(2, '0');
-      const gg = roundTo(g).toString(16).padStart(2, '0');
-      const bb = roundTo(b).toString(16).padStart(2, '0');
-      
-      return `#${rr}${gg}${bb}`.toUpperCase();
-    };
-    
-    const simpleColor = simplifyColor(hexColor);
-    
-    // Trova il colore più vicino nella mappa
-    if (colorMap[simpleColor]) {
-      return colorMap[simpleColor];
+    // Controlla se è un colore neutro (differenze piccole tra componenti RGB)
+    const maxComponent = Math.max(r, g, b);
+    const minComponent = Math.min(r, g, b);
+    const saturation = maxComponent === 0 ? 0 : (maxComponent - minComponent) / maxComponent;
+
+    // Se saturation è bassa, è probabilmente un grigio
+    if (saturation < 0.15) {
+      if (luminance < 0.15) return "nero";
+      if (luminance < 0.35) return "grigio scuro";
+      if (luminance < 0.65) return "grigio";
+      if (luminance < 0.85) return "grigio chiaro";
+      return "bianco";
     }
+
+    // Converti in HSV per una migliore identificazione dei colori
+    const max = maxComponent / 255;
+    const min = minComponent / 255;
+    const diff = max - min;
     
-    // Colori di base
-    if (simpleColor.slice(1, 3) === "FF") return "rosso";
-    if (simpleColor.slice(3, 5) === "FF") return "verde";
-    if (simpleColor.slice(5, 7) === "FF") return "blu";
-    
-    // Default
+    let hue = 0;
+    if (diff !== 0) {
+      if (max === r / 255) {
+        hue = ((g - b) / 255 / diff) % 6;
+      } else if (max === g / 255) {
+        hue = ((b - r) / 255 / diff) + 2;
+      } else {
+        hue = ((r - g) / 255 / diff) + 4;
+      }
+    }
+    hue = Math.round(hue * 60);
+    if (hue < 0) hue += 360;
+
+    console.log(`Hue calcolato: ${hue}, Saturation: ${saturation.toFixed(2)}, Luminance: ${luminance.toFixed(2)}`);
+
+    // Identifica il colore basandosi sulla hue
+    if (saturation > 0.3) {  // Colori sufficientemente saturi
+      if (hue >= 0 && hue < 15) return "rosso";
+      if (hue >= 15 && hue < 45) return "arancione";
+      if (hue >= 45 && hue < 75) return "giallo";
+      if (hue >= 75 && hue < 150) return "verde";
+      if (hue >= 150 && hue < 210) return "turchese";
+      if (hue >= 210 && hue < 270) return "blu";
+      if (hue >= 270 && hue < 330) return "viola";
+      if (hue >= 330 && hue < 360) return "rosso";
+    }
+
+    // Per colori meno saturi, usa il componente dominante
+    if (r > g && r > b) {
+      if (r > 1.2 * Math.max(g, b)) return "rosso";
+      if (g > 0.7 * r) return "arancione";
+      return "rosa";
+    } else if (g > r && g > b) {
+      if (g > 1.2 * Math.max(r, b)) return "verde";
+      if (r > 0.7 * g) return "giallo";
+      return "verde chiaro";
+    } else if (b > r && b > g) {
+      if (b > 1.2 * Math.max(r, g)) return "blu";
+      if (r > 0.7 * b) return "viola";
+      return "azzurro";
+    }
+
     return "neutro";
   }
 
@@ -289,72 +451,250 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
     setFurnitureType("");
     setRecommendations([]);
   };
-
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.8, ease: "easeOut" }}
       className="virtual-room-container"
       style={{
-        backgroundColor: theme === "dark" ? "#2c2c2c" : "#f8f9fa",
-        padding: "30px",
-        borderRadius: "15px",
-        boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
+        background: theme === "dark" 
+          ? "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)"
+          : "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)",
+        padding: "40px",
+        borderRadius: "24px",
+        boxShadow: theme === "dark" 
+          ? "0 25px 50px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)"
+          : "0 25px 50px rgba(102,126,234,0.2), 0 0 0 1px rgba(255,255,255,0.2)",
+        position: "relative",
+        overflow: "hidden",
+        backdropFilter: "blur(20px)",
       }}
     >
-      {/* Step Indicator */}
-      <div className="step-indicator mb-4 d-flex justify-content-center">
+      {/* Background Pattern */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 1px, transparent 1px),
+                           radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 1px, transparent 1px)`,
+          backgroundSize: "50px 50px",
+          opacity: 0.3,
+          pointerEvents: "none"
+        }}
+      />
+      
+      {/* Floating Elements */}
+      <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          right: "30px",
+          width: "100px",
+          height: "100px",
+          background: "rgba(255,255,255,0.1)",
+          borderRadius: "50%",
+          filter: "blur(40px)",
+          pointerEvents: "none"
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: "30px",
+          left: "50px",
+          width: "80px",
+          height: "80px",
+          background: "rgba(255,255,255,0.08)",
+          borderRadius: "50%",
+          filter: "blur(30px)",
+          pointerEvents: "none"
+        }}
+      />
+
+      {/* Enhanced Step Indicator */}
+      <div className="step-indicator mb-5 d-flex justify-content-center position-relative">
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "15%",
+            right: "15%",
+            height: "3px",
+            background: "rgba(255,255,255,0.2)",
+            borderRadius: "2px",
+            transform: "translateY(-50%)",
+            zIndex: 1
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "15%",
+            height: "3px",
+            width: `${((step - 1) / 2) * 70}%`,
+            background: "linear-gradient(90deg, #00f2fe 0%, #4facfe 100%)",
+            borderRadius: "2px",
+            transform: "translateY(-50%)",
+            transition: "width 0.8s ease",
+            zIndex: 2
+          }}
+        />
         {[1, 2, 3].map((stepNumber) => (
-          <div
+          <motion.div
             key={stepNumber}
-            className="step-dot mx-2"
+            className="step-dot mx-4"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: stepNumber * 0.2, type: "spring", stiffness: 200 }}
             style={{
-              width: "30px",
-              height: "30px",
+              width: "60px",
+              height: "60px",
               borderRadius: "50%",
-              backgroundColor: step >= stepNumber
-                ? theme === "dark" ? "#007bff" : "#0056b3"
-                : theme === "dark" ? "#6c757d" : "#dee2e6",
+              background: step >= stepNumber
+                ? "linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)"
+                : "rgba(255,255,255,0.2)",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
               color: "#fff",
-              fontWeight: "bold",
-              transition: "all 0.3s ease",
+              fontWeight: "700",
+              fontSize: "1.2rem",
+              transition: "all 0.4s ease",
+              position: "relative",
+              zIndex: 3,
+              border: step >= stepNumber ? "3px solid rgba(255,255,255,0.3)" : "3px solid transparent",
+              boxShadow: step >= stepNumber 
+                ? "0 10px 30px rgba(79,172,254,0.4)" 
+                : "0 5px 15px rgba(0,0,0,0.1)"
             }}
           >
-            {stepNumber}
-          </div>
+            {step > stepNumber ? (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                ✓
+              </motion.div>
+            ) : (
+              stepNumber
+            )}
+          </motion.div>
         ))}
-      </div>
-
-      {/* Step 1: Image Upload */}
+      </div>      {/* Step 1: Image Upload - Modern Glass Design */}
       {step === 1 && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="text-center position-relative"
+          style={{ zIndex: 10 }}
         >
-          <FaCloudUploadAlt size={50} color={theme === "dark" ? "#007bff" : "#0056b3"} className="mb-3" />
-          <h4 style={{ color: theme === "dark" ? "#fff" : "#000" }}>Carica una foto della tua stanza</h4>
-          <p style={{ color: theme === "dark" ? "#adb5bd" : "#6c757d" }}>
-            Carica un'immagine della stanza che desideri arredare
-          </p>
+          {/* Hero Section */}
+          <div className="mb-5">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
+              style={{
+                display: "inline-block",
+                background: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%)",
+                borderRadius: "50%",
+                padding: "25px",
+                marginBottom: "20px",
+                boxShadow: "0 15px 35px rgba(255,154,158,0.3)"
+              }}
+            >
+              <FaCloudUploadAlt size={60} color="#fff" />
+            </motion.div>
+            
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              style={{ 
+                color: "#fff",
+                fontWeight: "800",
+                fontSize: "2.5rem",
+                marginBottom: "15px",
+                textShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                background: "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
+            >
+              Trasforma la tua stanza
+            </motion.h2>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              style={{ 
+                color: "rgba(255,255,255,0.9)",
+                fontSize: "1.2rem",
+                fontWeight: "400",
+                lineHeight: "1.6",
+                maxWidth: "600px",
+                margin: "0 auto"
+              }}
+            >
+              Carica un'immagine della tua stanza e lascia che l'IA analizzi i colori per suggerirti l'arredamento perfetto
+            </motion.p>
+          </div>
           
-          <div 
-            className="upload-area mt-3 mb-4 mx-auto"
+          {/* Upload Area - Glass Morphism */}
+          <motion.div 
+            className="upload-area mt-4 mb-5 mx-auto"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.6 }}
             style={{
-              border: `2px dashed ${theme === "dark" ? "#6c757d" : "#adb5bd"}`,
-              borderRadius: "10px",
-              padding: "40px 20px",
+              background: "rgba(255,255,255,0.1)",
+              backdropFilter: "blur(20px)",
+              border: "2px dashed rgba(255,255,255,0.3)",
+              borderRadius: "20px",
+              padding: "50px 30px",
               cursor: "pointer",
-              maxWidth: "500px",
+              maxWidth: "600px",
               position: "relative",
+              transition: "all 0.4s ease",
+              overflow: "hidden"
             }}
             onClick={() => document.getElementById("room-image-upload").click()}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-5px)";
+              e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.2)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.5)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "none";
+              e.currentTarget.style.boxShadow = "none";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+            }}
           >
+            {/* Animated Background */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: "linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,0.05) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.05) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.05) 75%)",
+                backgroundSize: "20px 20px",
+                backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
+                opacity: 0.3,
+                pointerEvents: "none"
+              }}
+            />
+            
             <input
               type="file"
               id="room-image-upload"
@@ -364,18 +704,28 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
             />
             
             {imagePreview ? (
-              <div className="position-relative">
+              <motion.div 
+                className="position-relative"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
                 <img
                   src={imagePreview}
                   alt="Room preview"
                   style={{
                     maxWidth: "100%",
                     maxHeight: "300px",
-                    borderRadius: "8px"
+                    borderRadius: "15px",
+                    boxShadow: "0 15px 35px rgba(0,0,0,0.2)",
+                    border: "3px solid rgba(255,255,255,0.2)"
                   }}
                 />
-                <div 
+                <motion.div 
                   className="image-overlay"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
                   style={{
                     position: "absolute",
                     top: 0,
@@ -385,520 +735,1249 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: "rgba(0,0,0,0.4)",
-                    borderRadius: "8px",
-                    opacity: 0,
-                    transition: "opacity 0.3s ease",
+                    background: "rgba(0,0,0,0.7)",
+                    borderRadius: "15px",
                     color: "#fff",
+                    fontSize: "1.1rem",
+                    fontWeight: "600"
                   }}
-                  onMouseEnter={(e) => e.target.style.opacity = 1}
-                  onMouseLeave={(e) => e.target.style.opacity = 0}
                 >
-                  Clicca per cambiare immagine
-                </div>
-              </div>
+                  <div className="text-center">
+                    <FaCloudUploadAlt size={30} className="mb-2" />
+                    <div>Clicca per cambiare immagine</div>
+                  </div>
+                </motion.div>
+              </motion.div>
             ) : (
-              <div>
-                <FaCloudUploadAlt size={50} color={theme === "dark" ? "#6c757d" : "#adb5bd"} />
-                <p className="mt-2 mb-0">Clicca per selezionare un'immagine o trascina qui</p>
-              </div>
+              <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.9, duration: 0.5 }}
+              >
+                <motion.div
+                  animate={{ 
+                    y: [0, -10, 0],
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <FaCloudUploadAlt size={80} color="rgba(255,255,255,0.8)" />
+                </motion.div>
+                <h4 style={{ 
+                  color: "rgba(255,255,255,0.9)", 
+                  marginTop: "20px",
+                  marginBottom: "10px",
+                  fontWeight: "600"
+                }}>
+                  Scegli un'immagine della tua stanza
+                </h4>
+                <p style={{ 
+                  color: "rgba(255,255,255,0.7)", 
+                  margin: 0,
+                  fontSize: "1rem"
+                }}>
+                  Trascina qui il file oppure clicca per selezionare
+                </p>
+                <div style={{
+                  marginTop: "15px",
+                  fontSize: "0.9rem",
+                  color: "rgba(255,255,255,0.6)"
+                }}>
+                  Formati supportati: JPG, PNG (max 5MB)
+                </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
           
-          <Button
-            variant={theme === "dark" ? "light" : "dark"}
-            size="lg"
-            disabled={!imagePreview}
-            onClick={() => setStep(2)}
-            className="mt-3"
+          {/* Action Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1, duration: 0.5 }}
           >
-            Continua
-          </Button>
+            <Button
+              disabled={!imagePreview}
+              onClick={() => setStep(2)}
+              style={{
+                background: imagePreview 
+                  ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                  : "rgba(255,255,255,0.2)",                border: "none",
+                borderRadius: "8px",
+                padding: "15px 40px",
+                fontSize: "1.1rem",
+                fontWeight: "600",
+                color: "#fff",
+                transition: "all 0.4s ease",
+                boxShadow: imagePreview ? "0 10px 30px rgba(102,126,234,0.4)" : "none",
+                cursor: imagePreview ? "pointer" : "not-allowed"
+              }}
+              onMouseEnter={(e) => {
+                if (imagePreview) {
+                  e.target.style.transform = "translateY(-3px) scale(1.05)";
+                  e.target.style.boxShadow = "0 15px 40px rgba(102,126,234,0.5)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (imagePreview) {
+                  e.target.style.transform = "none";
+                  e.target.style.boxShadow = "0 10px 30px rgba(102,126,234,0.4)";
+                }
+              }}
+            >
+              {imagePreview ? (
+                <>
+                  <FaMagic className="me-2" />
+                  Analizza la stanza
+                </>
+              ) : (
+                "Carica prima un'immagine"
+              )}
+            </Button>
+          </motion.div>
         </motion.div>
-      )}
-
-      {/* Step 2: User Requirements */}
+      )}      {/* Step 2: Furniture Selection - Modern Card Design */}
       {step === 2 && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          style={{ position: "relative", zIndex: 10 }}
         >
-          <div className="row">
-            <div className="col-md-6">
-              <img
-                src={imagePreview}
-                alt="Your room"
+          <div className="row align-items-center">
+            {/* Image Preview */}
+            <div className="col-md-5">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
                 style={{
-                  width: "100%",
-                  borderRadius: "10px",
-                  boxShadow: "0px 5px 15px rgba(0,0,0,0.2)",
+                  position: "relative",
+                  borderRadius: "20px",
+                  overflow: "hidden",
+                  boxShadow: "0 20px 40px rgba(0,0,0,0.2)"
                 }}
-              />
-            </div>
-            <div className="col-md-6">
-              <h4 style={{ color: theme === "dark" ? "#fff" : "#000" }}>Cosa desideri modificare?</h4>
-              
-              <Form.Group className="mb-3">
-                <Form.Label style={{ color: theme === "dark" ? "#fff" : "#000" }}>
-                  Tipo di arredamento
-                </Form.Label>
-                <Form.Select
-                  value={furnitureType}
-                  onChange={(e) => setFurnitureType(e.target.value)}
-                  style={{
-                    backgroundColor: theme === "dark" ? "#212529" : "#fff",
-                    color: theme === "dark" ? "#fff" : "#000",
-                    border: `1px solid ${theme === "dark" ? "#495057" : "#ced4da"}`,
-                  }}
-                >
-                  <option value="">Seleziona il tipo di arredamento</option>
-                  <option value="divano">Divano</option>
-                  <option value="tavolo">Tavolo</option>
-                  <option value="sedia">Sedia</option>
-                  <option value="letto">Letto</option>
-                  <option value="armadio">Armadio</option>
-                  <option value="libreria">Libreria</option>
-                  <option value="mobile-tv">Mobile TV</option>
-                  <option value="lampada">Lampada</option>
-                </Form.Select>
-              </Form.Group>
-              
-              <Form.Group className="mb-4">
-                <Form.Label style={{ color: theme === "dark" ? "#fff" : "#000" }}>
-                  Descrivi cosa cerchi
-                </Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={4}
-                  placeholder="Es. Cerco un divano moderno che si abbini ai colori della mia stanza, preferibilmente in tonalità chiare..."
-                  value={requirements}
-                  onChange={(e) => setRequirements(e.target.value)}
-                  style={{
-                    backgroundColor: theme === "dark" ? "#212529" : "#fff",
-                    color: theme === "dark" ? "#fff" : "#000",
-                    border: `1px solid ${theme === "dark" ? "#495057" : "#ced4da"}`,
-                  }}
-                />
-              </Form.Group>
-              
-              <div className="d-flex justify-content-between">
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => setStep(1)}
-                  disabled={isLoading}
-                >
-                  Indietro
-                </Button>
-                <Button
-                  variant={theme === "dark" ? "light" : "dark"}
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      {processingStage}
-                    </>
-                  ) : (
-                    <>
-                      <FaMagic className="me-2" /> Genera suggerimenti
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Mostra le fasi di elaborazione quando è in caricamento */}
-          {isLoading && (
-            <div className="mt-4 text-center" style={{ color: theme === "dark" ? "#adb5bd" : "#6c757d" }}>
-              <div className="progress mb-2" style={{ height: "5px" }}>
-                <div
-                  className="progress-bar progress-bar-striped progress-bar-animated"
-                  role="progressbar"
-                  style={{ width: "100%" }}
-                ></div>
-              </div>
-              <p>{processingStage}</p>
-              <p className="small">L'analisi dell'immagine viene eseguita direttamente nel tuo browser</p>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* Step 3: Results */}
-      {step === 3 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h4 className="text-center mb-4" style={{ color: theme === "dark" ? "#fff" : "#000" }}>
-            Ecco i nostri suggerimenti per la tua stanza
-          </h4>
-          
-          <Row>
-            <Col md={5}>
-              <div className="position-relative">
+              >
                 <img
                   src={imagePreview}
                   alt="Your room"
                   style={{
                     width: "100%",
-                    borderRadius: "10px",
-                    boxShadow: "0px 5px 15px rgba(0,0,0,0.2)",
+                    borderRadius: "20px",
+                    border: "3px solid rgba(255,255,255,0.2)"
                   }}
                 />
-                {/* AI visualization overlay - simplified version */}
+                {/* Glass overlay with AI analysis indicator */}
                 <div
                   style={{
                     position: "absolute",
-                    top: 0,
+                    bottom: 0,
                     left: 0,
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "10px",
-                    background: "linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2))",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
+                    right: 0,
+                    background: "linear-gradient(transparent, rgba(0,0,0,0.7))",
+                    padding: "30px 20px 20px",
+                    color: "#fff"
                   }}
                 >
-                  <div
-                    style={{
-                      padding: "10px 15px",
-                      backgroundColor: "rgba(0,123,255,0.8)",
-                      borderRadius: "50px",
-                      color: "#fff",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    <FaMagic className="me-2" /> IA ha analizzato questa stanza
-                  </div>
-                </div>
-              </div>
-            </Col>
-            <Col md={7}>
-              {/* Aggiungi sezione di analisi IA */}
-              {/* Migliora la sezione di analisi IA con grafica più professionale */}
-              {analysisData && (
-                <Card className="mb-4 analysis-card" style={{
-                  backgroundColor: theme === "dark" ? "#343a40" : "#fff",
-                  color: theme === "dark" ? "#fff" : "#000",
-                  borderColor: theme === "dark" ? "#495057" : "#dee2e6",
-                  borderRadius: "12px",
-                  overflow: "hidden"
-                }}>
-                  <Card.Header style={{
-                    backgroundColor: theme === "dark" ? "#212529" : "#f8f9fa",
-                    borderBottom: `1px solid ${theme === "dark" ? "#495057" : "#dee2e6"}`,
-                    padding: "1rem 1.25rem"
-                  }}>
-                    <div className="d-flex align-items-center">
-                      <div style={{
+                  <div className="d-flex align-items-center">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      style={{
                         width: "40px",
                         height: "40px",
                         borderRadius: "50%",
-                        backgroundColor: theme === "dark" ? "#007bff" : "#0056b3",
+                        background: "linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: "12px"
+                      }}
+                    >
+                      <FaMagic color="#fff" size={18} />
+                    </motion.div>
+                    <div>
+                      <div style={{ fontWeight: "600", fontSize: "1rem" }}>Immagine pronta per l'analisi</div>
+                      <div style={{ fontSize: "0.85rem", opacity: 0.8 }}>L'IA analizzerà i colori automaticamente</div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+            
+            {/* Selection Form */}
+            <div className="col-md-7">
+              <motion.div
+                initial={{ x: 30, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                style={{
+                  background: "rgba(255,255,255,0.1)",
+                  backdropFilter: "blur(20px)",
+                  borderRadius: "20px",
+                  padding: "40px",
+                  border: "1px solid rgba(255,255,255,0.2)"
+                }}
+              >
+                <motion.h3
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                  style={{ 
+                    color: "#fff",
+                    fontWeight: "700",
+                    fontSize: "2rem",
+                    marginBottom: "30px",
+                    textAlign: "center"
+                  }}
+                >
+                  Quale arredo stai cercando?
+                </motion.h3>
+                
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                >
+                  <Form.Group className="mb-4">
+                    <Form.Label style={{ 
+                      color: "rgba(255,255,255,0.9)",
+                      fontWeight: "600",
+                      fontSize: "1.1rem",
+                      marginBottom: "15px",
+                      display: "block"
+                    }}>
+                      Seleziona il tipo di mobile
+                    </Form.Label>
+                    <Form.Select
+                      value={furnitureType}
+                      onChange={(e) => setFurnitureType(e.target.value)}
+                      style={{
+                        background: "rgba(255,255,255,0.1)",
+                        backdropFilter: "blur(10px)",
+                        color: "#fff",
+                        border: "2px solid rgba(255,255,255,0.2)",
+                        borderRadius: "15px",
+                        padding: "15px 20px",
+                        fontSize: "1rem",
+                        fontWeight: "500",
+                        transition: "all 0.3s ease"
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = "rgba(79,172,254,0.6)";
+                        e.target.style.boxShadow = "0 0 20px rgba(79,172,254,0.3)";
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = "rgba(255,255,255,0.2)";
+                        e.target.style.boxShadow = "none";
+                      }}
+                    >
+                      <option value="" style={{background: "#2d3748", color: "#fff"}}>
+                        Scegli il tipo di arredamento...
+                      </option>
+                      <option value="divano" style={{background: "#2d3748", color: "#fff"}}>🛋️ Divano</option>
+                      <option value="tavolo" style={{background: "#2d3748", color: "#fff"}}>🪑 Tavolo</option>
+                      <option value="sedia" style={{background: "#2d3748", color: "#fff"}}>💺 Sedia</option>
+                      <option value="letto" style={{background: "#2d3748", color: "#fff"}}>🛏️ Letto</option>
+                      <option value="armadio" style={{background: "#2d3748", color: "#fff"}}>🚪 Armadio</option>
+                      <option value="libreria" style={{background: "#2d3748", color: "#fff"}}>📚 Libreria</option>
+                      <option value="mobile-tv" style={{background: "#2d3748", color: "#fff"}}>📺 Mobile TV</option>
+                      <option value="lampada" style={{background: "#2d3748", color: "#fff"}}>💡 Lampada</option>
+                    </Form.Select>
+                  </Form.Group>
+                  
+                  {/* Info Card */}
+                  <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 1, duration: 0.5 }}
+                    style={{
+                      background: "rgba(79,172,254,0.1)",
+                      border: "1px solid rgba(79,172,254,0.3)",
+                      borderRadius: "15px",
+                      padding: "20px",
+                      marginBottom: "30px"
+                    }}
+                  >
+                    <div className="d-flex align-items-center mb-2">
+                      <div style={{
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         marginRight: "12px"
                       }}>
-                        <FaMagic color="#fff" size={20} />
+                        <FaMagic color="#fff" size={14} />
                       </div>
-                      <h5 style={{ 
-                        margin: 0, 
-                        color: theme === "dark" ? "#fff" : "#000",
-                        fontWeight: 600
-                      }}>
-                        Analisi IA della tua stanza
-                      </h5>
+                      <h6 style={{ color: "#fff", margin: 0, fontWeight: "600" }}>
+                        Analisi automatica con IA
+                      </h6>
                     </div>
-                  </Card.Header>
+                    <p style={{ 
+                      color: "rgba(255,255,255,0.8)", 
+                      margin: 0, 
+                      fontSize: "0.9rem",
+                      lineHeight: "1.5"
+                    }}>
+                      L'intelligenza artificiale analizzerà automaticamente i colori della tua stanza per trovare l'arredamento più adatto alla tua palette cromatica.
+                    </p>
+                  </motion.div>
                   
-                  <Card.Body style={{ padding: "1.5rem" }}>
-                    <div className="mb-4">
-                      <div className="d-flex align-items-center mb-2">
-                        <div style={{ 
-                          width: "16px", 
-                          height: "16px", 
-                          backgroundColor: theme === "dark" ? "#007bff" : "#0056b3",
-                          borderRadius: "50%",
-                          marginRight: "10px"
-                        }}></div>
-                        <strong>Stile rilevato:</strong>
-                      </div>
-                      <div className="ms-4 ps-2" style={{
-                        borderLeft: `2px solid ${theme === "dark" ? "#495057" : "#dee2e6"}`,
-                        padding: "0.5rem 0"
-                      }}>
-                        <span style={{
-                          fontSize: "1.1rem",
-                          fontWeight: 500,
-                          color: theme === "dark" ? "#e9ecef" : "#212529",
-                          textTransform: "capitalize"
-                        }}>{analysisData.roomStyle}</span>
-                        <p style={{ 
-                          margin: "0.5rem 0 0 0", 
-                          color: theme === "dark" ? "#adb5bd" : "#6c757d",
-                          fontSize: "0.9rem"
-                        }}>
-                          {analysisData.styleDescription || "Lo stile della tua stanza è stato analizzato in base alle caratteristiche dell'immagine."}
-                        </p>
-                      </div>
-                    </div>
+                  {/* Action Buttons */}
+                  <motion.div 
+                    className="d-flex justify-content-between"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 1.2, duration: 0.5 }}
+                  >
+                    <Button
+                      onClick={() => setStep(1)}
+                      disabled={isLoading}
+                      style={{
+                        background: "rgba(255,255,255,0.1)",
+                        backdropFilter: "blur(10px)",                        border: "2px solid rgba(255,255,255,0.2)",
+                        borderRadius: "8px",
+                        padding: "12px 30px",
+                        color: "#fff",
+                        fontWeight: "600",
+                        transition: "all 0.3s ease"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = "rgba(255,255,255,0.2)";
+                        e.target.style.transform = "translateY(-2px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = "rgba(255,255,255,0.1)";
+                        e.target.style.transform = "none";
+                      }}
+                    >
+                      <FaArrowLeft className="me-2" /> Indietro
+                    </Button>
                     
-                    <div className="mb-4">
-                      <div className="d-flex align-items-center mb-2">
-                        <div style={{ 
-                          width: "16px", 
-                          height: "16px", 
-                          backgroundColor: theme === "dark" ? "#007bff" : "#0056b3",
-                          borderRadius: "50%",
-                          marginRight: "10px"
-                        }}></div>
-                        <strong>Palette di colori consigliata:</strong>
-                      </div>
-                      <div className="ms-4 ps-2" style={{
-                        borderLeft: `2px solid ${theme === "dark" ? "#495057" : "#dee2e6"}`,
-                        padding: "0.5rem 0"
-                      }}>
-                        <div className="d-flex mt-2">
-                          {analysisData.colorPalette && analysisData.colorPalette.map((color, idx) => (
-                            <div key={idx} className="me-2" style={{
-                              width: "40px",
-                              height: "40px",
-                              backgroundColor: color,
-                              border: theme === "dark" ? "1px solid #495057" : "1px solid #dee2e6",
-                              borderRadius: "8px",
-                              position: "relative",
-                              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              overflow: "hidden"
-                            }} title={color}>
-                              <div style={{
-                                position: "absolute",
-                                bottom: "2px",
-                                fontSize: "8px",
-                                color: getContrastYIQ(color) === 'black' ? "#000" : "#fff",
-                                textShadow: "0 0 2px rgba(0,0,0,0.4)"
-                              }}>{color}</div>
-                            </div>
-                          ))}
-                        </div>
-                        <p style={{ 
-                          margin: "0.75rem 0 0 0", 
-                          color: theme === "dark" ? "#adb5bd" : "#6c757d",
-                          fontSize: "0.9rem" 
-                        }}>
-                          Questi colori sono stati selezionati per armonizzarsi con il tuo ambiente.
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="d-flex align-items-center mb-2">
-                        <div style={{ 
-                          width: "16px", 
-                          height: "16px", 
-                          backgroundColor: theme === "dark" ? "#007bff" : "#0056b3",
-                          borderRadius: "50%",
-                          marginRight: "10px"
-                        }}></div>
-                        <strong>Consigli per l'arredamento:</strong>
-                      </div>
-                      <div className="ms-4 ps-2" style={{
-                        borderLeft: `2px solid ${theme === "dark" ? "#495057" : "#dee2e6"}`,
-                        padding: "0.5rem 0"
-                      }}>
-                        <ul className="mt-2 advice-list" style={{ 
-                          paddingLeft: "1.25rem" 
-                        }}>
-                          {analysisData.keyFeatures && analysisData.keyFeatures.map((tip, idx) => (
-                            <li key={idx} style={{ 
-                              marginBottom: "0.5rem",
-                              color: theme === "dark" ? "#e9ecef" : "#212529"
-                            }}>{tip}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </Card.Body>
-                </Card>
-              )}
-              
-              <h5 style={{ color: theme === "dark" ? "#fff" : "#000", marginBottom: "20px", fontWeight: "600" }}>
-  Prodotti consigliati per la tua stanza:
-</h5>
-
-<div className="recommendations-grid">
-  {recommendations && recommendations.length > 0 ? (
-    <Row className="g-3">
-      {recommendations.map((recommendation, index) => (
-        <Col lg={6} key={index}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-          >
-            <Card 
-              className="recommendation-card h-100" 
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={isLoading || !furnitureType}
+                      style={{
+                        background: (isLoading || !furnitureType) 
+                          ? "rgba(255,255,255,0.2)"
+                          : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",                        border: "none",
+                        borderRadius: "8px",
+                        padding: "12px 35px",
+                        color: "#fff",
+                        fontWeight: "600",
+                        fontSize: "1rem",
+                        transition: "all 0.4s ease",
+                        boxShadow: (!isLoading && furnitureType) ? "0 10px 30px rgba(102,126,234,0.4)" : "none",
+                        cursor: (!isLoading && furnitureType) ? "pointer" : "not-allowed"
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isLoading && furnitureType) {
+                          e.target.style.transform = "translateY(-3px) scale(1.05)";
+                          e.target.style.boxShadow = "0 15px 40px rgba(102,126,234,0.5)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isLoading && furnitureType) {
+                          e.target.style.transform = "none";
+                          e.target.style.boxShadow = "0 10px 30px rgba(102,126,234,0.4)";
+                        }
+                      }}
+                    >
+                      {isLoading ? (
+                        <>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            style={{ display: "inline-block", marginRight: "8px" }}
+                          >
+                            <FaMagic />
+                          </motion.div>
+                          {processingStage || "Elaborazione..."}
+                        </>
+                      ) : (
+                        <>
+                          <FaMagic className="me-2" /> Inizia l'analisi IA
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
+                </motion.div>
+              </motion.div>
+            </div>
+          </div>
+          
+          {/* Loading Progress - Enhanced */}
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mt-5 text-center"
               style={{
-                backgroundColor: theme === "dark" ? "#343a40" : "#fff",
-                color: theme === "dark" ? "#fff" : "#000",
-                borderColor: theme === "dark" ? "#495057" : "#dee2e6",
-                borderRadius: "12px",
-                overflow: "hidden",
-                cursor: "pointer",
-                transition: "all 0.3s ease",
-                border: "none",
-                boxShadow: "0 5px 15px rgba(0,0,0,0.1)"
-              }}
-              onClick={() => handleProductRecommendationClick(recommendation.productId)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-5px)";
-                e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "none";
-                e.currentTarget.style.boxShadow = "0 5px 15px rgba(0,0,0,0.1)";
+                background: "rgba(255,255,255,0.1)",
+                backdropFilter: "blur(20px)",
+                borderRadius: "20px",
+                padding: "30px",
+                border: "1px solid rgba(255,255,255,0.2)"
               }}
             >
-              <div className="d-flex h-100">
-                <div 
-                  className="recommendation-image"
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                  opacity: [0.7, 1, 0.7]
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                style={{
+                  display: "inline-block",
+                  background: "linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)",
+                  borderRadius: "50%",
+                  padding: "20px",
+                  marginBottom: "20px"
+                }}
+              >
+                <FaMagic size={30} color="#fff" />
+              </motion.div>
+              
+              <h4 style={{ color: "#fff", marginBottom: "15px", fontWeight: "600" }}>
+                {processingStage || "Analisi in corso..."}
+              </h4>
+              
+              <div style={{
+                background: "rgba(255,255,255,0.2)",
+                borderRadius: "50px",
+                height: "8px",
+                marginBottom: "15px",
+                overflow: "hidden"
+              }}>
+                <motion.div
+                  animate={{ x: [-100, 300] }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
                   style={{
-                    width: "40%",
-                    position: "relative",
-                    overflow: "hidden"
+                    width: "100px",
+                    height: "100%",
+                    background: "linear-gradient(90deg, transparent, #00f2fe, transparent)",
+                    borderRadius: "50px"
                   }}
-                >
-                  <img
-                    src={recommendation.productImage}
-                    alt={recommendation.productName}
-                    style={{ 
-                      width: "100%",
-                      height: "100%", 
-                      objectFit: "cover",
-                      transition: "transform 0.5s ease"
-                    }}
-                    className="recommendation-image"
-                  />
-                  <div 
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: "linear-gradient(to right, rgba(0,0,0,0.1), transparent)"
-                    }}
-                  ></div>
-                </div>
+                />
+              </div>
+              
+              <p style={{ 
+                color: "rgba(255,255,255,0.8)", 
+                margin: 0,
+                fontSize: "0.95rem"
+              }}>
+                L'IA sta analizzando i colori e lo stile della tua stanza per trovare i prodotti perfetti
+              </p>
+            </motion.div>
+          )}
+        </motion.div>
+      )}      {/* Step 3: Results - Revolutionary Modern Design */}
+      {step === 3 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          style={{ position: "relative", zIndex: 10 }}
+        >
+          {/* Hero Results Header */}
+          <motion.div
+            initial={{ y: -30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-center mb-5"
+          >
+            <motion.div
+              initial={{ scale: 0, rotate: 360 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 0.8, type: "spring", stiffness: 150 }}
+              style={{
+                display: "inline-block",
+                background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                borderRadius: "50%",
+                padding: "25px",
+                marginBottom: "25px",
+                boxShadow: "0 20px 40px rgba(79,172,254,0.3)"
+              }}
+            >
+              <FaMagic size={50} color="#fff" />
+            </motion.div>
+            
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              style={{ 
+                color: "#fff",
+                fontWeight: "800",
+                fontSize: "2.8rem",
+                marginBottom: "15px",
+                textShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                background: "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
+            >
+              Analisi Completata!
+            </motion.h2>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
+              style={{ 
+                color: "rgba(255,255,255,0.9)",
+                fontSize: "1.2rem",
+                fontWeight: "400",
+                maxWidth: "700px",
+                margin: "0 auto",
+                lineHeight: "1.6"
+              }}
+            >
+              La nostra IA ha analizzato la tua stanza e trovato l'arredamento perfetto per te
+            </motion.p>
+          </motion.div>
+          
+          <Row className="g-4">
+            {/* Enhanced Image Analysis Section */}
+            <Col lg={5}>
+              <motion.div
+                initial={{ x: -50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                style={{
+                  background: "rgba(255,255,255,0.1)",
+                  backdropFilter: "blur(20px)",
+                  borderRadius: "25px",
+                  padding: "25px",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  position: "relative",
+                  overflow: "hidden"
+                }}
+              >
+                {/* Animated background pattern */}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundImage: `radial-gradient(circle at 25% 25%, rgba(79,172,254,0.1) 2px, transparent 2px),
+                                     radial-gradient(circle at 75% 75%, rgba(0,242,254,0.1) 2px, transparent 2px)`,
+                    backgroundSize: "30px 30px",
+                    opacity: 0.4,
+                    pointerEvents: "none"
+                  }}
+                />
                 
-                <Card.Body 
-                  style={{ 
-                    padding: "1.25rem",
-                    width: "60%"
-                  }}
-                >
-                  <div className="d-flex flex-column justify-content-between h-100">
-                    <div>
-                      <h5 
-                        style={{ 
-                          color: theme === "dark" ? "#fff" : "#000",
-                          marginBottom: "0.75rem",
-                          fontSize: "1rem",
-                          fontWeight: "600",
-                          borderBottom: `2px solid ${theme === "dark" ? "#007bff" : "#0056b3"}`,
-                          paddingBottom: "0.5rem",
-                          display: "inline-block"
-                        }}
-                      >
-                        {recommendation.productName}
-                      </h5>
-                      
-                      <div 
-                        style={{ 
-                          fontSize: "0.85rem",
-                          color: theme === "dark" ? "#adb5bd" : "#6c757d",
-                          marginBottom: "0.75rem",
-                          maxHeight: "60px",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          display: "-webkit-box",
-                          WebkitLineClamp: "3",
-                          WebkitBoxOrient: "vertical"
-                        }}
-                      >
-                        {recommendation.reason}
+                <div className="position-relative" style={{ zIndex: 2 }}>
+                  <motion.h4
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                    style={{ 
+                      color: "#fff",
+                      fontWeight: "700",
+                      fontSize: "1.5rem",
+                      marginBottom: "20px",
+                      textAlign: "center"
+                    }}
+                  >
+                    La Tua Stanza Analizzata
+                  </motion.h4>
+                  
+                  <motion.div 
+                    className="position-relative"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                    style={{
+                      borderRadius: "20px",
+                      overflow: "hidden",
+                      boxShadow: "0 25px 50px rgba(0,0,0,0.3)"
+                    }}
+                  >
+                    <img
+                      src={imagePreview}
+                      alt="Your analyzed room"
+                      style={{
+                        width: "100%",
+                        borderRadius: "20px",
+                        border: "3px solid rgba(255,255,255,0.3)"
+                      }}
+                    />
+                    
+                    {/* Enhanced AI Analysis Overlay */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8, duration: 0.8 }}
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        background: "linear-gradient(transparent, rgba(0,0,0,0.8))",
+                        padding: "40px 20px 20px",
+                        color: "#fff"
+                      }}
+                    >
+                      <div className="d-flex align-items-center justify-content-center">
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 1.1, 1],
+                            rotate: [0, 360]
+                          }}
+                          transition={{ 
+                            scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+                            rotate: { duration: 3, repeat: Infinity, ease: "linear" }
+                          }}
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            borderRadius: "50%",
+                            background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginRight: "15px",
+                            boxShadow: "0 10px 30px rgba(79,172,254,0.4)"
+                          }}
+                        >
+                          <FaMagic color="#fff" size={20} />
+                        </motion.div>
+                        <div>
+                          <div style={{ fontWeight: "700", fontSize: "1.1rem", marginBottom: "5px" }}>
+                            Analisi IA Completata
+                          </div>
+                          <div style={{ fontSize: "0.9rem", opacity: 0.9 }}>
+                            Colori e stile identificati con successo
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </Col>
+            
+            {/* Modern Analysis Results Section */}
+            <Col lg={7}>              <motion.div
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+              >
+                {/* Enhanced AI Analysis Display */}
+                {analysisData && (
+                  <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.6 }}
+                    style={{
+                      background: "rgba(255,255,255,0.1)",
+                      backdropFilter: "blur(20px)",
+                      borderRadius: "25px",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      overflow: "hidden",
+                      position: "relative",
+                      marginBottom: "30px"
+                    }}
+                  >
+                    {/* Header with gradient background */}
+                    <div style={{
+                      background: "linear-gradient(135deg, rgba(79,172,254,0.3) 0%, rgba(0,242,254,0.3) 100%)",
+                      padding: "25px",
+                      borderBottom: "1px solid rgba(255,255,255,0.1)"
+                    }}>
+                      <div className="d-flex align-items-center">
+                        <motion.div
+                          initial={{ rotate: -90, scale: 0 }}
+                          animate={{ rotate: 0, scale: 1 }}
+                          transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                          style={{
+                            width: "50px",
+                            height: "50px",
+                            borderRadius: "50%",
+                            background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            marginRight: "15px",
+                            boxShadow: "0 10px 25px rgba(79,172,254,0.4)"
+                          }}
+                        >
+                          <FaMagic color="#fff" size={22} />
+                        </motion.div>
+                        <h5 style={{ 
+                          margin: 0, 
+                          color: "#fff",
+                          fontWeight: "700",
+                          fontSize: "1.4rem"
+                        }}>
+                          Analisi Intelligente della Stanza
+                        </h5>
                       </div>
                     </div>
                     
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span
+                    <div style={{ padding: "30px" }}>
+                      {/* Style Analysis Section */}
+                      <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 1, duration: 0.5 }}
+                        className="mb-4"
+                      >
+                        <div className="d-flex align-items-center mb-3">
+                          <div style={{ 
+                            width: "20px", 
+                            height: "20px", 
+                            background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                            borderRadius: "50%",
+                            marginRight: "12px",
+                            boxShadow: "0 5px 15px rgba(79,172,254,0.3)"
+                          }}></div>
+                          <strong style={{ color: "#fff", fontSize: "1.1rem" }}>Stile Identificato</strong>
+                        </div>
+                        <div 
+                          style={{
+                            marginLeft: "32px",
+                            padding: "20px",
+                            background: "rgba(255,255,255,0.05)",
+                            borderRadius: "15px",
+                            border: "1px solid rgba(255,255,255,0.1)"
+                          }}
+                        >
+                          <span style={{
+                            fontSize: "1.2rem",
+                            fontWeight: "600",
+                            color: "#fff",
+                            textTransform: "capitalize",
+                            display: "block",
+                            marginBottom: "10px"
+                          }}>
+                            {analysisData.roomStyle}
+                          </span>
+                          <p style={{ 
+                            margin: 0, 
+                            color: "rgba(255,255,255,0.8)",
+                            fontSize: "1rem",
+                            lineHeight: "1.5"
+                          }}>
+                            {analysisData.styleDescription || "Lo stile della tua stanza è stato analizzato in base alle caratteristiche dell'immagine."}
+                          </p>
+                        </div>
+                      </motion.div>
+                      
+                      {/* Color Palette Section */}
+                      <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 1.2, duration: 0.5 }}
+                        className="mb-4"
+                      >
+                        <div className="d-flex align-items-center mb-3">
+                          <div style={{ 
+                            width: "20px", 
+                            height: "20px", 
+                            background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                            borderRadius: "50%",
+                            marginRight: "12px",
+                            boxShadow: "0 5px 15px rgba(79,172,254,0.3)"
+                          }}></div>
+                          <strong style={{ color: "#fff", fontSize: "1.1rem" }}>Palette Colori Rilevata</strong>
+                        </div>
+                        <div 
+                          style={{
+                            marginLeft: "32px",
+                            padding: "20px",
+                            background: "rgba(255,255,255,0.05)",
+                            borderRadius: "15px",
+                            border: "1px solid rgba(255,255,255,0.1)"
+                          }}
+                        >
+                          <div className="d-flex flex-wrap gap-3 mb-3">
+                            {analysisData.colorPalette && analysisData.colorPalette.map((color, idx) => (
+                              <motion.div 
+                                key={idx}
+                                initial={{ scale: 0, rotate: 180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ 
+                                  delay: 1.4 + (idx * 0.1), 
+                                  type: "spring", 
+                                  stiffness: 300 
+                                }}
+                                style={{
+                                  width: "50px",
+                                  height: "50px",
+                                  backgroundColor: color,
+                                  border: "3px solid rgba(255,255,255,0.3)",
+                                  borderRadius: "12px",
+                                  position: "relative",
+                                  boxShadow: "0 8px 25px rgba(0,0,0,0.2)",
+                                  cursor: "pointer",
+                                  transition: "transform 0.3s ease"
+                                }} 
+                                title={color}
+                                whileHover={{ scale: 1.1, y: -5 }}
+                              >
+                                <div style={{
+                                  position: "absolute",
+                                  bottom: "-25px",
+                                  left: "50%",
+                                  transform: "translateX(-50%)",
+                                  fontSize: "10px",
+                                  color: "#fff",
+                                  background: "rgba(0,0,0,0.7)",
+                                  padding: "2px 6px",
+                                  borderRadius: "4px",
+                                  whiteSpace: "nowrap"
+                                }}>
+                                  {color}
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                          <p style={{ 
+                            margin: 0, 
+                            color: "rgba(255,255,255,0.8)",
+                            fontSize: "1rem"
+                          }}>
+                            Questi colori sono stati identificati come dominanti nel tuo ambiente e formeranno la base per i nostri suggerimenti di arredamento.
+                          </p>
+                        </div>
+                      </motion.div>
+                      
+                      {/* AI Recommendations Section */}
+                      <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 1.4, duration: 0.5 }}
+                      >
+                        <div className="d-flex align-items-center mb-3">
+                          <div style={{ 
+                            width: "20px", 
+                            height: "20px", 
+                            background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                            borderRadius: "50%",
+                            marginRight: "12px",
+                            boxShadow: "0 5px 15px rgba(79,172,254,0.3)"
+                          }}></div>
+                          <strong style={{ color: "#fff", fontSize: "1.1rem" }}>Consigli IA per l'Arredamento</strong>
+                        </div>
+                        <div 
+                          style={{
+                            marginLeft: "32px",
+                            padding: "20px",
+                            background: "rgba(255,255,255,0.05)",
+                            borderRadius: "15px",
+                            border: "1px solid rgba(255,255,255,0.1)"
+                          }}
+                        >
+                          <div style={{ color: "rgba(255,255,255,0.9)", fontSize: "1rem" }}>
+                            {analysisData.keyFeatures && analysisData.keyFeatures.length > 0 ? (
+                              <ul style={{ 
+                                paddingLeft: "20px",
+                                margin: 0
+                              }}>
+                                {analysisData.keyFeatures.map((tip, idx) => (
+                                  <motion.li 
+                                    key={idx}
+                                    initial={{ x: -20, opacity: 0 }}
+                                    animate={{ x: 0, opacity: 1 }}
+                                    transition={{ delay: 1.6 + (idx * 0.1) }}
+                                    style={{ 
+                                      marginBottom: "10px",
+                                      color: "rgba(255,255,255,0.9)",
+                                      lineHeight: "1.5"
+                                    }}
+                                  >
+                                    {tip}
+                                  </motion.li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p style={{ margin: 0, fontStyle: "italic" }}>
+                                L'IA ha analizzato la tua stanza e sta generando raccomandazioni personalizzate basate sui colori e lo stile identificati.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>                    </div>
+                  </motion.div>
+                )}
+                
+                {/* Modern Product Recommendations Section */}
+                <motion.div
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 1.6, duration: 0.6 }}
+                >
+                  <h5 style={{ 
+                    color: "#fff", 
+                    marginBottom: "25px", 
+                    fontWeight: "700",
+                    fontSize: "1.6rem",
+                    textAlign: "center"
+                  }}>
+                    🎯 Prodotti Consigliati per la Tua Stanza
+                  </h5>
+
+                  <div className="recommendations-grid">
+                    {recommendations && recommendations.length > 0 ? (
+                      <Row className="g-4">
+                        {recommendations.map((recommendation, index) => (
+                          <Col lg={6} key={index}>
+                            <motion.div
+                              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              transition={{ 
+                                duration: 0.6, 
+                                delay: 1.8 + (index * 0.15),
+                                type: "spring",
+                                stiffness: 100
+                              }}
+                              whileHover={{ y: -8, scale: 1.02 }}
+                              style={{
+                                background: "rgba(255,255,255,0.1)",
+                                backdropFilter: "blur(20px)",
+                                borderRadius: "20px",
+                                border: "1px solid rgba(255,255,255,0.2)",
+                                overflow: "hidden",
+                                cursor: "pointer",
+                                boxShadow: "0 15px 35px rgba(0,0,0,0.2)"
+                              }}
+                              onClick={() => handleRecommendationClick(recommendation.productId)}
+                            >
+                              <div className="d-flex h-100">
+                                {/* Enhanced Product Image */}
+                                <div 
+                                  style={{
+                                    width: "45%",
+                                    position: "relative",
+                                    overflow: "hidden"
+                                  }}
+                                >
+                                  <img
+                                    src={recommendation.productImage}
+                                    alt={recommendation.productName}
+                                    style={{ 
+                                      width: "100%",
+                                      height: "100%", 
+                                      objectFit: "cover",
+                                      transition: "transform 0.6s ease"
+                                    }}
+                                  />
+                                  {/* Gradient overlay */}
+                                  <div 
+                                    style={{
+                                      position: "absolute",
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      background: "linear-gradient(135deg, rgba(79,172,254,0.1) 0%, rgba(0,242,254,0.1) 100%)"
+                                    }}
+                                  />
+                                  {/* Match score badge */}
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ delay: 2 + (index * 0.15), type: "spring" }}
+                                    style={{
+                                      position: "absolute",
+                                      top: "15px",
+                                      right: "15px",
+                                      background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                                      color: "#fff",
+                                      padding: "8px 12px",
+                                      borderRadius: "20px",
+                                      fontSize: "0.8rem",
+                                      fontWeight: "700",
+                                      boxShadow: "0 5px 15px rgba(79,172,254,0.4)"
+                                    }}
+                                  >
+                                    {recommendation.matchScore || 95}% Match
+                                  </motion.div>
+                                </div>
+                                
+                                {/* Enhanced Product Details */}
+                                <div 
+                                  style={{ 
+                                    padding: "25px",
+                                    width: "55%",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "space-between"
+                                  }}
+                                >
+                                  <div>
+                                    <motion.h6
+                                      initial={{ opacity: 0, x: 20 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      transition={{ delay: 2.2 + (index * 0.15) }}
+                                      style={{ 
+                                        color: "#fff",
+                                        marginBottom: "12px",
+                                        fontSize: "1.1rem",
+                                        fontWeight: "700",
+                                        lineHeight: "1.3"
+                                      }}
+                                    >
+                                      {recommendation.productName}
+                                    </motion.h6>
+                                    
+                                    <motion.div
+                                      initial={{ opacity: 0, x: 20 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      transition={{ delay: 2.4 + (index * 0.15) }}
+                                      style={{ 
+                                        fontSize: "0.9rem",
+                                        color: "rgba(255,255,255,0.8)",
+                                        marginBottom: "15px",
+                                        lineHeight: "1.4",
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: "3",
+                                        WebkitBoxOrient: "vertical",
+                                        overflow: "hidden"
+                                      }}
+                                    >
+                                      {recommendation.reason}
+                                    </motion.div>
+                                  </div>
+                                  
+                                  <motion.div 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 2.6 + (index * 0.15) }}
+                                    className="d-flex justify-content-between align-items-center"
+                                  >
+                                    <div
+                                      style={{ 
+                                        fontWeight: "800", 
+                                        color: "#fff",
+                                        fontSize: "1.3rem",
+                                        background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+                                        WebkitBackgroundClip: "text",
+                                        WebkitTextFillColor: "transparent",
+                                        backgroundClip: "text"
+                                      }}
+                                    >
+                                      €{recommendation.price}
+                                    </div>
+                                    <motion.div 
+                                      whileHover={{ x: 5 }}
+                                      style={{
+                                        fontSize: "0.9rem",
+                                        color: "rgba(255,255,255,0.9)",
+                                        fontWeight: "600",
+                                        display: "flex",
+                                        alignItems: "center"
+                                      }}
+                                    >
+                                      Vedi dettagli
+                                      <FaArrowRight style={{ marginLeft: "8px", fontSize: "0.8rem" }} />
+                                    </motion.div>
+                                  </motion.div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          </Col>
+                        ))}
+                      </Row>
+                    ) : (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 1.8, duration: 0.6 }}
+                        className="text-center"
                         style={{ 
-                          fontWeight: "bold", 
-                          color: theme === "dark" ? "#007bff" : "#0056b3",
-                          fontSize: "1.1rem"
+                          background: "rgba(255,255,255,0.1)", 
+                          backdropFilter: "blur(20px)",
+                          borderRadius: "20px", 
+                          padding: "50px 30px",
+                          border: "1px solid rgba(255,255,255,0.2)"
                         }}
                       >
-                        €{recommendation.price}
-                      </span>
-                      <div 
-                        className="view-details" 
-                        style={{
-                          fontSize: "0.8rem",
-                          color: theme === "dark" ? "#adb5bd" : "#6c757d",
-                          textDecoration: "underline",
-                          cursor: "pointer"
-                        }}
-                      >
-                        Vedi dettagli ›
-                      </div>
-                    </div>
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 1.1, 1],
+                            opacity: [0.7, 1, 0.7]
+                          }}
+                          transition={{ 
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                          style={{
+                            display: "inline-block",
+                            background: "linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)",
+                            borderRadius: "50%",
+                            padding: "20px",
+                            marginBottom: "20px"
+                          }}
+                        >
+                          <FaSearch size={40} color="rgba(255,255,255,0.8)" />
+                        </motion.div>
+                        
+                        {analysisData.noProductsMessage ? (
+                          <>
+                            <h5 style={{
+                              color: "#fff",
+                              fontSize: "1.4rem",
+                              fontWeight: "700",
+                              marginBottom: "15px"
+                            }}>
+                              {analysisData.noProductsMessage}
+                            </h5>
+                            <p style={{
+                              color: "rgba(255,255,255,0.8)",
+                              fontSize: "1.1rem",
+                              marginBottom: "20px",
+                              lineHeight: "1.5"
+                            }}>
+                              I colori rilevati nella tua stanza sono specifici e al momento non abbiamo prodotti che corrispondono esattamente a questa palette.
+                            </p>
+                            
+                            {/* Color display */}
+                            <div className="mb-4">
+                              <p style={{
+                                color: "rgba(255,255,255,0.9)",
+                                fontSize: "1rem",
+                                fontWeight: "600",
+                                marginBottom: "15px"
+                              }}>
+                                Colori rilevati nella tua stanza:
+                              </p>
+                              <div className="d-flex justify-content-center gap-3">
+                                {analysisData.detectedColors && analysisData.detectedColors.slice(0, 5).map((color, idx) => (
+                                  <motion.div 
+                                    key={idx}
+                                    initial={{ scale: 0, rotate: 180 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    transition={{ 
+                                      delay: 2 + (idx * 0.1), 
+                                      type: "spring", 
+                                      stiffness: 200 
+                                    }}
+                                    style={{
+                                      width: "45px",
+                                      height: "45px",
+                                      backgroundColor: color.hex,
+                                      border: "3px solid rgba(255,255,255,0.3)",
+                                      borderRadius: "50%",
+                                      boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
+                                    }} 
+                                    title={`${color.name} (${color.hex})`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <p style={{
+                              color: "rgba(255,255,255,0.7)",
+                              fontSize: "1rem",
+                              fontStyle: "italic"
+                            }}>
+                              💡 <strong>Suggerimento:</strong> Prova a cercare prodotti in colori neutri come bianco, nero o grigio che si abbinano a qualsiasi palette, oppure carica un'immagine diversa.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <h5 style={{
+                              color: "rgba(255,255,255,0.9)",
+                              fontSize: "1.3rem",
+                              fontWeight: "600",
+                              marginBottom: "15px"
+                            }}>
+                              Nessun prodotto consigliato disponibile
+                            </h5>
+                            <p style={{
+                              color: "rgba(255,255,255,0.7)",
+                              fontSize: "1rem"
+                            }}>
+                              Prova a modificare i requisiti o a caricare un'immagine diversa della stanza.
+                            </p>
+                          </>
+                        )}
+                      </motion.div>
+                    )}
                   </div>
-                </Card.Body>
-              </div>
-            </Card>
-          </motion.div>
-        </Col>
-      ))}
-    </Row>
-  ) : (
-    <div className="text-center p-4" style={{ backgroundColor: theme === "dark" ? "#343a40" : "#f8f9fa", borderRadius: "12px", padding: "30px" }}>
-      <FaSearch size={48} color={theme === "dark" ? "#495057" : "#dee2e6"} className="mb-3" />
-      <p style={{
-        color: theme === "dark" ? "#adb5bd" : "#6c757d",
-        fontSize: "1.1rem",
-        fontWeight: "500"
-      }}>Nessun prodotto consigliato disponibile.</p>
-      <p style={{
-        color: theme === "dark" ? "#adb5bd" : "#6c757d",
-        fontSize: "0.9rem"
-      }}>Prova a modificare i requisiti o a caricare un'immagine diversa della stanza.</p>
-    </div>
-  )}
-</div>
-              
-              <div className="d-flex justify-content-between mt-4">
-                <Button
-                  variant="outline-secondary"
-                  onClick={() => setStep(2)}
-                >
-                  Indietro
-                </Button>
-                <Button
-                  variant={theme === "dark" ? "light" : "dark"}
-                  onClick={handleViewRecommendedProducts}
-                >
-                  <FaChair className="me-2" /> Visualizza i prodotti consigliati
-                </Button>
-              </div>
+                  
+                  {/* Enhanced Action Buttons */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 2.5, duration: 0.6 }}
+                    className="d-flex justify-content-between mt-5"
+                  >
+                    <Button
+                      onClick={() => setStep(2)}
+                      style={{
+                        background: "rgba(255,255,255,0.1)",
+                        backdropFilter: "blur(10px)",                        border: "2px solid rgba(255,255,255,0.2)",
+                        borderRadius: "8px",
+                        padding: "15px 30px",
+                        color: "#fff",
+                        fontWeight: "600",
+                        fontSize: "1rem",
+                        transition: "all 0.3s ease"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = "rgba(255,255,255,0.2)";
+                        e.target.style.transform = "translateY(-3px)";
+                        e.target.style.boxShadow = "0 10px 25px rgba(0,0,0,0.2)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = "rgba(255,255,255,0.1)";
+                        e.target.style.transform = "none";
+                        e.target.style.boxShadow = "none";
+                      }}
+                    >
+                      <FaArrowLeft className="me-2" /> Analizza Nuovamente
+                    </Button>
+                    
+                    {recommendations && recommendations.length > 0 && (
+                      <Button
+                        onClick={handleViewRecommendedProducts}
+                        style={{
+                          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",                          border: "none",
+                          borderRadius: "8px",
+                          padding: "15px 35px",
+                          color: "#fff",
+                          fontWeight: "600",
+                          fontSize: "1rem",
+                          transition: "all 0.4s ease",
+                          boxShadow: "0 15px 35px rgba(102,126,234,0.4)"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = "translateY(-3px) scale(1.05)";
+                          e.target.style.boxShadow = "0 20px 45px rgba(102,126,234,0.5)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = "none";
+                          e.target.style.boxShadow = "0 15px 35px rgba(102,126,234,0.4)";
+                        }}
+                      >
+                        <FaChair className="me-2" /> Esplora Tutti i Prodotti
+                      </Button>
+                    )}
+                  </motion.div>
+                </motion.div>
+              </motion.div>
             </Col>
           </Row>
         </motion.div>
@@ -970,9 +2049,8 @@ const HomePage = () => {
   const [selectedProductRef, setSelectedProductRef] = useState(null);
   const [highlightedProductId, setHighlightedProductId] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [sectionsVisibility, setSectionsVisibility] = useState({
-    virtualRoom: true,
+  const [selectedCategory, setSelectedCategory] = useState(null);  const [sectionsVisibility, setSectionsVisibility] = useState({
+    virtualRoom: false,
     products: true
   });
 
@@ -1201,7 +2279,17 @@ const scrollToProducts = () => {
 };
 
 const scrollToVirtualRoom = () => {
-  scrollToSection(virtualRoomSectionRef);
+  setSectionsVisibility(prev => ({
+    ...prev, 
+    virtualRoom: !prev.virtualRoom
+  }));
+  
+  // If we're showing the section, scroll to it after a brief delay for animation
+  if (!sectionsVisibility.virtualRoom) {
+    setTimeout(() => {
+      scrollToSection(virtualRoomSectionRef);
+    }, 300);
+  }
 };
 
   const loadMoreProducts = () => {
@@ -1416,15 +2504,13 @@ const filteredProductsMemo = useMemo(() => {
 
   return filtered;
 }, [filters, products, sortOrder]);
-
   return (
 
-    <div className={theme === "dark" ? "dark-mode" : "light-mode"} style={{ backgroundColor: theme === "dark" ? "#212529" : "#fff", color: theme === "dark" ? "#fff" : "#000" }}>
-      {/* Hero Section - sempre visibile */}
+    <div className={`glass-container ${theme === "dark" ? "dark-mode" : "light-mode"}`} style={{ backgroundColor: "transparent", color: theme === "dark" ? "#fff" : "#000" }}>      {/* Hero Section - sempre visibile */}
       <div
+        className="glass-hero"
         style={{
           boxShadow: "0px 15px 25px rgba(0,0,0,0.15)",
-          backgroundColor: theme === "dark" ? "#1a1d20" : "#f8f9fa",
           color: theme === "dark" ? "#fff" : "#000",
           height: "100vh",
           display: "flex",
@@ -1432,10 +2518,6 @@ const filteredProductsMemo = useMemo(() => {
           justifyContent: "center",
           alignItems: "center",
           width: "100%",
-          backgroundImage: theme === "dark" 
-            ? "linear-gradient(135deg, rgba(30,32,35,0.95) 0%, rgba(50,52,55,0.95) 100%)"
-            : "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(245,245,245,0.95) 100%)",
-          backgroundSize: "cover",
           position: "relative",
           overflow: "hidden"
         }}
@@ -1493,25 +2575,20 @@ const filteredProductsMemo = useMemo(() => {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 1 }}
-        >
-          <Button
-            variant="dark"
+        >          <Button
             size="lg"
-            className="mt-3 me-3"
+            className="mt-3 me-3 glass-button"
             onClick={scrollToProducts}
             style={{
-              border: "2px solid #fff",
               transition: "transform 0.3s ease",
             }}
             onMouseEnter={(e) => (e.target.style.transform = "scale(1.1)")}
             onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
           >
             Vai ai Prodotti
-          </Button>
-          <Button
-            variant="outline-light"
+          </Button>          <Button
             size="lg"
-            className="mt-3"
+            className="mt-3 glass-button-outline"
             onClick={scrollToVirtualRoom}
             style={{
               transition: "transform 0.3s ease",
@@ -1519,50 +2596,59 @@ const filteredProductsMemo = useMemo(() => {
             onMouseEnter={(e) => (e.target.style.transform = "scale(1.1)")}
             onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
           >
-            <FaMagic className="me-2" /> Crea la tua stanza virtuale
+            <FaMagic className="me-2" /> 
+            {sectionsVisibility.virtualRoom ? 'Nascondi Stanza Virtuale' : 'Crea la tua stanza virtuale'}
           </Button>
         </motion.div>
-      </div>
-
-
-      {/* Virtual Room Creator Section */}
-      {(!selectedProduct || sectionsVisibility.virtualRoom) && (
-      <div ref={virtualRoomSectionRef} style={{
-        backgroundColor: theme === "dark" ? "#212529" : "#fff",
-        color: theme === "dark" ? "#fff" : "#000",
-        padding: "40px 0",
-        boxShadow: "0px 10px 20px rgba(0,0,0,0.1)",
-        marginBottom: "40px"
-      }}>
-        <Container>
-          <motion.h2
-            className="text-center mb-4"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+      </div>      {/* Virtual Room Creator Section */}
+      <AnimatePresence>
+        {sectionsVisibility.virtualRoom && (
+          <motion.div 
+            ref={virtualRoomSectionRef} 
+            initial={{ opacity: 0, height: 0, y: -50 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -50 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className={`glass-virtual-room ${theme === "dark" ? "dark-mode" : "light-mode"}`}
             style={{
               color: theme === "dark" ? "#fff" : "#000",
-              fontWeight: "bold",
+              overflow: "hidden"
             }}
           >
-            Crea la tua stanza virtuale
-          </motion.h2>
-          <VirtualRoomCreator 
-            theme={theme} 
-            products={products} 
-            setFilteredProducts={setFilteredProducts} 
-            scrollToProducts={scrollToProducts} 
-            handleProductRecommendationClick={handleAIRecommendationClick}  // Aggiungi questa prop
-          />
-        </Container>
-      </div>
-      )}
-
-      {/* Product Details Section */}
+            <Container>
+              <motion.h2
+                className="text-center mb-4"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                style={{
+                  color: theme === "dark" ? "#fff" : "#000",
+                  fontWeight: "bold",
+                }}
+              >
+                Crea la tua stanza virtuale
+              </motion.h2>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <VirtualRoomCreator 
+                  theme={theme} 
+                  products={products} 
+                  setFilteredProducts={setFilteredProducts} 
+                  scrollToProducts={scrollToProducts} 
+                  handleProductRecommendationClick={handleAIRecommendationClick}
+                />
+              </motion.div>
+            </Container>
+          </motion.div>
+        )}
+      </AnimatePresence>      {/* Product Details Section */}
       <AnimatePresence>
         {selectedProduct && (
           <motion.div
-            className="led-effect"
+            className={`glass-product-details ${theme === "dark" ? "dark-mode" : "light-mode"}`}
             initial={{ opacity: 0, scale: 0.8, rotateX: -15, y: 100 }}
             animate={{ opacity: 1, scale: 1, rotateX: 0, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, rotateX: 15, y: 100 }}
@@ -1571,12 +2657,9 @@ const filteredProductsMemo = useMemo(() => {
               perspective: "1000px",
               position: "relative",
               zIndex: 10,
-              backgroundColor: theme === "dark" ? "#212529" : "#fff",
-              padding: "30px",
-              borderRadius: "15px",
-              boxShadow: "0 0 60px rgba(255, 255, 255, 0.2)",
               maxWidth: "90%",
               margin: "30px auto",
+              color: theme === "dark" ? "#fff" : "#000"
             }}
           >
             <Row>
@@ -1702,54 +2785,47 @@ const filteredProductsMemo = useMemo(() => {
             </Row>
           </motion.div>
         )}
-      </AnimatePresence>
-      {/* Products Section */}
-      <div ref={productsSectionRef} style={{
-        backgroundColor: theme === "dark" ? "#212529" : "#fff", color: theme === "dark" ? "#fff" : "#000", /*mettimi un box shadow*/
-        boxShadow: "20px 20px 30px rgba(0,0,0,0.9)",
+      </AnimatePresence>      {/* Products Section */}
+      <div ref={productsSectionRef} className="glass-section" style={{
+        color: theme === "dark" ? "#fff" : "#000"
       }}>
         <Container fluid>
 
           <h2 className="text-center mb-4" style={{
             color: theme === "dark" ? "#fff" : "#000", // Cambia colore in base al tema
             fontWeight: "bold",
-          }}>Prodotti</h2>
-          {/* Filters Section */}
+          }}>Prodotti</h2>          {/* Filters Section */}
           <div 
             ref={filtersContainerRef}
+            className="glass-filters"
             style={{
-              backgroundColor: theme === "dark" ? "#212529" : "#fff", 
-              color: theme === "dark" ? "#fff" : "#000",
-              boxShadow: "10px 10px 5px rgba(0,0,0,0.5)",
+              color: theme === "dark" ? "#fff" : "#000"
             }}
           >
-            <Container fluid>
-              <div className="text-center mb-3" >
+            <Container fluid>              <div className="text-center mb-3" >
                 <Button
-                  variant="dark"
-                  style={{ border: "0.5px solid " }}
+                  className="glass-button filter-toggle-btn"
+                  style={{ border: "1px solid rgba(255, 255, 255, 0.2)" }}
                   onClick={() => setShowFilters(!showFilters)}
                   aria-controls="filters-collapse"
                   aria-expanded={showFilters}
-                  className="filter-toggle-btn"
                 >
                   <FaFilter /> Filtri
                 </Button>
                 {showFilters && (
                   <Button
-                    variant="danger"
+                    className="glass-button-danger ms-3"
                     style={{ marginBottom: "30px" }}
-                    className="ms-3"
                     onClick={resetFilters}
                   >
                     Azzera Filtri
                   </Button>
                 )}
-              </div>
-              <Collapse 
+              </div>              <Collapse 
                 in={showFilters} 
                 id="filtri"
-                style={{ backgroundColor: theme === "dark" ? "#212529" : "#fff", color: theme === "dark" ? "#fff" : "#000" }}
+                className="glass-collapse"
+                style={{ color: theme === "dark" ? "#fff" : "#000" }}
               >
                 <div id="filters-collapse" className="filters-container">
                   <Form>
@@ -1759,14 +2835,14 @@ const filteredProductsMemo = useMemo(() => {
                           <Form.Label className="filter-label" style={{
                             // Cambia colore in base al tema
                             fontWeight: "bold",
-                          }}>Nome</Form.Label>
-                          <Form.Control
+                          }}>Nome</Form.Label>                        <Form.Control
                             type="text"
                             placeholder="Cerca per nome"
                             name="name"
                             style={{
                               backgroundColor: theme === "dark" ? "#212529" : "#fff",
-                              color: "white",
+                              color: theme === "dark" ? "#fff" : "#000",
+                              border: theme === "dark" ? "1px solid #495057" : "1px solid #ced4da",
                               fontWeight: "bold",
                             }}
                             value={filters.name}
@@ -1843,9 +2919,12 @@ const filteredProductsMemo = useMemo(() => {
                           <Form.Label className="filter-label" style={{
                             color: theme === "dark" ? "#fff" : "#000", // Cambia colore in base al tema
                             fontWeight: "bold",
-                          }}>Colore</Form.Label>
-                          <Form.Control
-                            style={{ backgroundColor: theme === "dark" ? "#212529" : "#fff", color: theme === "dark" ? "#fff" : "#000" }}
+                          }}>Colore</Form.Label>                        <Form.Control
+                            style={{ 
+                              backgroundColor: theme === "dark" ? "#212529" : "#fff", 
+                              color: theme === "dark" ? "#fff" : "#000",
+                              border: theme === "dark" ? "1px solid #495057" : "1px solid #ced4da",
+                            }}
                             type="text"
                             placeholder="Cerca per colore"
                             name="color"
@@ -2001,22 +3080,24 @@ const filteredProductsMemo = useMemo(() => {
                   md={4}
                   className={`mb-4 ${highlightedProductId === product._id ? "highlighted-product" : ""}`}
                   ref={productRefs.current[index]}
-                >
-                  <Card
-                    className="product-card h-100"
+                >                  <Card
+                    className={`product-card h-100 ${theme === "dark" ? "dark-mode" : "light-mode"}`}
                     style={{
-                      borderRadius: "12px",
+                      borderRadius: "20px",
                       overflow: "hidden",
                       cursor: "pointer",
                       border: highlightedProductId === product._id
                         ? `3px solid ${theme === "dark" ? "#007bff" : "#0056b3"}`
-                        : "none",
+                        : "1px solid rgba(255, 255, 255, 0.1)",
                       transition: "transform 0.3s ease, box-shadow 0.3s ease",
                       transform: highlightedProductId === product._id ? "translateY(-5px)" : "none",
                       boxShadow: highlightedProductId === product._id
-                        ? "0 15px 30px rgba(0,0,0,0.2)"
-                        : "0 5px 15px rgba(0,0,0,0.1)",
-                      backgroundColor: theme === "dark" ? "#2c2c2c" : "#fff",
+                        ? "0 20px 40px rgba(0,0,0,0.2)"
+                        : "0 10px 25px rgba(0,0,0,0.1)",
+                      background: theme === "dark" 
+                        ? "rgba(255, 255, 255, 0.05)" 
+                        : "rgba(0, 0, 0, 0.02)",
+                      backdropFilter: "blur(10px)",
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = "translateY(-5px)";
@@ -2059,10 +3140,12 @@ const filteredProductsMemo = useMemo(() => {
                         className="product-image"
                       />
                     </div>
-                    
-                    <Card.Body style={{ 
+                      <Card.Body style={{ 
                       padding: "1.25rem",
-                      backgroundColor: theme === "dark" ? "#2c2c2c" : "#fff",
+                      background: theme === "dark" 
+                        ? "rgba(255, 255, 255, 0.03)" 
+                        : "rgba(0, 0, 0, 0.01)",
+                      backdropFilter: "blur(5px)",
                       color: theme === "dark" ? "#fff" : "#000"
                     }}>
                       <Card.Title style={{ 
@@ -2145,8 +3228,7 @@ const filteredProductsMemo = useMemo(() => {
             </div>
           )}
         </Container>
-      </div>
-      {showScrollTop && (
+      </div>      {showScrollTop && (
   <button
     onClick={() => {
       // Scorri all'intera sezione dei filtri, non solo all'elemento con id="filtri"
@@ -2154,26 +3236,24 @@ const filteredProductsMemo = useMemo(() => {
         filtersContainerRef.current.scrollIntoView({ behavior: "smooth" });
       }
     }}
+    className={`glass-scroll-button ${theme === "dark" ? "dark-mode" : "light-mode"}`}
     style={{
       position: "fixed",
       bottom: "20px",
       left: "20px",
       zIndex: 1000,
-      borderRadius: "50%",
       width: "50px",
       height: "50px",
       fontSize: "24px",
-      backgroundColor: "#007bff",
       color: "white",
       border: "none",
       cursor: "pointer",
-      boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
     }}
     aria-label="Torna ai filtri"
   >
     ↑
   </button>
-)}  
+)}
       <ToastContainer />
       <ChatPopup />
     </div>

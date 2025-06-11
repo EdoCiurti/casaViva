@@ -14,10 +14,9 @@ const Footer = () => {
       window.removeEventListener('darkModeToggle', handleDarkModeToggle);
     };
   }, []);
-
   return (
     <footer 
-      className={`text-center py-3 mt-4 ${darkMode ? "bg-dark text-light" : "bg-light text-dark"}`} 
+      className={`glass-footer text-center py-3 mt-4 ${darkMode ? "dark" : "light"}`} 
       style={{ width: '100%', height: "7%", marginTop: 'auto', bottom: 0, position: 'relative' }}
     >
       <p>&copy; 2025 Ecommerce AR. All rights reserved.</p>

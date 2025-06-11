@@ -493,186 +493,584 @@ const ProductsPage = () => {
                         </Col>
                     </Row>
                 </Form>
-            )}
-            <AnimatePresence >
+            )}            <AnimatePresence>
                 {selectedProduct && selectedCategory && (
-                    <div ref={detailsSectionRef}>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: theme === "dark" 
+                                ? 'rgba(0, 0, 0, 0.85)' 
+                                : 'rgba(0, 0, 0, 0.75)',
+                            backdropFilter: 'blur(25px)',
+                            zIndex: 1000,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '20px'
+                        }}
+                        onClick={() => {
+                            setSelectedProduct(null);
+                            localStorage.removeItem("selectedProduct");
+                        }}
+                    >
                         <motion.div
-                            className="led-effect"
-                            initial={{ opacity: 0, scale: 0.8, rotateX: -15, y: 100 }}
-                            animate={{ opacity: 1, scale: 1, rotateX: 0, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.8, rotateX: 15, y: 100 }}
+                            ref={detailsSectionRef}
+                            initial={{ scale: 0.7, opacity: 0, rotateY: -15 }}
+                            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                            exit={{ scale: 0.8, opacity: 0, rotateY: 15 }}
                             transition={{
-                                duration: 0.8,
-                                ease: [0.25, 0.46, 0.45, 0.94],
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30,
+                                duration: 0.6
                             }}
+                            onClick={(e) => e.stopPropagation()}
                             style={{
-                                perspective: "1000px",
-                                position: "relative",
-                                zIndex: 10,
-                                backgroundColor: theme === "dark" ? "#212529" : "#fff",
-                                padding: "30px",
-                                borderRadius: "15px",
-                                boxShadow: `
-                                    0 0 20px rgb(248, 248, 248), /* Bagliore verde */
-                                    0 0 40px rgba(255, 255, 255, 0.3), 
-                                    0 0 60px rgba(255, 255, 255, 0.2)`, /* Ombra verde*/
-                                maxWidth: "90%",
-                                margin: "0 auto",
+                                background: theme === "dark" 
+                                    ? 'linear-gradient(145deg, rgba(30, 30, 47, 0.95), rgba(45, 45, 70, 0.85))' 
+                                    : 'linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 250, 0.95))',
+                                backdropFilter: 'blur(40px)',
+                                borderRadius: '35px',
+                                border: theme === "dark" 
+                                    ? '1px solid rgba(255, 255, 255, 0.15)' 
+                                    : '1px solid rgba(0, 0, 0, 0.1)',
+                                boxShadow: theme === "dark"
+                                    ? `0 35px 80px rgba(0, 0, 0, 0.4),
+                                       0 20px 40px rgba(138, 92, 246, 0.15),
+                                       inset 0 1px 0 rgba(255, 255, 255, 0.1)`
+                                    : `0 35px 80px rgba(0, 0, 0, 0.15),
+                                       0 20px 40px rgba(59, 130, 246, 0.1),
+                                       inset 0 1px 0 rgba(255, 255, 255, 0.8)`,
+                                maxWidth: '95vw',
+                                maxHeight: '95vh',
+                                width: '1200px',
+                                overflow: 'hidden',
+                                position: 'relative'
                             }}
                         >
-                            <Row  >
-                                {/* Colonna sinistra: Foto */}
-                                <Col
-                                    md={6}
-                                    className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"}`}
-                                    style={{ backgroundColor: theme === "dark" ? "#212529" : "#fff" }}
+                            {/* Floating Close Button */}
+                            <motion.button
+                                whileHover={{ scale: 1.1, rotate: 90 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => {
+                                    setSelectedProduct(null);
+                                    localStorage.removeItem("selectedProduct");
+                                }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '25px',
+                                    right: '25px',
+                                    background: theme === "dark" 
+                                        ? 'rgba(255, 255, 255, 0.1)' 
+                                        : 'rgba(0, 0, 0, 0.05)',
+                                    backdropFilter: 'blur(20px)',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '50px',
+                                    height: '50px',
+                                    color: theme === "dark" ? '#ffffff' : '#000000',
+                                    fontSize: '24px',
+                                    cursor: 'pointer',
+                                    zIndex: 10,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            >
+                                ✕
+                            </motion.button>
+
+                            <div style={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: '1fr 1fr', 
+                                height: '100%',
+                                minHeight: '600px'
+                            }}>
+                                {/* Left Section - Image Gallery */}
+                                <motion.div
+                                    initial={{ opacity: 0, x: -30 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.2, duration: 0.6 }}
+                                    style={{
+                                        padding: '40px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        position: 'relative'
+                                    }}
                                 >
-                                    <div className="text-center">
-                                        <img
-                                            src={mainImage}
-                                            alt={selectedProduct.name}
-                                            className="img-fluid mb-3"
-                                            style={{
-                                                maxHeight: "400px",
-                                                objectFit: "cover",
-                                                borderRadius: "15px",
-                                                backgroundColor: theme === "dark" ? "#1e1e2f" : "#ffffff",
-                                                color: theme === "dark" ? "#e0e0e0" : "#000000",
-                                                boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.2)",
-                                            }}
-                                        />
-                                        <p
-                                            style={{
-                                                color: theme === "dark" ? "#ffffff" : "#000000",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Immagini secondarie:
-                                        </p>
-                                        <div className="similar-images d-flex flex-wrap justify-content-center">
-                                            {selectedProduct.images.map((image, index) => (
-                                                <img
-                                                    key={index}
-                                                    src={image}
-                                                    alt={`Immagine secondaria ${index + 1}`}
-                                                    className="img-thumbnail mx-2"
-                                                    style={{
-                                                        maxHeight: "100px", // Altezza massima ridotta
-                                                        maxWidth: "100px", // Larghezza massima ridotta
-                                                        objectFit: "cover",
-                                                        cursor: "pointer",
-                                                        border: mainImage === image ? "3px solid blue" : "2px solid #ddd",
-                                                        borderRadius: "10px",
-                                                        backgroundColor: theme === "dark" ? "#2c2c2c" : "#fff",
-                                                        transition: "transform 0.3s ease-in-out",
-                                                    }}
-                                                    onClick={() => {
-                                                        const temp = mainImage;
-                                                        setMainImage(image);
-                                                        const updatedImages = [...selectedProduct.images];
-                                                        updatedImages[0] = image;
-                                                        updatedImages[index] = temp;
-                                                        setSelectedProduct({ ...selectedProduct, images: updatedImages });
-                                                    }}
-                                                    onMouseEnter={(e) => (e.target.style.transform = "scale(1.1)")}
-                                                    onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                </Col>
-                                {/* Colonna destra: Dettagli */}
-                                <Col
-                                    md={6}
-                                    className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"} d-flex align-items-center justify-content-center`}
-                                    style={{ position: "relative", backgroundColor: theme === "dark" ? "#212529" : "#fff" }}
-                                >
+                                    {/* Main Image Container */}
                                     <motion.div
-                                        className="details-content text-center"
-                                        initial={{ opacity: 0, x: 50 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ duration: 0.5, ease: "easeOut" }}
                                         style={{
-                                            backgroundColor: theme === "dark" ? "#212529" : "#fff",
-                                            color: theme === "dark" ? "#fff" : "#212529",
-                                            padding: "20px",
-                                            borderRadius: "10px",
+                                            position: 'relative',
+                                            borderRadius: '25px',
+                                            overflow: 'hidden',
+                                            background: theme === "dark" 
+                                                ? 'rgba(255, 255, 255, 0.05)' 
+                                                : 'rgba(0, 0, 0, 0.02)',
+                                            backdropFilter: 'blur(10px)',
+                                            border: theme === "dark" 
+                                                ? '1px solid rgba(255, 255, 255, 0.1)' 
+                                                : '1px solid rgba(0, 0, 0, 0.05)',
+                                            height: '400px',
+                                            marginBottom: '25px'
                                         }}
                                     >
-                                        <Button
-                                            variant="light"
-                                            className="close-details-btn"
-                                            onClick={() => {
-                                                setSelectedProduct(null);
-                                                localStorage.removeItem("selectedProduct");
-                                            }}
+                                        <motion.img
+                                            key={mainImage}
+                                            initial={{ scale: 1.1, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ duration: 0.5 }}
+                                            src={mainImage}
+                                            alt={selectedProduct.name}
                                             style={{
-                                                position: "absolute",
-                                                top: "10px",
-                                                right: "10px",
-                                                border: "none",
-                                                background: "transparent",
-                                                fontSize: "1.5rem",
-                                                fontWeight: "bold",
-                                                cursor: "pointer",
-                                                zIndex: 10,
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover'
+                                            }}
+                                        />
+                                        
+                                        {/* Image Overlay Gradient */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            bottom: 0,
+                                            left: 0,
+                                            right: 0,
+                                            height: '30%',
+                                            background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
+                                            pointerEvents: 'none'
+                                        }} />
+                                    </motion.div>
+
+                                    {/* Thumbnail Gallery */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.4, duration: 0.6 }}
+                                        style={{
+                                            display: 'flex',
+                                            gap: '12px',
+                                            justifyContent: 'center',
+                                            flexWrap: 'wrap',
+                                            maxHeight: '120px',
+                                            overflowY: 'auto',
+                                            padding: '10px 0'
+                                        }}
+                                    >
+                                        {selectedProduct.images.map((image, index) => (
+                                            <motion.div
+                                                key={index}
+                                                whileHover={{ scale: 1.1, y: -5 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => {
+                                                    const temp = mainImage;
+                                                    setMainImage(image);
+                                                    const updatedImages = [...selectedProduct.images];
+                                                    updatedImages[0] = image;
+                                                    updatedImages[index] = temp;
+                                                    setSelectedProduct({ ...selectedProduct, images: updatedImages });
+                                                }}
+                                                style={{
+                                                    width: '80px',
+                                                    height: '80px',
+                                                    borderRadius: '15px',
+                                                    overflow: 'hidden',
+                                                    cursor: 'pointer',
+                                                    background: theme === "dark" 
+                                                        ? 'rgba(255, 255, 255, 0.05)' 
+                                                        : 'rgba(0, 0, 0, 0.02)',
+                                                    border: mainImage === image 
+                                                        ? `3px solid ${theme === "dark" ? '#8b5cf6' : '#3b82f6'}` 
+                                                        : `2px solid ${theme === "dark" ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                                                    position: 'relative'
+                                                }}
+                                            >
+                                                <img
+                                                    src={image}
+                                                    alt={`View ${index + 1}`}
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '100%',
+                                                        objectFit: 'cover'
+                                                    }}
+                                                />
+                                                {mainImage === image && (
+                                                    <div style={{
+                                                        position: 'absolute',
+                                                        inset: '0',
+                                                        background: theme === "dark" 
+                                                            ? 'rgba(139, 92, 246, 0.2)' 
+                                                            : 'rgba(59, 130, 246, 0.2)',
+                                                        backdropFilter: 'blur(2px)'
+                                                    }} />
+                                                )}
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+                                </motion.div>
+
+                                {/* Right Section - Product Details */}
+                                <motion.div
+                                    initial={{ opacity: 0, x: 30 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3, duration: 0.6 }}
+                                    style={{
+                                        padding: '40px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        background: theme === "dark" 
+                                            ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.03))' 
+                                            : 'linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(139, 92, 246, 0.02))',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    {/* Content Section */}
+                                    <div>
+                                        {/* Product Title */}
+                                        <motion.h1
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.5, duration: 0.6 }}
+                                            style={{
+                                                fontSize: '2.8rem',
+                                                fontWeight: '800',
+                                                marginBottom: '15px',
+                                                background: theme === "dark" 
+                                                    ? 'linear-gradient(135deg, #ffffff, #e2e8f0)' 
+                                                    : 'linear-gradient(135deg, #1e293b, #475569)',
+                                                WebkitBackgroundClip: 'text',
+                                                WebkitTextFillColor: 'transparent',
+                                                lineHeight: '1.2'
                                             }}
                                         >
-                                            ✕
-                                        </Button>
-                                        <h3>{selectedProduct.name}</h3>
-                                        <p><strong>Prezzo:</strong> €{selectedProduct.price}</p>
-                                        <p><strong>Descrizione:</strong> {selectedProduct.description}</p>
-                                        <p><strong>Dimensioni:</strong> {selectedProduct.dimensioni || "Non specificate"}</p>
-                                        <p><strong>Disponibilità:</strong> {selectedProduct.stock > 0 ? `${selectedProduct.stock} pezzi disponibili` : "Non disponibile"}</p>
-                                        <div className="d-flex justify-content-center align-items-center mt-4">
-                                            <Button
-                                                variant={theme === "dark" ? "light" : "dark"}
-                                                onClick={() => addToCart(selectedProduct._id)}
-                                                className="me-3"
-                                            >
-                                                Aggiungi al carrello
-                                            </Button>
-                                            <FaHeart
-                                                size={24}
-                                                color={wishlist.includes(selectedProduct._id) ? "red" : "gray"}
-                                                style={{ cursor: "pointer" }}
-                                                className="pulse-animation"
-                                                onClick={() => {
-                                                    wishlist.includes(selectedProduct._id)
-                                                        ? removeFromWishlist(selectedProduct._id)
-                                                        : addToWishlist(selectedProduct._id);
-                                                }}
-                                            />
-                                        </div>
-                                        {(selectedProduct.link3Dios || selectedProduct.link3Dandroid) && (
-                                            <div className="mt-4">
-                                                <p><strong>Visualizza in 3D:</strong></p>
-                                                {selectedProduct.link3Dios && (
-                                                    <Button
-                                                        variant={theme === "dark" ? "light" : "dark"}
-                                                        className="me-2"
-                                                        onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
-                                                    >
-                                                        Visualizza su iOS
-                                                    </Button>
-                                                )}
-                                                {selectedProduct.link3Dandroid && (
-                                                    <Button
-                                                        variant={theme === "dark" ? "light" : "dark"}
-                                                        onClick={() => handleShowQRModal(selectedProduct.link3Dandroid)}
-                                                    >
-                                                        Visualizza su Android
-                                                    </Button>
-                                                )}
+                                            {selectedProduct.name}
+                                        </motion.h1>
+
+                                        {/* Price */}
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: 0.6, duration: 0.6 }}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                background: theme === "dark" 
+                                                    ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.1))' 
+                                                    : 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05))',
+                                                padding: '15px 25px',
+                                                borderRadius: '20px',
+                                                border: theme === "dark" 
+                                                    ? '1px solid rgba(34, 197, 94, 0.3)' 
+                                                    : '1px solid rgba(34, 197, 94, 0.2)',
+                                                marginBottom: '30px'
+                                            }}
+                                        >
+                                            <span style={{
+                                                fontSize: '2.2rem',
+                                                fontWeight: '700',
+                                                color: theme === "dark" ? '#22c55e' : '#16a34a'
+                                            }}>
+                                                €{selectedProduct.price}
+                                            </span>
+                                        </motion.div>
+
+                                        {/* Product Details */}
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: 0.7, duration: 0.6 }}
+                                            style={{ marginBottom: '30px' }}
+                                        >
+                                            {/* Description */}
+                                            <div style={{ 
+                                                marginBottom: '25px',
+                                                padding: '20px',
+                                                background: theme === "dark" 
+                                                    ? 'rgba(255, 255, 255, 0.03)' 
+                                                    : 'rgba(0, 0, 0, 0.02)',
+                                                borderRadius: '15px',
+                                                border: theme === "dark" 
+                                                    ? '1px solid rgba(255, 255, 255, 0.05)' 
+                                                    : '1px solid rgba(0, 0, 0, 0.05)'
+                                            }}>
+                                                <h3 style={{
+                                                    fontSize: '1.1rem',
+                                                    fontWeight: '600',
+                                                    color: theme === "dark" ? '#e2e8f0' : '#475569',
+                                                    marginBottom: '10px'
+                                                }}>
+                                                    Descrizione
+                                                </h3>
+                                                <p style={{
+                                                    fontSize: '1rem',
+                                                    lineHeight: '1.6',
+                                                    color: theme === "dark" ? '#cbd5e1' : '#64748b',
+                                                    margin: 0
+                                                }}>
+                                                    {selectedProduct.description}
+                                                </p>
                                             </div>
+
+                                            {/* Specifications Grid */}
+                                            <div style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: '1fr 1fr',
+                                                gap: '15px',
+                                                marginBottom: '25px'
+                                            }}>
+                                                <div style={{
+                                                    padding: '15px',
+                                                    background: theme === "dark" 
+                                                        ? 'rgba(255, 255, 255, 0.03)' 
+                                                        : 'rgba(0, 0, 0, 0.02)',
+                                                    borderRadius: '12px',
+                                                    border: theme === "dark" 
+                                                        ? '1px solid rgba(255, 255, 255, 0.05)' 
+                                                        : '1px solid rgba(0, 0, 0, 0.05)'
+                                                }}>
+                                                    <div style={{
+                                                        fontSize: '0.85rem',
+                                                        fontWeight: '500',
+                                                        color: theme === "dark" ? '#94a3b8' : '#64748b',
+                                                        marginBottom: '5px'
+                                                    }}>
+                                                        Dimensioni
+                                                    </div>
+                                                    <div style={{
+                                                        fontSize: '1rem',
+                                                        fontWeight: '600',
+                                                        color: theme === "dark" ? '#e2e8f0' : '#1e293b'
+                                                    }}>
+                                                        {selectedProduct.dimensioni || "Non specificate"}
+                                                    </div>
+                                                </div>
+                                                <div style={{
+                                                    padding: '15px',
+                                                    background: theme === "dark" 
+                                                        ? 'rgba(255, 255, 255, 0.03)' 
+                                                        : 'rgba(0, 0, 0, 0.02)',
+                                                    borderRadius: '12px',
+                                                    border: theme === "dark" 
+                                                        ? '1px solid rgba(255, 255, 255, 0.05)' 
+                                                        : '1px solid rgba(0, 0, 0, 0.05)'
+                                                }}>
+                                                    <div style={{
+                                                        fontSize: '0.85rem',
+                                                        fontWeight: '500',
+                                                        color: theme === "dark" ? '#94a3b8' : '#64748b',
+                                                        marginBottom: '5px'
+                                                    }}>
+                                                        Disponibilità
+                                                    </div>
+                                                    <div style={{
+                                                        fontSize: '1rem',
+                                                        fontWeight: '600',
+                                                        color: selectedProduct.stock > 0 
+                                                            ? (theme === "dark" ? '#22c55e' : '#16a34a')
+                                                            : (theme === "dark" ? '#ef4444' : '#dc2626')
+                                                    }}>
+                                                        {selectedProduct.stock > 0 
+                                                            ? `${selectedProduct.stock} disponibili` 
+                                                            : "Non disponibile"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* 3D/AR Section */}
+                                        {(selectedProduct.link3Dios || selectedProduct.link3Dandroid) && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.8, duration: 0.6 }}
+                                                style={{
+                                                    padding: '20px',
+                                                    background: theme === "dark" 
+                                                        ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(139, 92, 246, 0.05))' 
+                                                        : 'linear-gradient(135deg, rgba(168, 85, 247, 0.05), rgba(139, 92, 246, 0.03))',
+                                                    borderRadius: '15px',
+                                                    border: theme === "dark" 
+                                                        ? '1px solid rgba(168, 85, 247, 0.2)' 
+                                                        : '1px solid rgba(168, 85, 247, 0.1)',
+                                                    marginBottom: '30px'
+                                                }}
+                                            >
+                                                <h3 style={{
+                                                    fontSize: '1.1rem',
+                                                    fontWeight: '600',
+                                                    color: theme === "dark" ? '#c084fc' : '#8b5cf6',
+                                                    marginBottom: '15px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px'
+                                                }}>
+                                                    🥽 Visualizza in Realtà Aumentata
+                                                </h3>
+                                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                    {selectedProduct.link3Dios && (
+                                                        <motion.button
+                                                            whileHover={{ scale: 1.05, y: -2 }}
+                                                            whileTap={{ scale: 0.95 }}
+                                                            onClick={() => handleShowQRModal(selectedProduct.link3Dios)}
+                                                            style={{
+                                                                background: 'linear-gradient(135deg, #007AFF, #0051D0)',
+                                                                border: 'none',
+                                                                borderRadius: '12px',
+                                                                padding: '12px 20px',
+                                                                color: 'white',
+                                                                fontWeight: '600',
+                                                                fontSize: '0.9rem',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px'
+                                                            }}
+                                                        >
+                                                            📱 iOS
+                                                        </motion.button>
+                                                    )}
+                                                    {selectedProduct.link3Dandroid && (
+                                                        <motion.button
+                                                            whileHover={{ scale: 1.05, y: -2 }}
+                                                            whileTap={{ scale: 0.95 }}
+                                                            onClick={() => handleShowQRModal(selectedProduct.link3Dandroid)}
+                                                            style={{
+                                                                background: 'linear-gradient(135deg, #34A853, #137333)',
+                                                                border: 'none',
+                                                                borderRadius: '12px',
+                                                                padding: '12px 20px',
+                                                                color: 'white',
+                                                                fontWeight: '600',
+                                                                fontSize: '0.9rem',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px'
+                                                            }}
+                                                        >
+                                                            🤖 Android
+                                                        </motion.button>
+                                                    )}
+                                                </div>
+                                            </motion.div>
                                         )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 30 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.9, duration: 0.6 }}
+                                        style={{
+                                            display: 'flex',
+                                            gap: '15px',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <motion.button
+                                            whileHover={{ scale: 1.05, y: -3 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => addToCart(selectedProduct._id)}
+                                            style={{
+                                                flex: 1,
+                                                background: theme === "dark" 
+                                                    ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' 
+                                                    : 'linear-gradient(135deg, #2563eb, #1e40af)',
+                                                border: 'none',
+                                                borderRadius: '20px',
+                                                padding: '18px 30px',
+                                                color: 'white',
+                                                fontWeight: '700',
+                                                fontSize: '1.1rem',
+                                                cursor: 'pointer',
+                                                boxShadow: theme === "dark" 
+                                                    ? '0 10px 30px rgba(59, 130, 246, 0.3)' 
+                                                    : '0 10px 30px rgba(37, 99, 235, 0.3)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '10px'
+                                            }}
+                                        >
+                                            🛒 Aggiungi al Carrello
+                                        </motion.button>
+
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => {
+                                                wishlist.includes(selectedProduct._id)
+                                                    ? removeFromWishlist(selectedProduct._id)
+                                                    : addToWishlist(selectedProduct._id);
+                                            }}
+                                            style={{
+                                                width: '60px',
+                                                height: '60px',
+                                                borderRadius: '50%',
+                                                border: 'none',
+                                                background: wishlist.includes(selectedProduct._id)
+                                                    ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                                                    : theme === "dark" 
+                                                        ? 'rgba(255, 255, 255, 0.1)' 
+                                                        : 'rgba(0, 0, 0, 0.05)',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '1.5rem',
+                                                boxShadow: wishlist.includes(selectedProduct._id)
+                                                    ? '0 10px 30px rgba(239, 68, 68, 0.3)'
+                                                    : 'none'
+                                            }}
+                                        >
+                                            <FaHeart
+                                                color={wishlist.includes(selectedProduct._id) 
+                                                    ? "#ffffff" 
+                                                    : theme === "dark" ? "#64748b" : "#94a3b8"}
+                                            />
+                                        </motion.button>
                                     </motion.div>
-                                </Col>
-                            </Row>
+                                </motion.div>
+                            </div>
+
+                            {/* Floating Design Elements */}
+                            <div style={{
+                                position: 'absolute',
+                                top: '-100px',
+                                right: '-100px',
+                                width: '200px',
+                                height: '200px',
+                                borderRadius: '50%',
+                                background: theme === "dark" 
+                                    ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05))' 
+                                    : 'linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(59, 130, 246, 0.03))',
+                                filter: 'blur(40px)',
+                                pointerEvents: 'none'
+                            }} />
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '-50px',
+                                left: '-50px',
+                                width: '150px',
+                                height: '150px',
+                                borderRadius: '50%',
+                                background: theme === "dark" 
+                                    ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05))' 
+                                    : 'linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(16, 185, 129, 0.03))',
+                                filter: 'blur(30px)',
+                                pointerEvents: 'none'
+                            }} />
                         </motion.div>
-                    </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 

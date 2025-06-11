@@ -47,10 +47,13 @@ router.post("/recommend", upload.single("image"), async (req, res) => {
 
     const furnitureType = req.body.furnitureType;
     const requirements = req.body.requirements;
+    const detectedColors = req.body.detectedColors ? JSON.parse(req.body.detectedColors) : [];
 
     if (!furnitureType || !requirements) {
       return res.status(400).json({ error: "Parametri mancanti" });
     }
+
+    console.log("Colori rilevati ricevuti:", detectedColors);
 
     // Percorso dell'immagine caricata
     const imagePath = req.file.path;
@@ -58,36 +61,48 @@ router.post("/recommend", upload.single("image"), async (req, res) => {
       imagePath
     )}`;
 
-    // Nota: l'analisi dell'immagine avverrà lato client, qui restituiamo solo l'URL dell'immagine
-    // e cerchiamo i prodotti relativi alla categoria richiesta
-
     // Mappa il tipo di arredamento alla categoria nel database
     let categoryQuery = mapFurnitureTypeToCategory(furnitureType);
 
     // Recupera i prodotti dalla categoria richiesta
-    const products = await Product.find({
+    const allProducts = await Product.find({
       category: { $regex: categoryQuery, $options: "i" },
-    }).limit(15); // Aumentato il limite per avere più opzionii
+    }).limit(20); // Aumentato il limite per avere più opzioni
 
-    if (products.length === 0) {
+    if (allProducts.length === 0) {
       return res
         .status(404)
         .json({ error: "Nessun prodotto trovato per questa categoria" });
+    }    // Importa il servizio di raccomandazione
+    const { findMatchingProducts, generateProductReason } = require("../services/furnitureRecommendationService");// Filtra e ordina i prodotti basandosi sui colori rilevati
+    const matchingProducts = findMatchingProducts(
+      allProducts,
+      detectedColors,
+      furnitureType,
+      requirements
+    );
+
+    console.log(`Dopo il filtro colori: ${matchingProducts.length} prodotti compatibili`);
+
+    // Se non ci sono prodotti che corrispondono ai colori della palette
+    if (matchingProducts.length === 0) {
+      return res.json({
+        imageUrl,
+        products: [],
+        message: "Nessun prodotto disponibile che corrisponde ai colori rilevati nella tua stanza."
+      });
     }
 
-    // Invia al client l'URL dell'immagine e i prodotti trovati
+    // Invia al client l'URL dell'immagine e i prodotti filtrati e ordinati
     res.json({
-      imageUrl,
-      products: products.map((product) => ({
+      imageUrl,      products: matchingProducts.map((product) => ({
         productId: product._id,
         productName: product.name,
         productImage: product.images[0],
         price: product.price,
-        color: product.color || "",
-        material: product.material || "",
-        dimensions: product.dimensions || "",
-        style: product.style || "",
         description: product.description || "",
+        compatibilityScore: product.compatibilityScore || 0,
+        reason: generateProductReason(product, detectedColors, furnitureType)
       })),
     });
   } catch (error) {

@@ -792,55 +792,44 @@ function getApproximateColorName(hexColor) {
 }
 
 /**
- * Genera una spiegazione personalizzata per un prodotto consigliato
+ * Genera una spiegazione personalizzata per un prodotto consigliato basata sui colori rilevati
  */
-export function generateProductReason(product, styleAnalysis, furnitureType) {
-  const { roomStyle, complementaryPalette, suggestedMaterials } = styleAnalysis;
-
-  // Controllo di compatibilità per colori, materiali e stile
-  let colorMatch = false;
-  let materialMatch = false;
-  let styleMatch = false;
-
-  if (product.color && complementaryPalette) {
-    complementaryPalette.forEach((color) => {
-      const colorName = getReadableColorName(color);
-      if (product.color.toLowerCase().includes(colorName.toLowerCase())) {
-        colorMatch = true;
+export function generateProductReason(product, analysisData, furnitureType) {
+  const productColor = (product.color || "").toLowerCase();
+  const productStyle = (product.style || "").toLowerCase();
+  const productMaterial = (product.material || "").toLowerCase();
+  
+  // Se abbiamo colori rilevati dall'immagine
+  if (analysisData.detectedColors && analysisData.detectedColors.length > 0) {
+    const dominantColors = analysisData.detectedColors.slice(0, 3);
+    const colorNames = dominantColors.map(c => c.name).join(", ");
+    
+    // Verifica se il colore del prodotto è compatibile con i colori rilevati
+    const hasMatchingColor = dominantColors.some(detectedColor => 
+      productColor.includes(detectedColor.name.toLowerCase()) ||
+      detectedColor.name.toLowerCase().includes(productColor)
+    );
+    
+    if (hasMatchingColor) {
+      return `Questo ${furnitureType} si abbina perfettamente ai colori dominanti della tua stanza (${colorNames}), creando un'armonia cromatica naturale.`;
+    } else {
+      // Colori neutri che si abbinano a tutto
+      const neutralColors = ['bianco', 'nero', 'grigio', 'beige', 'crema'];
+      const isNeutral = neutralColors.some(neutral => productColor.includes(neutral));
+      
+      if (isNeutral) {
+        return `Il colore ${productColor} di questo ${furnitureType} è versatile e si abbina bene con i toni ${colorNames} della tua stanza, creando equilibrio visivo.`;
+      } else {
+        return `Questo ${furnitureType} in ${productColor} può creare un interessante contrasto con i colori ${colorNames} della tua stanza, aggiungendo carattere all'ambiente.`;
       }
-    });
-  }
-
-  if (product.material && suggestedMaterials) {
-    suggestedMaterials.forEach((material) => {
-      if (product.material.toLowerCase().includes(material.toLowerCase())) {
-        materialMatch = true;
-      }
-    });
-  }
-
-  if (product.style && roomStyle) {
-    if (product.style.toLowerCase().includes(roomStyle.toLowerCase())) {
-      styleMatch = true;
     }
   }
-
-  // Genera una motivazione personalizzata
-  if (styleMatch && colorMatch && materialMatch) {
-    return `Questo ${furnitureType} è perfetto per la tua stanza! Il colore ${product.color} si abbina perfettamente, il materiale in ${product.material} è ideale per lo stile ${roomStyle} e il design completa perfettamente il tuo arredamento.`;
-  } else if (colorMatch && materialMatch) {
-    return `Questo ${furnitureType} ha il colore ${product.color} che si abbina perfettamente alla tua stanza e il materiale in ${product.material} è consigliato per completare il tuo arredamento.`;
-  } else if (styleMatch && colorMatch) {
-    return `Il design di questo ${furnitureType} si integra perfettamente con lo stile ${roomStyle} della tua stanza e il colore ${product.color} si abbina splendidamente alla tua palette esistente.`;
-  } else if (styleMatch && materialMatch) {
-    return `Questo ${furnitureType} in ${product.material} è perfetto per lo stile ${roomStyle} della tua stanza e il suo design si integra armoniosamente con gli altri elementi.`;
-  } else if (colorMatch) {
-    return `Il colore ${product.color} di questo ${furnitureType} si abbina perfettamente alla palette della tua stanza creando un insieme armonioso.`;
-  } else if (materialMatch) {
-    return `Il materiale in ${product.material} di questo ${furnitureType} è ideale per completare l'arredamento della tua stanza nello stile ${roomStyle}.`;
-  } else if (styleMatch) {
-    return `Il design di questo ${furnitureType} è perfettamente in linea con lo stile ${roomStyle} della tua stanza per un risultato elegante e coerente.`;
-  } else {
-    return `Questo ${furnitureType} offre un buon equilibrio di stile e funzionalità e può integrarsi bene nel tuo ambiente attuale.`;
+  
+  // Fallback per analisi tradizionale se disponibile
+  if (analysisData.colorPalette && analysisData.colorPalette.length > 0) {
+    return `Questo ${furnitureType} è stato selezionato per complementare la palette di colori identificata nella tua stanza.`;
   }
+  
+  // Fallback generico
+  return `Questo ${furnitureType} è una scelta eccellente per il tuo spazio, combinando qualità, stile e funzionalità.`;
 }

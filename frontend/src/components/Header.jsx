@@ -42,13 +42,10 @@ const Header = () => {
   };
 
 
-
   return (
     <Navbar
-      bg={darkMode ? "dark" : "light"}
-      variant={darkMode ? "dark" : "light"}
       expand="lg"
-      className="py-3"
+      className={`py-3 glass-nav ${darkMode ? "dark" : "light"}`}
       style={{
         width: '100%',
         position: 'fixed',
@@ -58,48 +55,56 @@ const Header = () => {
       }}
     >
       <Container>
-        <Navbar.Brand as={Link} to="/" style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+        <Navbar.Brand 
+          as={Link} 
+          to="/" 
+          style={{ 
+            fontSize: '1.5rem', 
+            fontWeight: 'bold',
+            color: darkMode ? 'white' : '#000'
+          }}
+        >
           E-Commerce AR
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto">
-            {/* Pulsante dark mode */}
+          <Nav className="ms-auto">            {/* Pulsante dark mode */}
             <motion.button
-              className="theme-button pulse-animation" // Aggiungi la classe qui
+              className="glass-button pulse-animation" // Aggiungi la classe qui
               onClick={toggleDarkMode}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
             >
               {darkMode ? "🌙" : "☀️"}
-            </motion.button>
-
-            {username ? (
-              <NavDropdown
+            </motion.button>            {username ? (              <NavDropdown
                 title={`👤 ${username}`}
                 id="basic-nav-dropdown"
-                className="custom-dropdown"
-                style={{ fontSize: '1.2rem', borderRadius: '10px', overflow: 'show', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
-              >
-                <NavDropdown.Item as={Link} to="/profile" className="custom-dropdown-item" style={{color: 'black'}}>
+                className="glass-dropdown"
+                style={{ 
+                  fontSize: '1.2rem',
+                  color: darkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)'
+                }}
+              ><NavDropdown.Item as={Link} to="/profile" className="glass-dropdown-item" style={{color: 'inherit'}}>
                   👤 Profilo
                 </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/cart" className="custom-dropdown-item" style={{color: 'black'}}>
+                <NavDropdown.Item as={Link} to="/cart" className="glass-dropdown-item" style={{color: 'inherit'}}>
                   🛒 Carrello
                 </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/wishlist" className="custom-dropdown-item" style={{color: 'black'}}> {/* Aggiungi la wishlist */}
+                <NavDropdown.Item as={Link} to="/wishlist" className="glass-dropdown-item" style={{color: 'inherit'}}> {/* Aggiungi la wishlist */}
                   💖 Wishlist
                 </NavDropdown.Item>
-                <NavDropdown.Item onClick={handleLogout} className="custom-dropdown-item" style={{color: 'black'}}>
+                <NavDropdown.Item onClick={handleLogout} className="glass-dropdown-item" style={{color: 'inherit'}}>
                   🚪 Logout
                 </NavDropdown.Item>
               </NavDropdown>
-            ) : (
-              <Nav.Link
+            ) : (              <Nav.Link
                 as={Link}
                 to="/login"
-                style={{ fontSize: '1.2rem' }}
+                style={{ 
+                  fontSize: '1.2rem',
+                  color: darkMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)'
+                }}
                 //as={motion.div}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -110,29 +115,107 @@ const Header = () => {
             )}
           </Nav>
         </Navbar.Collapse>
-      </Container>
-      <style>{`
-        .theme-button {
-          background: none;
-          border: none;
-          font-size: 1.5rem;
-          cursor: pointer;
+      </Container>      <style>{`
+        .glass-button {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          padding: 8px 12px;
+          transition: all 0.3s ease;
         }
-        .custom-dropdown {
-          background-color: ${darkMode ? '#343a40' : '#f8f9fa'};
-          border-radius: 10px;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          overflow: show;
+        
+        .glass-button:hover {
+          background: rgba(255, 255, 255, 0.2);
+          transform: translateY(-2px);
         }
-
-        .custom-dropdown-item {
-          padding: 10px 20px;
-          transition: background-color 0.3s ease, color 0.3s ease;
+        
+        /* Dropdown Menu Glassmorphism */
+        .glass-dropdown .dropdown-menu {
+          background: rgba(255, 255, 255, 0.1) !important;
+          backdrop-filter: blur(20px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.2) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+          padding: 8px !important;
+          margin-top: 8px !important;
         }
-
-        .custom-dropdown-item:hover {
-          background-color: #007bff;
-          color: white;
+        
+        .glass-dropdown .dropdown-toggle {
+          background: rgba(255, 255, 255, 0.1) !important;
+          backdrop-filter: blur(10px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.2) !important;
+          border-radius: 8px !important;
+          padding: 8px 16px !important;
+          transition: all 0.3s ease !important;
+        }
+        
+        .glass-dropdown .dropdown-toggle:hover {
+          background: rgba(255, 255, 255, 0.2) !important;
+          transform: translateY(-1px) !important;
+        }
+        
+        .glass-dropdown-item {
+          background: transparent !important;
+          border: none !important;
+          border-radius: 8px !important;
+          margin: 2px 0 !important;
+          padding: 10px 16px !important;
+          transition: all 0.3s ease !important;
+          color: inherit !important;
+        }
+        
+        .glass-dropdown-item:hover {
+          background: rgba(255, 255, 255, 0.2) !important;
+          backdrop-filter: blur(10px) !important;
+          transform: translateX(4px) !important;
+          color: inherit !important;
+        }
+        
+        .glass-dropdown-item:focus {
+          background: rgba(255, 255, 255, 0.2) !important;
+          color: inherit !important;
+        }
+        
+        /* Light mode specific styles */
+        .light .glass-dropdown .dropdown-menu {
+          background: rgba(255, 255, 255, 0.9) !important;
+          backdrop-filter: blur(20px) !important;
+          border: 1px solid rgba(0, 0, 0, 0.1) !important;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        .light .glass-dropdown .dropdown-toggle {
+          background: rgba(255, 255, 255, 0.3) !important;
+          border: 1px solid rgba(0, 0, 0, 0.1) !important;
+          color: #000 !important;
+        }
+        
+        .light .glass-dropdown .dropdown-toggle:hover {
+          background: rgba(255, 255, 255, 0.4) !important;
+        }
+        
+        .light .glass-dropdown-item {
+          color: rgba(0, 0, 0, 0.8) !important;
+        }
+        
+        .light .glass-dropdown-item:hover {
+          background: rgba(0, 0, 0, 0.1) !important;
+          color: #000 !important;
+        }
+        
+        .light .glass-dropdown-item:focus {
+          background: rgba(0, 0, 0, 0.1) !important;
+          color: #000 !important;
+        }
+        
+        .light .glass-button {
+          background: rgba(255, 255, 255, 0.3);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .light .glass-button:hover {
+          background: rgba(255, 255, 255, 0.4);
         }
       `}</style>
     </Navbar>

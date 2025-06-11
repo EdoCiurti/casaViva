@@ -1,40 +1,24 @@
+/* Global Styles - Base body without conflicting theme classes */
 body {
   transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
   font-family: 'Arial', sans-serif;
   margin: 0;
   padding: 0;
 }
-.dark-mode {
-  background-color: #212529 !important;
-  color: #ffffff !important;
-}
 
-.light-mode {
-  background-color: #f8f9fa !important;
-  color: #212529 !important;
-}
-
-
-.light-mode {
-  background-color: #ffffff; /* Light background */
-  color: #000000; /* Dark text color */
-}
-
+/* Product Details Specific Styles */
 .dark-mode-card {
-  background-color: transparent; /* Rimuove lo sfondo */
+  background-color: transparent;
 }
+
 .product-details.dark-mode {
-  background-color: transparent; /* Rimuove lo sfondo */
-  color: white; /* Testo bianco per la modalità scura */
+  background-color: transparent;
+  color: white;
 }
 
 .product-details.light-mode {
-  background-color: transparent; /* Rimuove lo sfondo */
-  color: white; /* Testo bianco per la modalità scura */
-}
-.dark-mode {
-  background-color: #212529; /* Dark background */
-  color: #ffffff; /* Light text color */
+  background-color: transparent;
+  color: black;
 }
 .product-details-container {
   background-color: transparent;
@@ -94,110 +78,75 @@ body {
   border-radius: 5px;
   font-size: 1rem;
 }
-.light-mode .products-title {
-  color: #000000; /* Nero in modalità chiara */
-}
+/* Profile Page Theme Specific Styles */
 .light-mode .profile-page {
-  color: #000000; /* Nero in modalità chiara */
+  color: #000000;
 }
 
 .dark-mode .profile-page {
-  color: #ffffff; /* Bianco in modalità scura */
+  color: #ffffff;
 }
 
+/* Card Theme Specific Styles */
 .light-mode .profile-card .card-title,
 .light-mode .order-card .card-title,
 .light-mode .cart-card .card-title {
-  color: #000000; /* Nero in modalità chiara */
+  color: #000000;
 }
 
 .dark-mode .profile-card .card-title,
 .dark-mode .order-card .card-title,
 .dark-mode .cart-card .card-title {
-  color: #ffffff; /* Bianco in modalità scura */
+  color: #ffffff;
 }
 
+/* Arrow Icon Theme Styles */
 .light-mode .arrow-icon {
-  color: #000000; /* Nero in modalità chiara */
-}
-/* Colore generale del testo */
-.light-mode {
-  color: #000000; /* Nero in modalità chiara */
-}
-
-.dark-mode {
-  color: #ffffff; /* Bianco in modalità scura */
-}
-
-/* Specifico per le card */
-.light-mode .card {
-  background-color: #ffffff; /* Sfondo bianco */
-  color: #000000; /* Testo nero */
-}
-
-.dark-mode .card {
-  background-color: #343a40; /* Sfondo grigio scuro */
-  color: #ffffff; /* Testo bianco */
-}
-
-/* Specifico per i titoli */
-.light-mode .card-title,
-.light-mode .products-title {
-  color: #000000; /* Nero in modalità chiara */
-}
-
-.dark-mode .card-title,
-.dark-mode .products-title {
-  color: #ffffff; /* Bianco in modalità scura */
-}
-
-/* Specifico per le icone */
-.light-mode .arrow-icon {
-  color: #000000; /* Nero in modalità chiara */
+  color: #000000;
 }
 
 .dark-mode .arrow-icon {
-  color: #ffffff; /* Bianco in modalità scura */
+  color: #ffffff;
 }
+
+/* Products Title Theme Styles */
+.light-mode .products-title {
+  color: #000000;
+}
+
+.dark-mode .products-title {
+  color: #ffffff;
+}
+/* Button and Utility Styles */
 .text-light {
-  color: #f8f9fa; /* Colore chiaro per dark mode */
+  color: #f8f9fa;
 }
 
 .text-muted {
-  color: #6c757d; /* Colore scuro per light mode */
+  color: #6c757d;
 }
 
-/* Pulsanti */
 .btnCarrello {
-  background-color: #212529; /* Nero */
-  color: #ffffff; /* Bianco */
+  background-color: #212529;
+  color: #ffffff;
 }
 
 .btnCarrello:hover {
-  background-color: #000000; /* Nero più scuro */
+  background-color: #000000;
 }
 
-.dark-mode .arrow-icon {
-  color: #ffffff; /* Bianco in modalità scura */
-}
-
-.dark-mode .products-title {
-  color: #ffffff; /* Bianco in modalità scura */
-}
-.btnCarrello:hover {
-  background-color: #000000; /* Nero */
-}
 .scroll-to-top-btn {
-  background-color: #343a40; /* Grigio scuro */
+  background-color: #343a40;
   color: white;
 }
+
 .scroll-to-top-btn:hover {
-  background-color: #000000; /* Nero */
+  background-color: #000000;
 }
 
 .container-fluid {
-  background-color: inherit; /* Inherit background color from body */
-  color: inherit; /* Inherit text color from body */
+  background-color: inherit;
+  color: inherit;
 }
 
 /* Aggiungi queste classi per gestire il colore del testo "Checkout" */
