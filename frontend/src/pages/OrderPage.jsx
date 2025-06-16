@@ -499,25 +499,23 @@ const OrderPage = () => {
         >
           <motion.button
             onClick={handleOrder}
-            disabled={!isFormValid()}
-            style={{
+            disabled={!isFormValid()}            style={{
               padding: '18px 50px',
               fontSize: '1.3rem',
               fontWeight: '600',              background: isFormValid() 
                 ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' 
                 : 'rgba(108, 117, 125, 0.6)',
-              border: 'none',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '25px',
               cursor: isFormValid() ? 'pointer' : 'not-allowed',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
               margin: '0 auto',
               gap: '12px'
-            }}
+            }}}
             className="responsive-text-primary"
             whileHover={isFormValid() ? {
               scale: 1.05,
