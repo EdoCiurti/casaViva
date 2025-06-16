@@ -507,15 +507,14 @@ const OrderPage = () => {
                 : 'rgba(108, 117, 125, 0.6)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '25px',
-              cursor: isFormValid() ? 'pointer' : 'not-allowed',
-              backdropFilter: 'blur(20px)',
+              cursor: isFormValid() ? 'pointer' : 'not-allowed',              backdropFilter: 'blur(20px)',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
               transition: 'all 0.3s ease',
               display: 'flex',
               alignItems: 'center',
               margin: '0 auto',
               gap: '12px'
-            }}}
+            }}
             className="responsive-text-primary"
             whileHover={isFormValid() ? {
               scale: 1.05,
