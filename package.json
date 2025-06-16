@@ -16,7 +16,8 @@
     "stripe": "^12.0.0"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall": "patch-package"
   },
   "author": "Andrea Calosso",
   "license": "MIT",
