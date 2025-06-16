@@ -1,11 +1,11 @@
 import * as tf from '@tensorflow/tfjs';
 import * as mobilenet from '@tensorflow-models/mobilenet';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
-import ml5 from 'ml5';
+// import ml5 from 'ml5'; // Temporaneamente disabilitato per il deploy
 
 let mobileNetModel = null;
 let cocoModel = null;
-let colorExtractor = null;
+// let colorExtractor = null; // Temporaneamente disabilitato
 
 /**
  * Carica i modelli necessari per l'analisi
@@ -22,10 +22,10 @@ export const loadModels = async () => {
       cocoModel = await cocoSsd.load();
     }
     
-    // Inizializza l'estrattore di colori con ML5
-    if (!colorExtractor) {
-      colorExtractor = ml5.extractColor;
-    }
+    // Inizializza l'estrattore di colori con ML5 - TEMPORANEAMENTE DISABILITATO
+    // if (!colorExtractor) {
+    //   colorExtractor = ml5.extractColor;
+    // }
     
     return true;
   } catch (error) {
@@ -47,13 +47,18 @@ export const analyzeImage = async (imageElement) => {
     
     // Rileva oggetti con COCO-SSD
     const objects = await cocoModel.detect(imageElement);
+      // Estrai i colori dominanti - TEMPORANEAMENTE DISABILITATO
+    // const colors = await new Promise((resolve) => {
+    //   colorExtractor(imageElement, 5, (colors) => {
+    //     resolve(colors);
+    //   });
+    // });
     
-    // Estrai i colori dominanti con ML5
-    const colors = await new Promise((resolve) => {
-      colorExtractor(imageElement, 5, (colors) => {
-        resolve(colors);
-      });
-    });
+    // Colori di fallback temporanei
+    const colors = [
+      { r: 150, g: 150, b: 150 },
+      { r: 100, g: 100, b: 100 }
+    ];
     
     // Elabora i risultati per estrapolare lo stile della stanza
     const roomStyle = determineRoomStyle(classifications, objects);
