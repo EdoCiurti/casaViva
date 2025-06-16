@@ -15,6 +15,8 @@ import WishlistPage from "./pages/wishPage"; // Importa la pagina della wishlist
 import Footer from "./components/Footer";
 import "./App.css";
 import "./glassmorphism.css";
+import "./glass-effects.css";
+import "./professional-overrides.css";
 
 function App() {
   const location = useLocation();

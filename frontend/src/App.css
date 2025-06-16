@@ -100,7 +100,8 @@ body {
   color: #ffffff;
 }
 
-/* Arrow Icon Theme Styles */
+/* Arrow Icon Theme Styles - COMMENTATE PER EVITARE CONFLITTI */
+/*
 .light-mode .arrow-icon {
   color: #000000;
 }
@@ -108,6 +109,7 @@ body {
 .dark-mode .arrow-icon {
   color: #ffffff;
 }
+*/
 
 /* Products Title Theme Styles */
 .light-mode .products-title {
@@ -354,6 +356,8 @@ footer.dark-mode .footer {
 .container {
   animation: fadeIn 0.5s ease-in-out;
 }
+/* COMMENTATO PER EVITARE CONFLITTI CON PROFILE PAGE */
+/*
 .arrow-icon {
   z-index: 2;
   font-size: 2rem;
@@ -363,13 +367,17 @@ footer.dark-mode .footer {
   top: 50%;
   transform: translateY(-50%);
 }
+*/
 .card-img-top:hover{
   cursor: pointer;
 }
 
+/* COMMENTATO PER EVITARE CONFLITTI CON PROFILE PAGE */
+/*
 .arrow-icon:hover {
   transform: translateY(-50%) scale(1.2);
 }
+*/
 .card {
   animation: slideIn 0.5s ease-in-out;
   border-radius: 18px;
@@ -529,13 +537,14 @@ footer.dark-mode .footer {
 }
 /* Stile per il nome delle categorie */
 .category-title {
-  opacity: 1; /* Mostra il nome di default */
-  transition: opacity 0.3s ease-in-out; /* Transizione fluida */
+  opacity: 1 !important;
+  transition: all 0.3s ease-in-out !important;
 }
 
-/* Nascondi il nome quando passi sopra con il mouse */
+/* Migliora la visibilità al hover invece di nascondere */
 .category-card:hover .category-title {
-  opacity: 0; /* Nascondi il nome */
+  opacity: 1 !important;
+  transform: translateY(-2px) !important;
 }
 .theme-button:hover {
   transform: rotate(20deg);
@@ -639,7 +648,8 @@ footer.dark-mode .footer {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Ombra per effetto di profondità */
 }
 
-/* Frecce */
+/* Frecce - COMMENTATE PER EVITARE CONFLITTI CON PROFILE PAGE */
+/*
 .arrow-icon {
   font-size: 2rem;
   position: absolute;
@@ -659,10 +669,11 @@ footer.dark-mode .footer {
 }
 
 .arrow-icon:hover {
-  transform: translateY(-50%) scale(1.2); /* Ingrandisce leggermente al passaggio del mouse */
-  color: cyan; /* Cambia colore al passaggio del mouse */
-  text-shadow: 0px 0px 10px rgba(0, 255, 255, 0.8); /* Aggiunge un'ombra luminosa */
+  transform: translateY(-50%) scale(1.2);
+  color: cyan;
+  text-shadow: 0px 0px 10px rgba(0, 255, 255, 0.8);
 }
+*/
 
 .card-title-overlay {
   position: absolute;
@@ -736,7 +747,8 @@ footer.dark-mode .footer {
   text-shadow: 0px 0px 5px rgb(0, 0, 0);
 }
 
-/* Frecce */
+/* Frecce - COMMENTATE PER EVITARE CONFLITTI CON PROFILE PAGE */
+/*
 .arrow-icon {
   font-size: 2rem;
   position: absolute;
@@ -759,6 +771,7 @@ footer.dark-mode .footer {
   color: cyan;
   text-shadow: 0px 0px 10px rgb(255, 255, 255);
 }
+*/
 /* Rimuovi bordi indesiderati */
 body {
   margin: 0;
@@ -789,49 +802,7 @@ button {
   border-radius: 5px;
 }
 
-/* Stile per il contenitore dei filtri */
-.filters-container {
-  background-color: #2c2f33;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Stile per le etichette dei filtri */
-.filter-label {
-  color: #ffffff;
-  font-weight: bold;
-  margin-bottom: 5px;
-  display: block;
-}
-
-/* Stile per gli input dei filtri */
-.filter-input {
-  background-color: #343a40;
-  color: #ffffff;
-  border: 1px solid #495057;
-  border-radius: 5px;
-  padding: 10px;
-  transition: border-color 0.3s ease-in-out;
-}
-
-.filter-input:focus {
-  border-color: #007bff;
-  outline: none;
-}
-
-/* Stile per il checkbox */
-.filter-checkbox {
-  accent-color: #007bff;
-}
-
-/* Stile per il range di prezzo */
-.price-range {
-  display: flex;
-  justify-content: space-between;
-  color: #ffffff;
-  margin-top: 10px;
-}
+/* Removed conflicting filter styles - now handled by glass-effects.css */
 .reset-filters-btn{
   margin-bottom: 50px;
 }

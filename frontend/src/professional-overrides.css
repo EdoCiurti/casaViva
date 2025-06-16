@@ -1,0 +1,748 @@
+/* ===== ENHANCED FILTERS SECTION ===== */
+.glass-filters {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 25px !important;
+  padding: 50px 30px 30px 30px !important;  /* Increased top padding */
+  margin: 50px 0 !important;  /* Increased top margin */
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Dark mode filters */
+.dark-mode .glass-filters {
+  background: rgba(26, 26, 46, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Filter buttons container */
+.filter-buttons-container {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 25px !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+}
+
+/* Enhanced filter buttons container */
+.filter-buttons-row {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 20px !important;
+  margin-bottom: 25px !important;
+  flex-wrap: wrap !important;
+}
+
+/* Lower the filter buttons container */
+.glass-filters .text-center.mb-3 {
+  margin-top: 40px !important;
+  margin-bottom: 30px !important;
+  padding-top: 20px !important;
+}
+
+/* Align both filter buttons properly */
+.glass-filters .d-flex.justify-content-center.align-items-center.gap-3 {
+  align-items: baseline !important;
+  margin-top: 40px !important;
+  margin-bottom: 30px !important;
+}
+
+.filter-buttons-row .glass-button,
+.filter-buttons-row .glass-button-danger {
+  flex-shrink: 0 !important;
+  min-width: auto !important;
+}
+
+/* Enhanced filter toggle button */
+.filter-toggle-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px 24px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+  height: 48px !important; /* Fixed height for alignment */
+  line-height: 1 !important;
+}
+
+.filter-toggle-btn:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+}
+
+/* Reset filters button */
+.glass-button-danger {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px 24px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+  height: 48px !important; /* Fixed height for alignment */
+  line-height: 1 !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.glass-button-danger:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+}
+
+/* Filters container */
+.filters-container {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 20px !important;
+  padding: 25px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  margin-top: 0 !important;
+}
+
+.dark-mode .filters-container {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Filter labels */
+.filter-label {
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  margin-bottom: 12px !important;
+  color: inherit !important;
+}
+
+/* Enhanced input styling */
+.filter-input {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  color: inherit !important;
+  font-size: 1rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.filter-input:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.filter-input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.dark-mode .filter-input {
+  background: rgba(0, 0, 0, 0.3) !important;
+  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-mode .filter-input:focus {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border-color: #667eea !important;
+}
+
+/* Enhanced checkbox styling */
+.filter-checkbox {
+  transform: scale(1.5) !important;
+  accent-color: #667eea !important;
+  margin-top: 15px !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 6px !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.filter-checkbox:checked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-color: #667eea !important;
+  transform: scale(1.6) !important;
+}
+
+.filter-checkbox:hover {
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: scale(1.55) !important;
+}
+
+/* Price slider container */
+.price-slider-container {
+  display: flex !important;
+  align-items: center !important;
+  gap: 20px !important;
+  padding: 10px 0 !important;
+}
+
+/* Sort icons styling */
+.sort-icon {
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  padding: 12px !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.sort-icon:hover {
+  color: #667eea !important;
+  transform: translateY(-3px) scale(1.15) !important;
+  background: rgba(102, 126, 234, 0.2) !important;
+  border-color: rgba(102, 126, 234, 0.4) !important;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
+}
+
+.sort-icon.active {
+  color: #667eea !important;
+  background: rgba(102, 126, 234, 0.3) !important;
+  transform: scale(1.2) !important;
+  border-color: rgba(102, 126, 234, 0.6) !important;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Enhanced price slider styling */
+.price-slider {
+  flex: 1 !important;
+  margin: 0 20px !important;
+  padding: 10px 0 !important;
+}
+
+.price-slider .rc-slider-track {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  height: 8px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+}
+
+.price-slider .rc-slider-rail {
+  background: rgba(255, 255, 255, 0.2) !important;
+  height: 8px !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.price-slider .rc-slider-handle {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border: 4px solid #667eea !important;
+  width: 24px !important;
+  height: 24px !important;
+  margin-top: -8px !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  box-shadow: 
+    0 4px 12px rgba(102, 126, 234, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  cursor: grab !important;
+  position: relative !important;
+}
+
+.price-slider .rc-slider-handle:hover {
+  transform: scale(1.3) !important;
+  border-color: #764ba2 !important;
+  box-shadow: 
+    0 6px 20px rgba(102, 126, 234, 0.6),
+    0 0 15px rgba(118, 75, 162, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.price-slider .rc-slider-handle:active {
+  transform: scale(1.4) !important;
+  cursor: grabbing !important;
+  box-shadow: 
+    0 8px 25px rgba(102, 126, 234, 0.8),
+    0 0 20px rgba(118, 75, 162, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+.price-slider .rc-slider-handle:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 
+    0 0 0 3px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(102, 126, 234, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Price range display */
+.price-range {
+  display: flex !important;
+  justify-content: space-between !important;
+  margin-top: 8px !important;
+  font-weight: 600 !important;
+  color: inherit !important;
+}
+
+.price-range span {
+  padding: 4px 12px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  font-size: 0.9rem !important;
+}
+
+/* Enhanced collapse animation */
+.glass-collapse {
+  transition: all 0.4s ease !important;
+}
+
+/* Category navigation arrows */
+.category-nav-arrow {
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  padding: 15px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 50px !important;
+  height: 50px !important;
+}
+
+.category-nav-arrow:hover:not(.disabled) {
+  transform: translateY(-2px) scale(1.1) !important;
+  background: rgba(102, 126, 234, 0.2) !important;
+}
+
+.category-nav-arrow.disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ===== ENHANCED PRODUCT DETAILS SECTION ===== */
+/* Stunning product details with advanced animations and effects */
+
+.glass-product-details {
+  position: relative !important;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 100%) !important;
+  backdrop-filter: blur(30px) saturate(180%) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 30px !important;
+  padding: 40px !important;
+  margin: 40px auto !important;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.15),
+    0 15px 35px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  overflow: hidden !important;
+  transform-style: preserve-3d !important;
+}
+
+.glass-product-details::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 30% 20%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(240, 147, 251, 0.08) 0%, transparent 50%),
+    linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass-product-details.dark-mode {
+  background: linear-gradient(135deg, 
+    rgba(26, 26, 46, 0.9) 0%, 
+    rgba(16, 16, 32, 0.85) 100%) !important;
+  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.3),
+    0 15px 35px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Enhanced product image section */
+.product-image-section {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.product-main-image {
+  border-radius: 25px !important;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.2),
+    0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  border: 3px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.product-main-image:hover {
+  transform: scale(1.02) translateY(-5px) !important;
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.25),
+    0 15px 35px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Enhanced thumbnail gallery */
+.product-thumbnails {
+  margin-top: 25px !important;
+  display: flex !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 15px !important;
+}
+
+.product-thumbnail {
+  width: 80px !important;
+  height: 80px !important;
+  border-radius: 15px !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  border: 3px solid transparent !important;
+  backdrop-filter: blur(10px) !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.product-thumbnail:hover {
+  transform: translateY(-5px) scale(1.1) !important;
+  border-color: rgba(102, 126, 234, 0.6) !important;
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3) !important;
+}
+
+.product-thumbnail.active {
+  border-color: #667eea !important;
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+.product-thumbnail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.product-thumbnail:hover::before {
+  opacity: 1;
+}
+
+/* Enhanced product details content */
+.product-details-content {
+  position: relative !important;
+  z-index: 2 !important;
+  padding: 30px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(15px) !important;
+  border-radius: 25px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+.product-title {
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 20px !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  line-height: 1.2 !important;
+}
+
+.product-description {
+  font-size: 1.1rem !important;
+  line-height: 1.6 !important;
+  margin-bottom: 25px !important;
+  color: inherit !important;
+  opacity: 0.9 !important;
+}
+
+.product-price {
+  font-size: 2.2rem !important;
+  font-weight: 800 !important;
+  margin-bottom: 30px !important;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Enhanced QR code section */
+.qr-section {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 20px !important;
+  padding: 25px !important;
+  margin: 25px 0 !important;
+  text-align: center !important;
+}
+
+.qr-title {
+  font-size: 1.3rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 20px !important;
+  color: inherit !important;
+}
+
+.qr-codes-container {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 30px !important;
+  flex-wrap: wrap !important;
+}
+
+.qr-code-item {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(15px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 15px !important;
+  padding: 20px !important;
+  transition: all 0.3s ease !important;
+}
+
+.qr-code-item:hover {
+  transform: translateY(-5px) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.qr-code-item img {
+  border-radius: 10px !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Enhanced action buttons */
+.product-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 20px !important;
+  margin-top: 30px !important;
+}
+
+.product-add-to-cart {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  border-radius: 50px !important;
+  padding: 15px 35px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.product-add-to-cart::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.product-add-to-cart:hover {
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6) !important;
+}
+
+.product-add-to-cart:hover::before {
+  left: 100%;
+}
+
+.product-add-to-cart:active {
+  transform: translateY(-1px) scale(1.02) !important;
+}
+
+.product-wishlist-btn {
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(15px) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+.product-wishlist-btn:hover {
+  transform: translateY(-3px) scale(1.1) !important;
+  background: rgba(220, 53, 69, 0.2) !important;
+  border-color: rgba(220, 53, 69, 0.4) !important;
+  box-shadow: 0 10px 25px rgba(220, 53, 69, 0.3) !important;
+}
+
+.product-wishlist-btn.active {
+  background: rgba(220, 53, 69, 0.3) !important;
+  border-color: rgba(220, 53, 69, 0.6) !important;
+}
+
+/* Enhanced close button */
+.close-details-btn {
+  position: absolute !important;
+  top: 20px !important;
+  right: 20px !important;
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(15px) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  color: inherit !important;
+  font-size: 1.5rem !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  z-index: 10 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.close-details-btn:hover {
+  transform: rotate(90deg) scale(1.1) !important;
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3) !important;
+}
+
+.close-details-btn:active {
+  transform: rotate(90deg) scale(1.05) !important;
+}
+
+/* ===== PRODUCT SPECIFICATIONS SECTION ===== */
+.product-specifications {
+  animation: fadeInUp 0.6s ease-out !important;
+}
+
+.spec-item {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.spec-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.1), 
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.spec-item:hover::before {
+  left: 100%;
+}
+
+.spec-item:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+}
+
+/* Dark mode specifications */
+.dark-mode .spec-item {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-mode .spec-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 12px 35px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Light mode specifications */
+.light-mode .spec-item {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode .spec-item:hover {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Stock indicator animations */
+.spec-item div:last-child {
+  animation: countUp 0.8s ease-out !important;
+}
+
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive specifications grid */
+@media (max-width: 768px) {
+  .product-specifications {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin: 20px 0 !important;
+  }
+  
+  .spec-item {
+    padding: 12px !important;
+  }
+}

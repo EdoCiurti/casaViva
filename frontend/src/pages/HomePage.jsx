@@ -2040,6 +2040,8 @@ const HomePage = () => {
   const [visibleProducts, setVisibleProducts] = useState(9);
   const [showFilters, setShowFilters] = useState(true); // Inizia con i filtri aperti
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [isScrollingCategories, setIsScrollingCategories] = useState(false);
+  const [scrollDirection, setScrollDirection] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null); // Per i dettagli del prodotto
   const [wishlist, setWishlist] = useState([]);
   const [theme, setTheme] = useState("");
@@ -2244,25 +2246,40 @@ const HomePage = () => {
       }));
       setSelectedCategory(category); // Imposta la categoria selezionata
     };
+  };  // Migliora la funzione di scorrimento delle categorie con animazioni fluide
+  const handleCategoryScroll = (direction) => {
+    if (isScrollingCategories) return; // Previene scroll multipli durante l'animazione
+    
+    const increment = 3; // Numero di categorie da scorrere
+    const maxIndex = Math.max(categories.length - 3, 0);
+    
+    setIsScrollingCategories(true);
+    setScrollDirection(direction);
+      // Aggiungi classe di animazione alle categorie visibili
+    const categoryCards = document.querySelectorAll('.category-card');
+    categoryCards.forEach((card, index) => {
+      card.classList.add('changing');
+      
+      // Rimuovi la classe dopo l'animazione
+      setTimeout(() => {
+        card.classList.remove('changing');
+      }, 300);
+    });
+    
+    // Esegui lo scroll con un piccolo ritardo per sincronizzare con l'animazione
+    setTimeout(() => {
+      if (direction === "left") {
+        setCurrentCategoryIndex(prev => Math.max(prev - increment, 0));
+      } else {
+        setCurrentCategoryIndex(prev => Math.min(prev + increment, maxIndex));
+      }
+        // Reset dello stato di scrolling
+      setTimeout(() => {
+        setIsScrollingCategories(false);
+        setScrollDirection(null);
+      }, 150);
+    }, 100);
   };
-
-  // Migliora la funzione di scorrimento delle categorie
-const handleCategoryScroll = (direction) => {
-  const increment = 3; // Numero di categorie da scorrere
-  const maxIndex = Math.max(categories.length - 3, 0);
-  
-  if (direction === "left") {
-    setCurrentCategoryIndex(prev => Math.max(prev - increment, 0));
-  } else {
-    setCurrentCategoryIndex(prev => Math.min(prev + increment, maxIndex));
-  }
-  
-  // Anima lo scorrimento
-  const container = document.querySelector(".categories-container");
-  if (container) {
-    container.style.transition = "transform 0.5s ease";
-  }
-};
 
   // Migliora la navigazione tra le sezioni aggiungendo un offset per evitare problemi con navbar fisse o altri elementi
 const scrollToSection = (ref) => {
@@ -2295,7 +2312,6 @@ const scrollToVirtualRoom = () => {
   const loadMoreProducts = () => {
     setVisibleProducts((prev) => prev + 9);
   };
-
   const handleProductClick = useCallback((product, index) => {
     setSelectedProduct(product);
     setMainImage(product.images[0]);
@@ -2310,7 +2326,7 @@ const scrollToVirtualRoom = () => {
     
     // Aspetta che il DOM sia aggiornato con il componente dei dettagli
     setTimeout(() => {
-      const detailsSection = document.querySelector(".led-effect");
+      const detailsSection = document.querySelector(".glass-product-details");
       if (detailsSection) {
         // Scorri con precisione all'inizio della sezione dettagli
         const topPosition = detailsSection.getBoundingClientRect().top + window.pageYOffset;
@@ -2318,8 +2334,14 @@ const scrollToVirtualRoom = () => {
           top: topPosition - 20, // Un piccolo offset per non essere troppo in cima
           behavior: "smooth"
         });
+      } else {
+        // Fallback: scorri verso l'alto se non trova la sezione
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
       }
-    }, 200); // Aumentato il timeout per garantire che il DOM sia aggiornato
+    }, 300); // Aumentato il timeout per garantire che il DOM sia aggiornato
   }, []);
 
   const handleCloseDetails = () => {
@@ -2657,135 +2679,280 @@ const filteredProductsMemo = useMemo(() => {
               perspective: "1000px",
               position: "relative",
               zIndex: 10,
-              maxWidth: "90%",
-              margin: "30px auto",
+              maxWidth: "95%",
+              margin: "40px auto",
               color: theme === "dark" ? "#fff" : "#000"
             }}
           >
-            <Row>
-              {/* Colonna sinistra: Foto */}
-              <Col md={6} className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"}`}>
-                <div className="text-center">
-                  <img
+            {/* Enhanced Close Button */}
+            <motion.button
+              className="close-details-btn"
+              onClick={handleCloseDetails}
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 1.05 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              ✕
+            </motion.button>
+
+            <Row className="align-items-stretch">
+              {/* Enhanced Image Section */}
+              <Col lg={6} className="product-image-section">
+                <motion.div
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="text-center h-100 d-flex flex-column justify-content-center"
+                >
+                  <motion.img
                     src={mainImage}
                     alt={selectedProduct.name}
-                    className="img-fluid mb-3"
+                    className="product-main-image img-fluid mb-4"
                     style={{
-                      maxHeight: "400px",
+                      maxHeight: "450px",
+                      width: "100%",
                       objectFit: "cover",
-                      borderRadius: "15px",
-                      backgroundColor: theme === "dark" ? "#1e1e2f" : "#ffffff",
-                      boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.2)",
                     }}
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ duration: 0.3 }}
                   />
-                  <div className="similar-images d-flex flex-wrap justify-content-center">
+                  
+                  {/* Enhanced Thumbnail Gallery */}
+                  <div className="product-thumbnails">
                     {selectedProduct.images.map((image, index) => (
-                      <img
+                      <motion.img
                         key={index}
                         src={image}
-                        alt={`Immagine secondaria ${index + 1}`}
-                        className="img-thumbnail mx-2"
+                        alt={`${selectedProduct.name} - Image ${index + 1}`}
+                        className={`product-thumbnail ${mainImage === image ? 'active' : ''}`}
                         style={{
-                          maxHeight: "100px",
-                          maxWidth: "100px",
                           objectFit: "cover",
-                          cursor: "pointer",
-                          border: mainImage === image ? "3px solid blue" : "2px solid #ddd",
-                          borderRadius: "10px",
                         }}
                         onClick={() => setMainImage(image)}
+                        whileHover={{ y: -5, scale: 1.1 }}
+                        whileTap={{ scale: 1.05 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 + index * 0.1 }}
                       />
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </Col>
-              {/* Colonna destra: Dettagli */}
-              <Col md={6} className={`product-details-section ${theme === "dark" ? "dark-mode" : "light-mode"}`}>
+
+              {/* Enhanced Details Section */}
+              <Col lg={6}>
                 <motion.div
-                  className="details-content text-center"
+                  className="product-details-content"
                   initial={{ opacity: 0, x: 50 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  style={{
-                    padding: "20px",
-                    borderRadius: "10px",
-                  }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
                 >
-                  <Button
-                    variant="light"
-                    className="close-details-btn"
-                    onClick={handleCloseDetails}
+                  {/* Product Title */}
+                  <motion.h1
+                    className="product-title"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    {selectedProduct.name}
+                  </motion.h1>
+
+                  {/* Product Description */}
+                  <motion.p
+                    className="product-description"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    {selectedProduct.description}
+                  </motion.p>                  {/* Product Price */}
+                  <motion.div
+                    className="product-price"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+                  >
+                    €{selectedProduct.price}
+                  </motion.div>
+
+                  {/* Enhanced Product Specifications */}
+                  <motion.div
+                    className="product-specifications"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.65 }}
                     style={{
-                      position: "absolute",
-                      top: "10px",
-                      right: "10px",
-                      border: "none",
-                      background: "transparent",
-                      fontSize: "1.5rem",
-                      fontWeight: "bold",
-                      cursor: "pointer",
-                      color: theme === "dark" ? "#fff" : "#000",
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '15px',
+                      margin: '25px 0'
                     }}
                   >
-                    ✕
-                  </Button>
-                  <h3>{selectedProduct.name}</h3>
-<p className="mb-3" style={{ color: theme === "dark" ? "#adb5bd" : "#6c757d" }}>
-  {selectedProduct.description}
-</p>
-                  <p style={{ fontSize: "1.5rem", fontWeight: "bold", color: theme === "dark" ? "#007bff" : "#0056b3" }}>
-                    €{selectedProduct.price}
-                  </p>
-                  
-                  {/* Sezione per QR code dei modelli 3D */}
+                    {/* Dimensions */}
+                    <motion.div
+                      className="spec-item"
+                      whileHover={{ y: -2, scale: 1.02 }}
+                      style={{
+                        padding: '15px',
+                        background: theme === "dark" 
+                          ? 'rgba(255, 255, 255, 0.05)' 
+                          : 'rgba(0, 0, 0, 0.03)',
+                        borderRadius: '12px',
+                        border: theme === "dark" 
+                          ? '1px solid rgba(255, 255, 255, 0.1)' 
+                          : '1px solid rgba(0, 0, 0, 0.1)',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                    >
+                      <div style={{
+                        fontSize: '0.85rem',
+                        fontWeight: '500',
+                        color: theme === "dark" ? '#94a3b8' : '#64748b',
+                        marginBottom: '5px'
+                      }}>
+                        Dimensioni
+                      </div>
+                      <div style={{
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        color: theme === "dark" ? '#e2e8f0' : '#1e293b'
+                      }}>
+                        {selectedProduct.dimensioni || "Non specificate"}
+                      </div>
+                    </motion.div>
+
+                    {/* Stock Availability */}
+                    <motion.div
+                      className="spec-item"
+                      whileHover={{ y: -2, scale: 1.02 }}
+                      style={{
+                        padding: '15px',
+                        background: theme === "dark" 
+                          ? 'rgba(255, 255, 255, 0.05)' 
+                          : 'rgba(0, 0, 0, 0.03)',
+                        borderRadius: '12px',
+                        border: theme === "dark" 
+                          ? '1px solid rgba(255, 255, 255, 0.1)' 
+                          : '1px solid rgba(0, 0, 0, 0.1)',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                    >
+                      <div style={{
+                        fontSize: '0.85rem',
+                        fontWeight: '500',
+                        color: theme === "dark" ? '#94a3b8' : '#64748b',
+                        marginBottom: '5px'
+                      }}>
+                        Disponibilità
+                      </div>
+                      <div style={{
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        color: selectedProduct.stock > 0 
+                          ? (theme === "dark" ? '#22c55e' : '#16a34a')
+                          : (theme === "dark" ? '#ef4444' : '#dc2626'),
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}>
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.8, type: "spring" }}
+                        >
+                          {selectedProduct.stock > 0 ? '✅' : '❌'}
+                        </motion.span>
+                        {selectedProduct.stock > 0 
+                          ? `${selectedProduct.stock} disponibili` 
+                          : "Non disponibile"}
+                      </div>
+                    </motion.div>
+                  </motion.div>
+
+                  {/* Enhanced QR Code Section */}
                   {(selectedProduct.link3Dios || selectedProduct.link3Dandroid) && (
-                    <div className="mt-4 mb-2">
-                      <h5>Visualizza il modello 3D</h5>
-                      <div className="d-flex justify-content-center mt-3">
+                    <motion.div
+                      className="qr-section"
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      <h5 className="qr-title">Visualizza in Realtà Aumentata</h5>
+                      <div className="qr-codes-container">
                         {selectedProduct.link3Dios && (
-                          <div className="qr-code-item mx-3">
-                            <p><strong>iOS</strong></p>
+                          <motion.div
+                            className="qr-code-item"
+                            whileHover={{ scale: 1.05, y: -5 }}
+                          >
+                            <p style={{ fontWeight: "600", marginBottom: "15px" }}>
+                              <strong>iOS</strong>
+                            </p>
                             <img
                               src={generateQRCode(selectedProduct.link3Dios)}
                               alt="QR Code per iOS"
                               style={{ width: 120, height: 120 }}
                             />
-                          </div>
+                          </motion.div>
                         )}
                         {selectedProduct.link3Dandroid && (
-                          <div className="qr-code-item mx-3">
-                            <p><strong>Android</strong></p>
+                          <motion.div
+                            className="qr-code-item"
+                            whileHover={{ scale: 1.05, y: -5 }}
+                          >
+                            <p style={{ fontWeight: "600", marginBottom: "15px" }}>
+                              <strong>Android</strong>
+                            </p>
                             <img
                               src={generateQRCode(selectedProduct.link3Dandroid)}
                               alt="QR Code per Android"
                               style={{ width: 120, height: 120 }}
                             />
-                          </div>
+                          </motion.div>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   )}
-                  
-                  <div className="mt-4">
-                    <Button variant={theme === "dark" ? "light" : "dark"} onClick={() => addToCart(selectedProduct._id)}>
-                      Aggiungi al carrello
-                    </Button>
-                    <FaHeart
-                      size={24}
-                      color={wishlist.includes(selectedProduct._id) ? "red" : "gray"}
-                      style={{ cursor: "pointer", marginLeft: "15px" }}
+
+                  {/* Enhanced Action Buttons */}
+                  <motion.div
+                    className="product-actions"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                  >
+                    <motion.button
+                      className="product-add-to-cart"
+                      onClick={() => addToCart(selectedProduct._id)}
+                      whileHover={{ scale: 1.05, y: -3 }}
+                      whileTap={{ scale: 1.02 }}
+                    >
+                      Aggiungi al Carrello
+                    </motion.button>
+                    
+                    <motion.div
+                      className={`product-wishlist-btn ${wishlist.includes(selectedProduct._id) ? 'active' : ''}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleWishlist(selectedProduct._id);
                       }}
-                    />
-                  </div>
+                      whileHover={{ scale: 1.1, y: -3 }}
+                      whileTap={{ scale: 1.05 }}
+                    >
+                      <FaHeart
+                        size={24}
+                        color={wishlist.includes(selectedProduct._id) ? "#dc3545" : "currentColor"}
+                      />
+                    </motion.div>
+                  </motion.div>
                 </motion.div>
               </Col>
             </Row>
           </motion.div>
         )}
-      </AnimatePresence>      {/* Products Section */}
+      </AnimatePresence>{/* Products Section */}
       <div ref={productsSectionRef} className="glass-section" style={{
         color: theme === "dark" ? "#fff" : "#000"
       }}>
@@ -2802,26 +2969,22 @@ const filteredProductsMemo = useMemo(() => {
               color: theme === "dark" ? "#fff" : "#000"
             }}
           >
-            <Container fluid>              <div className="text-center mb-3" >
+            <Container fluid>              <div className="text-center mb-3 d-flex justify-content-center align-items-center gap-3" >
                 <Button
                   className="glass-button filter-toggle-btn"
-                  style={{ border: "1px solid rgba(255, 255, 255, 0.2)" }}
                   onClick={() => setShowFilters(!showFilters)}
                   aria-controls="filters-collapse"
                   aria-expanded={showFilters}
                 >
                   <FaFilter /> Filtri
                 </Button>
-                {showFilters && (
-                  <Button
-                    className="glass-button-danger ms-3"
-                    style={{ marginBottom: "30px" }}
-                    onClick={resetFilters}
-                  >
-                    Azzera Filtri
-                  </Button>
-                )}
-              </div>              <Collapse 
+                <Button
+                  className="glass-button-danger"
+                  onClick={resetFilters}
+                >
+                  Azzera Filtri
+                </Button>
+              </div><Collapse 
                 in={showFilters} 
                 id="filtri"
                 className="glass-collapse"
@@ -2830,45 +2993,24 @@ const filteredProductsMemo = useMemo(() => {
                 <div id="filters-collapse" className="filters-container">
                   <Form>
                     <Row className="gy-3">
-                      <Col md={3}>
-                        <Form.Group controlId="filterName">
-                          <Form.Label className="filter-label" style={{
-                            // Cambia colore in base al tema
-                            fontWeight: "bold",
-                          }}>Nome</Form.Label>                        <Form.Control
+                      <Col md={3}>                        <Form.Group controlId="filterName">
+                          <Form.Label className="filter-label">Nome</Form.Label>
+                          <Form.Control
                             type="text"
                             placeholder="Cerca per nome"
                             name="name"
-                            style={{
-                              backgroundColor: theme === "dark" ? "#212529" : "#fff",
-                              color: theme === "dark" ? "#fff" : "#000",
-                              border: theme === "dark" ? "1px solid #495057" : "1px solid #ced4da",
-                              fontWeight: "bold",
-                            }}
                             value={filters.name}
                             onChange={handleFilterChange}
                             className="filter-input"
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={6}>
-                        <Form.Group controlId="filterPrice">
-                          <Form.Label className="filter-label" style={{
-                            color: theme === "dark" ? "#fff" : "#000", // Cambia colore in base al tema
-                            fontWeight: "bold",
-                            marginLeft: "auto",
-                            marginRight: "auto",
-                            textAlign: "center",
-                          }}>Prezzo</Form.Label>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Col md={6}>                        <Form.Group controlId="filterPrice">
+                          <Form.Label className="filter-label">Prezzo</Form.Label>                          <div className="price-slider-container">
                             <FaSortAmountUp
-                              size={24}
-                              style={{
-                                cursor: "pointer",
-                                color: sortOrder === "asc" ? "#007bff" : theme === "dark" ? "#fff" : "#000",
-                                marginRight: "10px",
-                              }}
-                              onClick={() => setSortOrder((prev) => (prev === "asc" ? "" : "asc"))} // Deseleziona al secondo clic
+                              size={32}
+                              className={`sort-icon ${sortOrder === "asc" ? "active" : ""}`}
+                              onClick={() => setSortOrder((prev) => (prev === "asc" ? "" : "asc"))}
                             />
                             <Slider
                               range
@@ -2877,70 +3019,35 @@ const filteredProductsMemo = useMemo(() => {
                               step={50}
                               value={filters.price}
                               onChange={(value) => setFilters((prev) => ({ ...prev, price: value }))}
-                              trackStyle={[{ backgroundColor: "#007bff" }]} // Colore della barra selezionata
-                              handleStyle={[
-                                { borderColor: "#007bff", backgroundColor: "#fff" }, // Stile dei cursori
-                                { borderColor: "#007bff", backgroundColor: "#fff" },
-                              ]}
-                              style={{
-                                width: "200px",
-                                marginTop: "10px",
-                              }} // larghezza diminuita del slider
+                              className="price-slider"
                             />
                             <FaSortAmountDown
-                              size={24}
-                              style={{
-                                cursor: "pointer",
-                                color: sortOrder === "desc" ? "#007bff" : theme === "dark" ? "#fff" : "#000",
-                                marginLeft: "10px",
-                              }}
-                              onClick={() => setSortOrder((prev) => (prev === "desc" ? "" : "desc"))} // Deseleziona al secondo clic
+                              size={32}
+                              className={`sort-icon ${sortOrder === "desc" ? "active" : ""}`}
+                              onClick={() => setSortOrder((prev) => (prev === "desc" ? "" : "desc"))}
                             />
                           </div>
-                          <div className="price-range" style={{
-                            color: theme === "dark" ? "#fff" : "#000", // Cambia colore in base al tema
-                            fontWeight: "bold",
-                            textAlign: "center",
-                          }}>
-                            <span style={{
-                              marginLeft: "auto",
-                              marginRight: "auto",
-                            }}>€{filters.price[0]}</span>
-                            <span style={{
-                              marginLeft: "auto",
-                              marginRight: "auto",
-                            }}>€{filters.price[1]}</span>
+                          <div className="price-range">
+                            <span>€{filters.price[0]}</span>
+                            <span>€{filters.price[1]}</span>
                           </div>
                         </Form.Group>
                       </Col>
 
-                      <Col md={3}>
-                        <Form.Group controlId="filterColor">
-                          <Form.Label className="filter-label" style={{
-                            color: theme === "dark" ? "#fff" : "#000", // Cambia colore in base al tema
-                            fontWeight: "bold",
-                          }}>Colore</Form.Label>                        <Form.Control
-                            style={{ 
-                              backgroundColor: theme === "dark" ? "#212529" : "#fff", 
-                              color: theme === "dark" ? "#fff" : "#000",
-                              border: theme === "dark" ? "1px solid #495057" : "1px solid #ced4da",
-                            }}
+                      <Col md={3}>                        <Form.Group controlId="filterColor">
+                          <Form.Label className="filter-label">Colore</Form.Label>
+                          <Form.Control
                             type="text"
                             placeholder="Cerca per colore"
                             name="color"
                             value={filters.color}
                             onChange={handleFilterChange}
                             className="filter-input"
-
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={3}>
-                        <Form.Group controlId="filterHas3D">
-                          <Form.Label className="filter-label" style={{
-                            color: theme === "dark" ? "#fff" : "#000", // Cambia colore in base al tema
-                            fontWeight: "bold",
-                          }}>Solo con Modello 3D</Form.Label>
+                      <Col md={3}>                        <Form.Group controlId="filterHas3D">
+                          <Form.Label className="filter-label">Solo con Modello 3D</Form.Label>
                           <Form.Check
                             type="checkbox"
                             name="has3D"
@@ -2951,113 +3058,108 @@ const filteredProductsMemo = useMemo(() => {
                         </Form.Group>
                       </Col>
                     </Row>
-                    <Row className="align-items-center mt-4">
-                      <Col md={1} className="text-center">
-                        <motion.div
-                          whileHover={{ scale: 1.2 }} // Ingrandisce leggermente l'icona al passaggio del mouse
-                          whileTap={{ scale: 0.9 }} // Riduce leggermente l'icona al clic
+                    <Row className="align-items-center mt-4">                      <Col md={1} className="text-center">
+                        <div 
+                          className={`category-nav-arrow ${currentCategoryIndex === 0 ? 'disabled' : ''}`}
+                          onClick={() => currentCategoryIndex > 0 && handleCategoryScroll("left")}
                         >
                           <FaArrowLeft
-                            size={30}
+                            size={24}
                             style={{
                               color: theme === "dark" ? "#fff" : "#000",
                               fontWeight: "bold",
-                              cursor: "pointer",
                             }}
-                            onClick={() => handleCategoryScroll("left")}
                           />
-                        </motion.div>
-                      </Col>
-                      <Col md={10}>
-                        <div className="categories-container d-flex justify-content-center">
-                          <AnimatePresence>
-                            {categories.slice(currentCategoryIndex, currentCategoryIndex + 3).map((category) => (
-                              <motion.div
-                                key={category}
-                                className="text-center mx-2 category-card"
-                                initial={{ opacity: 0, y: 20 }} // Stato iniziale: leggermente in basso e trasparente
-                                animate={{ opacity: 1, y: 0 }} // Stato animato: visibile e in posizione
-                                exit={{ opacity: 0, y: 23 }} // Stato di uscita: leggermente in alto e trasparente
-                                transition={{
-                                  duration: 0.2, // Durata della transizione
-                                  ease: [0.4, 0.8, 0.4, 1], // Curva di Bezier per un'animazione fluida
-                                }}
-                                whileHover={{
-                                  scale: 1.1, // Ingrandisce leggermente al passaggio del mouse
-                                  boxShadow: "0 10px 20px rgba(0, 0, 0, 0.3)", // Aggiunge un'ombra più pronunciata
-                                }}
-                                whileTap={{ scale: 0.95 }} // Riduce leggermente al clic
-                                style={{
-                                  width: "150px",
-                                  height: "150px",
-                                  position: "relative",
-                                  overflow: "hidden",
-                                  cursor: "pointer",
-                                  borderRadius: "10px",
-                                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", // Ombra standard
-                                  transition: "box-shadow 0.3s ease",
-                                  display: "flex",
-                                  flexDirection: "column",
-                                }}
-                                onClick={() => handleCategoryClick(category)}
-                              >
-                                <div style={{position: "relative", height: "100%", width: "100%"}}>
-                                  <img
-                                    src={categoryImages[category]}
-                                    alt={category}
-                                    style={{
-                                      width: "100%",
-                                      height: "100%",
-                                      objectFit: "cover",
-                                      opacity: 0.8,
-                                      transition: "opacity 0.3s ease",
-                                    }}
-                                  />
-                                  <div 
-                                    className="category-title" 
-                                    style={{
-                                      position: "absolute",
-                                      bottom: 0,
-                                      left: 80,
-                                      right: 0,
-                                     
-                                      color: "white",
-                                      padding: "10px 5px",
-                                      textAlign: "center",    // Questo è già corretto
-                                      fontSize: "13px",
-                                      fontWeight: "600",
-                                      width: "100%",          // Questo è già corretto
-                                      textTransform: "capitalize",
-                                      letterSpacing: "0.5px",
-                                      textShadow: "0 1px 2px rgba(0,0,0,0.8)",
-                                      display: "flex",        // Aggiungi questo
-                                      justifyContent: "center", // Aggiungi questo
-                                      alignItems: "center"    // Aggiungi questo
-                                    }}
-                                  >
-                                    {category.replace(/-/g, ' ')}
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </AnimatePresence>
                         </div>
-                      </Col>
-                      <Col md={1} className="text-center">
-                        <motion.div
-                          whileHover={{ scale: 1.2 }} // Ingrandisce leggermente l'icona al passaggio del mouse
-                        // Riduce leggermente l'icona al clic
+                      </Col>                      <Col md={10}>
+                        <div className="categories-scroll-container">
+                          <div className="categories-scroll-wrapper d-flex justify-content-center align-items-center">
+                            <AnimatePresence mode="wait">
+                              {categories.slice(currentCategoryIndex, currentCategoryIndex + 3).map((category, index) => (
+                                <motion.div
+                                  key={`${category}-${currentCategoryIndex}-${index}`}
+                                  className={`category-card ${isScrollingCategories ? 'changing' : ''}`}
+                                  initial={{ 
+                                    opacity: 0, 
+                                    x: scrollDirection === 'right' ? 100 : -100,
+                                    rotateY: scrollDirection === 'right' ? 45 : -45,
+                                    scale: 0.8
+                                  }}
+                                  animate={{ 
+                                    opacity: 1, 
+                                    x: 0,
+                                    rotateY: 0,
+                                    scale: 1
+                                  }}
+                                  exit={{ 
+                                    opacity: 0, 
+                                    x: scrollDirection === 'right' ? -100 : 100,
+                                    rotateY: scrollDirection === 'right' ? -45 : 45,
+                                    scale: 0.8
+                                  }}                                  transition={{
+                                    duration: 0.3,
+                                    ease: [0.25, 0.46, 0.45, 0.94],
+                                    delay: index * 0.05
+                                  }}
+                                  whileHover={{
+                                    scale: 1.05,
+                                    y: -10,
+                                    rotateX: 5,
+                                    rotateY: 2,
+                                    transition: { duration: 0.3 }
+                                  }}
+                                  whileTap={{ 
+                                    scale: 1.02,
+                                    y: -5,
+                                    transition: { duration: 0.1 }
+                                  }}
+                                  style={{
+                                    width: "150px",
+                                    height: "150px",
+                                    position: "relative",
+                                    overflow: "hidden",
+                                    cursor: "pointer",
+                                    borderRadius: "15px",
+                                    marginLeft: "10px",
+                                    marginRight: "10px",
+                                  }}
+                                  onClick={() => handleCategoryClick(category)}
+                                >
+                                  <div style={{position: "relative", height: "100%", width: "100%"}}>
+                                    <img
+                                      className="category-image"
+                                      src={categoryImages[category]}
+                                      alt={category}
+                                      style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                      }}
+                                    />
+                                    <div className="category-title-overlay">
+                                      <div className="category-title">
+                                        {category.replace(/-/g, ' ')}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </AnimatePresence>
+                          </div>
+                        </div>
+                      </Col><Col md={1} className="text-center">
+                        <div 
+                          className={`category-nav-arrow ${currentCategoryIndex >= Math.max(categories.length - 3, 0) ? 'disabled' : ''}`}
+                          onClick={() => currentCategoryIndex < Math.max(categories.length - 3, 0) && handleCategoryScroll("right")}
                         >
                           <FaArrowRight
-                            size={30}
+                            size={24}
                             style={{
                               color: theme === "dark" ? "#fff" : "#000",
                               fontWeight: "bold",
-                              cursor: "pointer",
                             }}
-                            onClick={() => handleCategoryScroll("right")}
                           />
-                        </motion.div>
+                        </div>
                       </Col>
                     </Row>
                   </Form>
@@ -3168,7 +3270,7 @@ const filteredProductsMemo = useMemo(() => {
                           margin: 0
                         }}>€{product.price}</Card.Text>
                         
-                        {product.category && (
+                      
                           <span style={{
                             fontSize: "0.8rem",
                             color: theme === "dark" ? "#adb5bd" : "#6c757d",
@@ -3176,7 +3278,7 @@ const filteredProductsMemo = useMemo(() => {
                             padding: "3px 8px",
                             borderRadius: "20px"
                           }}>{product.category}</span>
-                        )}
+                
                       </div>
                       
                       <div className="d-flex justify-content-between align-items-center mt-3">

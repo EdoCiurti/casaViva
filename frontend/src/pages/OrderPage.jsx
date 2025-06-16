@@ -344,13 +344,16 @@ const OrderPage = () => {
                   borderTop: '2px solid rgba(255, 255, 255, 0.3)',
                   textAlign: 'right'
                 }}
-              >                <h4 className="responsive-text-primary" style={{
-                  fontWeight: '700',
-                  fontSize: '1.8rem',
-                  margin: 0
-                }}>
+              >                <ModernText
+                  variant="gradient"
+                  style={{
+                    fontWeight: '700',
+                    fontSize: '1.8rem',
+                    margin: 0
+                  }}
+                >
                   Total: €{cartItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0).toFixed(2)}
-                </h4>
+                </ModernText>
               </motion.div>
             </motion.div>
           </Col>
