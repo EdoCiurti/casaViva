@@ -14,6 +14,8 @@ import { AnimatePresence } from "framer-motion";
 import { useRef } from "react"; // Importa useRef
 import QRCode from "qrcode";
 import { API_ENDPOINTS } from '../config/api';
+import Slider from "rc-slider";
+import "rc-slider/assets/index.css";
 
 
 
@@ -23,7 +25,14 @@ const ProductsPage = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [filters, setFilters] = useState({ name: "", price: "", category: "", color: "", dimension: "", has3D: false });
+    const [filters, setFilters] = useState({ 
+        name: "", 
+        price: [0, 5000], // Cambiato da string a array per range
+        category: "", 
+        color: "", 
+        dimension: "", 
+        has3D: false 
+    });
     const [viewMode, setViewMode] = useState("grid"); // "scroll" or "grid"
     const [showPopup, setShowPopup] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -203,12 +212,11 @@ const ProductsPage = () => {
                 theme: "colored",
             });
         }
-    };
-    useEffect(() => {
+    };    useEffect(() => {
         const filtered = products.filter((product) => {
             return (
                 (filters.name === "" || (product.name && product.name.toLowerCase().includes(filters.name.toLowerCase()))) &&
-                (filters.price === "" || (product.price && product.price <= parseFloat(filters.price))) &&
+                (product.price >= filters.price[0] && product.price <= filters.price[1]) &&
                 (filters.category === "" || product.category === filters.category) &&
                 (filters.color === "" || (product.description && product.description.toLowerCase().includes(filters.color.toLowerCase()))) &&
                 (filters.dimension === "" || (product.dimension && parseFloat(product.dimension) <= parseFloat(filters.dimension))) &&
@@ -277,11 +285,9 @@ const ProductsPage = () => {
         setFilters((prev) => ({ ...prev, category }));
         localStorage.setItem("selectedCategory", category);
     };
-
-
     const handleBackToCategories = () => {
         setSelectedCategory(null);
-        setFilters({ name: "", price: "", category: "", color: "", dimension: "" });
+        setFilters({ name: "", price: [0, 5000], category: "", color: "", dimension: "", has3D: false });
         setFilteredProducts(products);
         localStorage.removeItem("selectedCategory");
         localStorage.removeItem("selectedProduct"); // 🔹 Rimuove il prodotto salvat
@@ -454,18 +460,38 @@ const ProductsPage = () => {
                                     className="filter-input"
                                 />
                             </Form.Group>
-                        </Col>
-                        <Col md={3} className="filter-col">
+                        </Col>                        <Col md={3} className="filter-col">
                             <Form.Group controlId="filterPrice" className="filter-group">
-                                <Form.Label className="filter-label">Prezzo Max (€)</Form.Label>
-                                <Form.Control
-                                    type="number"
-                                    placeholder="Es. 1500"
-                                    name="price"
-                                    value={filters.price}
-                                    onChange={handleFilterChange}
-                                    className="filter-input"
-                                />
+                                <Form.Label className="filter-label">Prezzo: €{filters.price[0]} - €{filters.price[1]}</Form.Label>
+                                <div style={{ padding: '0.5rem 0', marginTop: '0.75rem' }}>
+                                    <Slider
+                                        range
+                                        min={0}
+                                        max={5000}
+                                        value={filters.price}
+                                        onChange={(value) => setFilters(prev => ({ ...prev, price: value }))}
+                                        trackStyle={[{ backgroundColor: '#8b5cf6', height: 6 }]}
+                                        handleStyle={[
+                                            { 
+                                                borderColor: '#8b5cf6', 
+                                                backgroundColor: '#8b5cf6',
+                                                boxShadow: '0 0 0 4px rgba(139, 92, 246, 0.2)',
+                                                width: 20,
+                                                height: 20,
+                                                marginTop: -7
+                                            },
+                                            { 
+                                                borderColor: '#8b5cf6', 
+                                                backgroundColor: '#8b5cf6',
+                                                boxShadow: '0 0 0 4px rgba(139, 92, 246, 0.2)',
+                                                width: 20,
+                                                height: 20,
+                                                marginTop: -7
+                                            }
+                                        ]}
+                                        railStyle={{ backgroundColor: 'rgba(148, 163, 184, 0.3)', height: 6 }}
+                                    />
+                                </div>
                             </Form.Group>
                         </Col>
                         <Col md={3} className="filter-col">
@@ -493,21 +519,17 @@ const ProductsPage = () => {
                                         label="Solo con 3D"
                                     />
                                 </div>
-                            </Form.Group>
-                        </Col>
+                            </Form.Group>                        </Col>
                     </Row>
-                    <Row className="mt-3">
-                        <Col className="text-center">
-                            <Button 
-                                variant="danger" 
-                                className="filter-reset-button"
-                                onClick={() => setFilters({ name: "", price: "", category: selectedCategory, color: "", dimension: "", has3D: false })}
-                            >
-                                <i className="fas fa-undo me-2"></i>
-                                Resetta Filtri
-                            </Button>
-                        </Col>
-                    </Row>
+                    <div className="filter-reset-container">                        <Button 
+                            variant="danger" 
+                            className="filter-reset-button"
+                            onClick={() => setFilters({ name: "", price: [0, 5000], category: selectedCategory, color: "", dimension: "", has3D: false })}
+                        >
+                            <i className="fas fa-undo"></i>
+                            Resetta Filtri
+                        </Button>
+                    </div>
                 </Form>
             )}<AnimatePresence>
                 {selectedProduct && selectedCategory && (
