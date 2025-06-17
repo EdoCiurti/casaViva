@@ -439,63 +439,77 @@ const ProductsPage = () => {
             className={`mt-5 text-center position-relative ${selectedProduct && !showScrollToTop ? "blur-background" : "no-blur"
                 }`}
             style={{ zIndex: 0 }}
-        >
-
-            {selectedCategory && (
-                <Form className="mb-4">
-                    <Row>
-                        <Col md={3}>
-                            <Form.Group controlId="filterName">
-                                <Form.Label>Nome</Form.Label>
+        >            {selectedCategory && (
+                <Form className="filters-container">
+                    <Row className="filters-row">
+                        <Col md={3} className="filter-col">
+                            <Form.Group controlId="filterName" className="filter-group">
+                                <Form.Label className="filter-label">Nome</Form.Label>
                                 <Form.Control
                                     type="text"
                                     placeholder="Cerca per nome"
                                     name="name"
                                     value={filters.name}
                                     onChange={handleFilterChange}
+                                    className="filter-input"
                                 />
                             </Form.Group>
                         </Col>
-                        <Col md={3}>
-                            <Form.Group controlId="filterPrice">
-                                <Form.Label>Prezzo massimo</Form.Label>
+                        <Col md={3} className="filter-col">
+                            <Form.Group controlId="filterPrice" className="filter-group">
+                                <Form.Label className="filter-label">Prezzo Max (€)</Form.Label>
                                 <Form.Control
                                     type="number"
-                                    placeholder="Cerca per prezzo"
+                                    placeholder="Es. 1500"
                                     name="price"
                                     value={filters.price}
                                     onChange={handleFilterChange}
+                                    className="filter-input"
                                 />
                             </Form.Group>
                         </Col>
-                        <Col md={3}>
-                            <Form.Group controlId="filterColor">
-                                <Form.Label>Colore</Form.Label>
+                        <Col md={3} className="filter-col">
+                            <Form.Group controlId="filterColor" className="filter-group">
+                                <Form.Label className="filter-label">Colore</Form.Label>
                                 <Form.Control
                                     type="text"
-                                    placeholder="Cerca per colore"
+                                    placeholder="Es. nero, bianco"
                                     name="color"
                                     value={filters.color}
                                     onChange={handleFilterChange}
+                                    className="filter-input"
                                 />
                             </Form.Group>
-                        </Col>
-                        <Col md={3}>
-                            <Form.Group controlId="filterHas3D">
-                                <Form.Label>Solo con Modello 3D</Form.Label>
-                                <div className="mt-2">
+                        </Col>                        <Col md={3} className="filter-col">
+                            <Form.Group controlId="filterHas3D" className="filter-group">
+                                <Form.Label className="filter-label">Modello 3D</Form.Label>
+                                <div className="filter-checkbox-container">
                                     <Form.Check
                                         type="checkbox"
                                         name="has3D"
                                         checked={filters.has3D}
                                         onChange={(e) => setFilters((prev) => ({ ...prev, has3D: e.target.checked }))}
+                                        className="filter-checkbox"
+                                        label="Solo con 3D"
                                     />
                                 </div>
                             </Form.Group>
                         </Col>
                     </Row>
+                    <Row className="mt-3">
+                        <Col className="text-center">
+                            <Button 
+                                variant="danger" 
+                                className="filter-reset-button"
+                                onClick={() => setFilters({ name: "", price: "", category: selectedCategory, color: "", dimension: "", has3D: false })}
+                            >
+                                <i className="fas fa-undo me-2"></i>
+                                Resetta Filtri
+                            </Button>
+                        </Col>
+                    </Row>
                 </Form>
-            )}            <AnimatePresence>
+            )}<AnimatePresence>
                 {selectedProduct && selectedCategory && (
                     <motion.div
                         initial={{ opacity: 0 }}
