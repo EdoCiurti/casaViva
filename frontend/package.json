@@ -2,7 +2,8 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
-  "type": "module",  "scripts": {
+  "type": "module",
+  "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -12,9 +13,11 @@
     "@tensorflow-models/coco-ssd": "^2.2.3",
     "@tensorflow-models/mobilenet": "^2.1.1",
     "@tensorflow/tfjs": "^4.22.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
-    "framer-motion": "^12.6.3",    "lucide-react": "^0.475.0",
+    "framer-motion": "^12.6.3",
+    "lucide-react": "^0.475.0",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "rc-slider": "^11.1.8",
@@ -22,21 +25,22 @@
     "react-bootstrap": "^2.10.9",
     "react-data-table-component": "^7.7.0",
     "react-dom": "^19.0.0",
-    "react-icons": "^5.5.0",    "react-router-dom": "^7.5.0",
-    "react-toastify": "^11.0.5"
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.5.0",
+    "react-toastify": "^11.0.5",
+    "vite": "^6.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
-    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.19.0",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-react-hooks": "^5.0.0",
-    "eslint-plugin-react-refresh": "^0.4.18",    "globals": "^15.14.0",
+    "eslint-plugin-react-refresh": "^0.4.18",
+    "globals": "^15.14.0",
     "postcss": "^8.5.3",
-    "tailwindcss": "^4.0.7",
-    "vite": "^6.2.0"
+    "tailwindcss": "^4.0.7"
   }
 }
