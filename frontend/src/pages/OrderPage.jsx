@@ -507,7 +507,6 @@ const OrderPage = () => {
               fontWeight: '600',              background: isFormValid() 
                 ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' 
                 : 'rgba(108, 117, 125, 0.6)',
-              border: 'none',
               borderRadius: '25px',
               cursor: isFormValid() ? 'pointer' : 'not-allowed',
               backdropFilter: 'blur(20px)',
