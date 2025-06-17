@@ -8,6 +8,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { FaHeart } from "react-icons/fa"; // Importa l'icona del cuore
 import 'react-toastify/dist/ReactToastify.css';
 import LoadingSpinner from '../components/LoadingSpinner';
+import QRCodeModal from '../components/QRCodeModal';
 import { useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useRef } from "react"; // Importa useRef
@@ -32,9 +33,12 @@ const ProductsPage = () => {
     const [theme, setTheme] = useState(""); // "light" o "dark"
     const [mainImage, setMainImage] = useState(null);
     const [hoveredCategory, setHoveredCategory] = useState(null);
-
-
-    const handleShowQRModal = () => setShowQRModal(true);
+    const handleShowQRModal = (product = selectedProduct) => {
+        if (product) {
+            setSelectedProduct(product);
+        }
+        setShowQRModal(true);
+    };
     const handleCloseQRModal = () => setShowQRModal(false);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
@@ -1209,12 +1213,11 @@ const ProductsPage = () => {
                                 />
                             </div>
                         </>
-                    ) : (
-                        <Row>
+                    ) : (                        <div className="products-grid">
                             {filteredProducts.map((product) => (
-                                <Col key={product._id} md={4} className="mb-4">
+                                <div key={product._id} className="product-item">
                                     <Card
-                                        className="shadow-lg"
+                                        className="product-card shadow-lg"
                                         style={{ borderRadius: "15px", overflow: "hidden", cursor: "pointer" }}
                                         onClick={() => handleCardClick(product)}
                                     >
@@ -1222,16 +1225,16 @@ const ProductsPage = () => {
                                             variant="top"
                                             src={product.images[0]}
                                             alt={product.name}
+                                            className="product-image"
                                             style={{ height: "250px", objectFit: "cover" }}
-                                        />
-                                        <Card.Body style={{ backgroundColor: "#f8f9fa" }}>
-                                            <Card.Title style={{ color: "#343a40", fontWeight: "bold" }}>
+                                        />                                        <Card.Body className="product-body" style={{ backgroundColor: "#f8f9fa" }}>
+                                            <Card.Title className="product-title" style={{ color: "#343a40", fontWeight: "bold" }}>
                                                 {product.name}
                                             </Card.Title>
-                                            <Card.Text>
+                                            <Card.Text className="product-price">
                                                 <strong style={{ color: "#28a745" }}>€{product.price}</strong>
                                             </Card.Text>
-                                            <div className="d-flex justify-content-between align-items-center">
+                                            <div className="d-flex-responsive justify-content-between align-items-center">
                                                 <motion.button
                                                     className="btn btn-dark"
                                                     whileHover={{ scale: 1.1 }}
@@ -1247,8 +1250,7 @@ const ProductsPage = () => {
                                                     size={24}
                                                     color={wishlist.includes(product._id) ? "red" : "gray"}
                                                     style={{ cursor: "pointer" }}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
+                                                    onClick={(e) => {                                                        e.stopPropagation();
                                                         wishlist.includes(product._id)
                                                             ? removeFromWishlist(product._id)
                                                             : addToWishlist(product._id);
@@ -1257,9 +1259,9 @@ const ProductsPage = () => {
                                             </div>
                                         </Card.Body>
                                     </Card>
-                                </Col>
+                                </div>
                             ))}
-                        </Row>
+                        </div>
                     )}
                 </>
             ) : (
@@ -1297,15 +1299,15 @@ const ProductsPage = () => {
                                     onClick={() => setCurrentIndex(index)}
                                     whileHover={{ scale: 1.05 }}
                                 >
-                                    {/* filepath: c:\Users\edocu\Desktop\casaViva\frontend\src\pages\ProductsPage.jsx */}
-                                    <Card className="glowing-card" style={{ height: "300px", overflow: "hidden", position: "relative" }} onClick={() => handleCategoryClick(category)}>
+                                    {/* filepath: c:\Users\edocu\Desktop\casaViva\frontend\src\pages\ProductsPage.jsx */}                                    <Card className="category-card glowing-card" style={{ height: "300px", overflow: "hidden", position: "relative" }} onClick={() => handleCategoryClick(category)}>
                                         <Card.Img
                                             variant="top"
                                             src={categoryImages[category]}
                                             alt={category}
+                                            className="category-image"
                                             style={{ width: "100%", height: "100%", objectFit: "cover" }}
                                         />
-                                        <Card.Title className="card-title-overlay">{category}</Card.Title>
+                                        <Card.Title className="card-title-overlay text-responsive">{category}</Card.Title>
                                     </Card>
                                 </motion.div>
                             ))}
@@ -1370,38 +1372,18 @@ const ProductsPage = () => {
                     <Button variant="secondary" onClick={handleClosePopup}>
                         Chiudi
                     </Button>
-                    <Button variant="dark" onClick={() => addToCart(selectedProduct?._id)}>
-                        Aggiungi al carrello
+                    <Button variant="dark" onClick={() => addToCart(selectedProduct?._id)}>                        Aggiungi al carrello
                     </Button>
                 </Modal.Footer>
             </Modal>
-            <Modal show={showQRModal} onHide={() => setShowQRModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title >Scansiona per vedere in AR</Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="text-center">
-                    <img
-                        src={`https://quickchart.io/qr?text=https%3A%2F%2Fcalossoa.github.io%2F3D%2Findex.html`}
-                        alt="QR Code AR"
-                    />
-                    <p style={{ color: "#000" }}>Scansiona con la fotocamera del tuo smartphone per visualizzare il modello in realtà aumentata.</p>
-                    <model-viewer
-                        src="https://calossoa.github.io/3D/modello.glb"
-                        ios-src="https://calossoa.github.io/3D/modello.usdz"
-                        ar
-                        ar-modes="webxr scene-viewer quick-look"
-                        camera-controls
-                        auto-rotate
-                        style={{ width: "100%", height: "400px" }}
-                    >
-                    </model-viewer>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowQRModal(false)}>
-                        Chiudi
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+
+            {/* Nuovo QR Code Modal Responsivo */}
+            <QRCodeModal 
+                show={showQRModal} 
+                onHide={() => setShowQRModal(false)} 
+                product={selectedProduct} 
+            />
+
             <style>{`
                 .scroll-to-top-btn {
                     position: fixed;
