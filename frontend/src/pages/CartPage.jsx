@@ -6,7 +6,6 @@ import { Plus, Minus, Trash, ShoppingCart, CreditCard, Trash2 } from "lucide-rea
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from '../components/LoadingSpinner';
 import { API_ENDPOINTS } from '../config/api';
-import { API_ENDPOINTS } from '../config/api';
 
 const CartPage = () => {  const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
