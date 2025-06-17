@@ -121,10 +121,30 @@
   }
 }
 
+@media (max-width: 600px) {
+  .categories-wrapper .category-card {
+    width: calc(100vw - 100px); /* Larghezza massima per mobile */
+    height: 220px;
+    margin: 0 auto;
+    min-width: 250px;
+  }
+  
+  .categories-container {
+    padding: 0 40px;
+  }
+  
+  .categories-wrapper {
+    gap: 0;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
 @media (max-width: 480px) {
   .categories-wrapper .category-card {
-    width: 280px;
+    width: calc(100vw - 80px); /* Larghezza quasi completa meno padding */
     height: 200px;
+    margin: 0 auto;
   }
   .categories-container {
     padding: 0 30px;
@@ -132,6 +152,7 @@
   
   .categories-wrapper {
     gap: 1rem;
+    justify-content: center;
   }
 }
 

@@ -53,15 +53,13 @@ const ProductsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const detailsSectionRef = useRef(null); // Riferimento alla sezione dei dettagli
-    const [itemsPerView, setItemsPerView] = useState(3);
-
-    // Funzione per calcolare items per view in base alla larghezza dello schermo
+    const [itemsPerView, setItemsPerView] = useState(3);    // Funzione per calcolare items per view in base alla larghezza dello schermo
     const calculateItemsPerView = () => {
         const width = window.innerWidth;
-        if (width < 480) return 1;        // Mobile molto piccolo: 1 item
-        if (width < 768) return 2;        // Mobile: 2 items  
-        if (width < 1024) return 3;       // Tablet: 3 items
-        if (width < 1400) return 4;       // Desktop piccolo: 4 items
+        if (width <= 600) return 1;       // Mobile: 1 item (più conservativo)
+        if (width <= 768) return 2;       // Mobile grande: 2 items  
+        if (width <= 1024) return 3;      // Tablet: 3 items
+        if (width <= 1400) return 4;      // Desktop piccolo: 4 items
         return 5;                         // Desktop grande: 5 items
     };
 
@@ -1344,30 +1342,34 @@ const ProductsPage = () => {
                             drag="x"
                             dragConstraints={getDragConstraints(categories.length)}
                         >
-                            {categories.map((category, index) => (
-                                <motion.div
-                                    key={index}
-                                    className="category-card"
-                                    animate={{
-                                        opacity: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.5,
-                                        scale: index >= currentIndex && index < currentIndex + itemsPerView ? 1 : 0.8,
-                                    }}
-                                    transition={{ duration: 0.5 }}
-                                    onClick={() => setCurrentIndex(index)}
-                                    whileHover={{ scale: 1.05 }}
-                                >
-                                    {/* filepath: c:\Users\edocu\Desktop\casaViva\frontend\src\pages\ProductsPage.jsx */}                                    <Card className="category-card glowing-card" style={{ height: "300px", overflow: "hidden", position: "relative" }} onClick={() => handleCategoryClick(category)}>
-                                        <Card.Img
-                                            variant="top"
-                                            src={categoryImages[category]}
-                                            alt={category}
-                                            className="category-image"
-                                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                        />
-                                        <Card.Title className="card-title-overlay text-responsive">{category}</Card.Title>
-                                    </Card>
-                                </motion.div>
-                            ))}
+                            {categories
+                                .slice(currentIndex, currentIndex + itemsPerView)
+                                .map((category, index) => {
+                                    const originalIndex = currentIndex + index;
+                                    return (
+                                        <motion.div
+                                            key={originalIndex}
+                                            className="category-card"
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.8 }}
+                                            transition={{ duration: 0.5 }}
+                                            onClick={() => setCurrentIndex(originalIndex)}
+                                            whileHover={{ scale: 1.05 }}
+                                        >
+                                            <Card className="category-card glowing-card" style={{ height: "300px", overflow: "hidden", position: "relative" }} onClick={() => handleCategoryClick(category)}>
+                                                <Card.Img
+                                                    variant="top"
+                                                    src={categoryImages[category]}
+                                                    alt={category}
+                                                    className="category-image"
+                                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                />
+                                                <Card.Title className="card-title-overlay text-responsive">{category}</Card.Title>
+                                            </Card>
+                                        </motion.div>
+                                    );
+                                })}
                         </motion.div>
                         <FaArrowRight
                             className="arrow-icon position-absolute"
