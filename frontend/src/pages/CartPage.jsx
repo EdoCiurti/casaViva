@@ -312,15 +312,12 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                 return (
                   <>
                     {/* Pagination Controls - Top */}
-                    {cart.length > itemsPerPage && (
-                      <motion.div
+                    {cart.length > itemsPerPage && (                      <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
+                        className="cart-pagination-controls"
                         style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
                           marginBottom: '25px',
                           padding: '15px 20px',
                           background: 'rgba(255, 255, 255, 0.05)',
@@ -328,6 +325,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                           border: '1px solid rgba(255, 255, 255, 0.1)'
                         }}
                       >
+                        <div className="cart-pagination-buttons">
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -345,7 +343,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                           }}
                         >
                           ← Precedente
-                        </motion.button>
+                        </motion.button>                        </div>
                         
                         <span style={{ 
                           color: 'white', 
@@ -358,6 +356,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                           </span>
                         </span>
                         
+                        <div className="cart-pagination-buttons">
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -376,12 +375,12 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                         >
                           Successiva →
                         </motion.button>
+                        </div>
                       </motion.div>
                     )}
 
                     {/* Cart Items */}
-                    {currentItems.map((item, index) => (
-                <motion.div
+                    {currentItems.map((item, index) => (                <motion.div
                   key={item._id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -393,20 +392,19 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                     borderRadius: '20px',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     padding: '25px',
-                    marginBottom: '20px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
+                    marginBottom: '20px'
                   }}
+                  className="cart-item-container"
                   whileHover={{ 
                     y: -5,
                     transition: { duration: 0.2 }
                   }}
                 >
-                  <div className="d-flex align-items-center">
+                  <div className="cart-item-info">
                     <motion.img 
                       src={item.images} 
                       alt={item.name} 
+                      className="cart-item-image"
                       style={{ 
                         width: "80px", 
                         height: "80px", 
@@ -444,7 +442,8 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                     </div>
                   </div>
                   
-                  <div className="d-flex align-items-center">
+                  <div className="cart-item-actions">
+                    <div className="cart-quantity-controls">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -479,8 +478,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                     }}>
                       {item.quantity}
                     </span>
-                    
-                    <motion.button
+                      <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => updateQuantity(item._id, item.quantity + 1)}
@@ -497,6 +495,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                     >
                       <Plus size={16} />
                     </motion.button>
+                    </div>
                     
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -513,7 +512,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
                       }}
                     >
                       <Trash size={16} />
-                    </motion.button>                  </div>
+                    </motion.button></div>
                 </motion.div>
               ))}
                   </>
@@ -523,11 +522,11 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
           )}
         </motion.div>
 
-        {/* Cart Summary and Actions */}
-        <motion.div
+        {/* Cart Summary and Actions */}        <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
+          className="cart-summary"
           style={{
             background: 'rgba(255, 255, 255, 0.1)',
             backdropFilter: 'blur(20px)',
@@ -554,7 +553,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
             Totale: €{total.toFixed(2)}
           </motion.h3>
           
-          <div className="d-flex justify-content-end gap-3">
+          <div className="cart-summary-buttons d-flex justify-content-end gap-3">
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}

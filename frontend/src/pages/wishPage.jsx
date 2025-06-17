@@ -351,29 +351,65 @@ const WishlistPage = () => {
                 Inizia ad aggiungere i tuoi prodotti preferiti!
               </p>
             </motion.div>
-          ) : (            <div style={{ display: 'grid', gap: '1.5rem' }}>
+          ) : (
+            <>
+              {/* Wishlist Stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="wishlist-stats"
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <Heart size={24} style={{ color: '#ff6b8a', marginBottom: '0.5rem' }} />
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }} className="responsive-text-primary">
+                    {wishlist.length}
+                  </div>
+                  <div style={{ fontSize: '0.9rem' }} className="responsive-text-muted">
+                    Prodotti Preferiti
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <Package size={24} style={{ color: '#4ade80', marginBottom: '0.5rem' }} />
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }} className="responsive-text-primary">
+                    €{wishlist.reduce((sum, item) => sum + item.price, 0).toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: '0.9rem' }} className="responsive-text-muted">
+                    Valore Totale
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <Star size={24} style={{ color: '#fbbf24', marginBottom: '0.5rem' }} />
+                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }} className="responsive-text-primary">
+                    {wishlist.length > 0 ? (wishlist.reduce((sum, item) => sum + item.rating, 0) / wishlist.length).toFixed(1) : '0.0'}
+                  </div>
+                  <div style={{ fontSize: '0.9rem' }} className="responsive-text-muted">
+                    Rating Medio
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Wishlist Items */}            <div style={{ display: 'grid', gap: '1.5rem' }}>
               <AnimatePresence>
-                {currentItems.map((item, index) => (<motion.div
+                {currentItems.map((item, index) => (                <motion.div
                     key={item._id}
                     initial={{ opacity: 0, x: -30 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 30 }}
                     transition={{ delay: index * 0.1 }}
                     whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-                    className="glass-card-inner"
+                    className="glass-card-inner wishlist-item-container"
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
                       padding: '1.5rem',
                       transition: 'all 0.3s ease'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                    <div className="wishlist-item-info" style={{ flex: 1 }}>
                       <motion.img
                         whileHover={{ scale: 1.1 }}
                         src={item.images}
                         alt={item.name}
+                        className="wishlist-item-image"
                         style={{
                           width: '80px',
                           height: '80px',
@@ -382,7 +418,7 @@ const WishlistPage = () => {
                           objectFit: 'cover',
                           border: '2px solid rgba(255, 255, 255, 0.2)'
                         }}
-                      />                      <div>
+                      /><div>
                         <h5 className="responsive-text-primary" style={{ 
                           fontWeight: '600', 
                           marginBottom: '0.5rem',
@@ -410,7 +446,8 @@ const WishlistPage = () => {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div className="wishlist-item-actions">
+                      <div className="wishlist-action-buttons">
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -447,15 +484,17 @@ const WishlistPage = () => {
                           justifyContent: 'center',
                           boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)'
                         }}
-                        title="Rimuovi dalla wishlist"
-                      >
+                        title="Rimuovi dalla wishlist"                      >
                         <Trash size={18} />
                       </motion.button>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
-            </div>          )}
+            </div>
+            </>
+          )}
         </motion.div>
 
         {/* Pagination Controls */}
