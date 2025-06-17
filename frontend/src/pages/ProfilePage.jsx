@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaArrowLeft, FaArrowRight, FaUser, FaEnvelope, FaSignOutAlt, FaShoppingCart, FaBox } from 'react-icons/fa';
 import { User, Mail, LogOut, ShoppingCart, Package, ChevronLeft, ChevronRight, Calendar, CreditCard } from 'lucide-react';
 import { Spinner } from 'react-bootstrap';
+import { API_ENDPOINTS } from '../config/api';
 
 const ProfilePage = () => {
     const [userData, setUserData] = useState({});
@@ -28,20 +29,18 @@ const ProfilePage = () => {
                     console.warn("Token non trovato, reindirizzamento al login.");
                     navigate('/login');
                     return;
-                }
-
-                const userResponse = await axios.get('http://localhost:5000/api/auth/profile', {
+                }                const userResponse = await axios.get(API_ENDPOINTS.AUTH_PROFILE, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setUserData(userResponse.data);
 
-                const ordersResponse = await axios.get('http://localhost:5000/api/orders/user', {
+                const ordersResponse = await axios.get(API_ENDPOINTS.USER_ORDERS, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setOrders(ordersResponse.data);
                 setLoadingOrders(false);
 
-                const cartResponse = await axios.get('http://localhost:5000/api/cart', {
+                const cartResponse = await axios.get(API_ENDPOINTS.CART, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setCart(cartResponse.data);
@@ -285,11 +284,9 @@ const ProfilePage = () => {
                                 className="glass-card"
                                 style={{
                                     padding: '40px',
-                                    marginBottom: '30px',
-                                    position: 'relative'
+                                    marginBottom: '30px'
                                 }}
-                            >
-                                <div style={{
+                            ><div style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     marginBottom: '30px'
@@ -309,35 +306,33 @@ const ProfilePage = () => {
                                         <p className="responsive-text-secondary" style={{ marginTop: '20px' }}>
                                             Caricamento ordini...
                                         </p>
-                                    </motion.div>                                ) : orders.length > 0 ? (
-                                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                        {/* Freccia sinistra */}
-                                        {orders.length > 1 && (
-                                            <motion.button
-                                                whileHover={{ scale: 1.2 }}
+                                    </motion.div>
+                                ) : orders.length > 0 ? (
+                                    <div style={{ position: 'relative' }}>
+                                        {orders.length > 1 && (                                            <motion.button
+                                                whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
                                                 onClick={handlePrevOrder}
+                                                className="glass-button"
                                                 style={{
+                                                    position: 'absolute',
+                                                    left: '-20px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    borderRadius: '50%',
                                                     width: '50px',
                                                     height: '50px',
-                                                    borderRadius: '50%',
-                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                    border: '2px solid rgba(255, 255, 255, 0.5)',
                                                     color: 'white',
+                                                    cursor: 'pointer',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    cursor: 'pointer',
-                                                    backdropFilter: 'blur(10px)',
-                                                    boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)'
+                                                    zIndex: 1
                                                 }}
                                             >
                                                 <ChevronLeft size={24} />
                                             </motion.button>
-                                        )}
-
-                                        {/* Card dell'ordine */}
-                                        <motion.div
+                                        )}                                        <motion.div
                                             key={currentOrderIndex}
                                             initial={{ opacity: 0, x: 20 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -345,7 +340,7 @@ const ProfilePage = () => {
                                             className="glass-card-inner"
                                             style={{
                                                 padding: '25px',
-                                                flex: 1
+                                                margin: orders.length > 1 ? '0 60px' : '0'
                                             }}
                                         >
                                             <div style={{
@@ -405,25 +400,25 @@ const ProfilePage = () => {
                                             )}
                                         </motion.div>
 
-                                        {/* Freccia destra */}
-                                        {orders.length > 1 && (
-                                            <motion.button
-                                                whileHover={{ scale: 1.2 }}
+                                        {orders.length > 1 && (                                            <motion.button
+                                                whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
                                                 onClick={handleNextOrder}
+                                                className="glass-button"
                                                 style={{
+                                                    position: 'absolute',
+                                                    right: '-20px',
+                                                    top: '50%',
+                                                    transform: 'translateY(-50%)',
+                                                    borderRadius: '50%',
                                                     width: '50px',
                                                     height: '50px',
-                                                    borderRadius: '50%',
-                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                    border: '2px solid rgba(255, 255, 255, 0.5)',
                                                     color: 'white',
+                                                    cursor: 'pointer',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    cursor: 'pointer',
-                                                    backdropFilter: 'blur(10px)',
-                                                    boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)'
+                                                    zIndex: 1
                                                 }}
                                             >
                                                 <ChevronRight size={24} />
@@ -513,7 +508,8 @@ const ProfilePage = () => {
                                                     gap: '1rem',
                                                     marginBottom: '25px'
                                                 }}
-                                            >                                                <motion.button
+                                            >
+                                                <motion.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={handlePrevCartPage}
@@ -526,13 +522,9 @@ const ProfilePage = () => {
                                                         opacity: currentCartPage === 1 ? 0.5 : 1,
                                                         cursor: currentCartPage === 1 ? 'not-allowed' : 'pointer',
                                                         borderRadius: '8px',
-                                                        background: 'linear-gradient(45deg, #6b7280, #4b5563)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.5rem'
+                                                        background: 'linear-gradient(45deg, #6b7280, #4b5563)'
                                                     }}
                                                 >
-                                                    <ChevronLeft size={16} />
                                                     Precedente
                                                 </motion.button>
                                                 
@@ -543,7 +535,8 @@ const ProfilePage = () => {
                                                 }}>
                                                     {currentCartPage} di {totalCartPages}
                                                 </span>
-                                                  <motion.button
+                                                
+                                                <motion.button
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={handleNextCartPage}
@@ -556,14 +549,10 @@ const ProfilePage = () => {
                                                         opacity: currentCartPage === totalCartPages ? 0.5 : 1,
                                                         cursor: currentCartPage === totalCartPages ? 'not-allowed' : 'pointer',
                                                         borderRadius: '8px',
-                                                        background: 'linear-gradient(45deg, #6b7280, #4b5563)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '0.5rem'
+                                                        background: 'linear-gradient(45deg, #6b7280, #4b5563)'
                                                     }}
                                                 >
                                                     Successiva
-                                                    <ChevronRight size={16} />
                                                 </motion.button>
                                             </motion.div>
                                         )}

@@ -15,6 +15,7 @@ import ChatPopup from "../components/ChatPopup";
 import { FaCloudUploadAlt, FaMagic, FaChair } from "react-icons/fa";
 import { analyzeImage, generateRecommendations as generateAIRecommendations } from '../services/imageAnalysisService';
 import { generateRecommendations, findMatchingProducts, generateProductReason } from '../services/furnitureRecommendationService';
+import { API_ENDPOINTS } from '../config/api';
 
 const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProducts, handleProductRecommendationClick }) => {
   const [step, setStep] = useState(1);   const [uploadedImage, setUploadedImage] = useState(null);
@@ -96,7 +97,7 @@ const VirtualRoomCreator = ({ theme, products, setFilteredProducts, scrollToProd
       setProcessingStage("Ricerca dei prodotti più adatti...");
       
       // Ottieni prodotti dal server
-      const response = await axios.post("http://localhost:5000/api/virtual-room/recommend", formData, {
+      const response = await axios.post(API_ENDPOINTS.VIRTUAL_ROOM_RECOMMEND, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -2138,7 +2139,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchProductsAndCategories = async () => {
       try {
-        const productsResponse = await axios.get("http://localhost:5000/api/products");
+        const productsResponse = await axios.get(API_ENDPOINTS.PRODUCTS);
         setProducts(productsResponse.data);
         setFilteredProducts(productsResponse.data);
 
@@ -2312,6 +2313,7 @@ const scrollToVirtualRoom = () => {
   const loadMoreProducts = () => {
     setVisibleProducts((prev) => prev + 9);
   };
+
   const handleProductClick = useCallback((product, index) => {
     setSelectedProduct(product);
     setMainImage(product.images[0]);
@@ -2326,7 +2328,7 @@ const scrollToVirtualRoom = () => {
     
     // Aspetta che il DOM sia aggiornato con il componente dei dettagli
     setTimeout(() => {
-      const detailsSection = document.querySelector(".glass-product-details");
+      const detailsSection = document.querySelector(".led-effect");
       if (detailsSection) {
         // Scorri con precisione all'inizio della sezione dettagli
         const topPosition = detailsSection.getBoundingClientRect().top + window.pageYOffset;
@@ -2334,14 +2336,8 @@ const scrollToVirtualRoom = () => {
           top: topPosition - 20, // Un piccolo offset per non essere troppo in cima
           behavior: "smooth"
         });
-      } else {
-        // Fallback: scorri verso l'alto se non trova la sezione
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth"
-        });
       }
-    }, 300); // Aumentato il timeout per garantire che il DOM sia aggiornato
+    }, 200); // Aumentato il timeout per garantire che il DOM sia aggiornato
   }, []);
 
   const handleCloseDetails = () => {
@@ -2398,9 +2394,8 @@ const scrollToVirtualRoom = () => {
       navigate("/login");
       return;
     }
-    try {
-      await axios.post(
-        "http://localhost:5000/api/cart",
+    try {      await axios.post(
+        API_ENDPOINTS.CART,
         { productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -2437,9 +2432,8 @@ const scrollToVirtualRoom = () => {
       navigate("/login");
       return;
     }
-    try {
-      await axios.post(
-        "http://localhost:5000/api/wishlist",
+    try {      await axios.post(
+        API_ENDPOINTS.WISHLIST,
         { productId },
         { headers: { Authorization: `Bearer ${token}` } }
       );

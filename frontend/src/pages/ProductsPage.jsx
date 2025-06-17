@@ -12,6 +12,7 @@ import { useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useRef } from "react"; // Importa useRef
 import QRCode from "qrcode";
+import { API_ENDPOINTS } from '../config/api';
 
 
 
@@ -70,10 +71,9 @@ const ProductsPage = () => {
         }
     }, [location]);
 
-    useEffect(() => {
-        const fetchProducts = async () => {
+    useEffect(() => {        const fetchProducts = async () => {
             try {
-                const response = await axios.get("http://localhost:5000/api/products");
+                const response = await axios.get(API_ENDPOINTS.PRODUCTS);
                 setProducts(response.data);
                 setFilteredProducts(response.data);
 
@@ -93,7 +93,7 @@ const ProductsPage = () => {
                 const token = localStorage.getItem("token");
                 if (!token) return;
 
-                const response = await axios.get("http://localhost:5000/api/wishlist", {
+                const response = await axios.get(API_ENDPOINTS.WISHLIST, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setWishlist(response.data.products.map((item) => item.product._id)); // Salva solo gli ID dei prodotti
@@ -167,9 +167,8 @@ const ProductsPage = () => {
             navigate("/login");
             return;
         }
-        try {
-            await axios.post(
-                "http://localhost:5000/api/cart",
+        try {            await axios.post(
+                API_ENDPOINTS.CART,
                 { productId, quantity: 1 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -356,9 +355,8 @@ const ProductsPage = () => {
             navigate("/login");
             return;
         }
-        try {
-            await axios.post(
-                "http://localhost:5000/api/wishlist",
+        try {            await axios.post(
+                API_ENDPOINTS.WISHLIST,
                 { productId },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -393,7 +391,7 @@ const ProductsPage = () => {
             return;
         }
         try {
-            await axios.delete(`http://localhost:5000/api/wishlist/${productId}`, {
+            await axios.delete(API_ENDPOINTS.WISHLIST_REMOVE(productId), {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setWishlist((prev) => prev.filter((id) => id !== productId)); // Rimuovi il prodotto dalla wishlist

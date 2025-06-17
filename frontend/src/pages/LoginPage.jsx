@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Form, Button, Card, Alert } from "react-bootstrap";
 import { motion } from "framer-motion";
 import { FaUser, FaEnvelope, FaLock, FaUserPlus, FaSignInAlt, FaMagic } from "react-icons/fa";
+import { API_ENDPOINTS } from '../config/api';
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -30,10 +31,9 @@ const LoginPage = () => {
     e.preventDefault();
     setError(null);
 
-    try {
-      const url = isRegistering
-        ? "http://localhost:5000/api/auth/register"
-        : "http://localhost:5000/api/auth/login";
+    try {      const url = isRegistering
+        ? API_ENDPOINTS.AUTH_REGISTER
+        : API_ENDPOINTS.AUTH_LOGIN;
 
       const response = await axios.post(url, isRegistering ? { email, password, username } : { email, password }, { headers: { 'Content-Type': 'application/json' } });
 

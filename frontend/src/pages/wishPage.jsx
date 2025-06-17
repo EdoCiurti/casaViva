@@ -6,6 +6,7 @@ import { Trash, Heart, ShoppingCart, Package, ArrowLeft, Star, Calendar } from "
 import LoadingSpinner from "../components/LoadingSpinner";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { API_ENDPOINTS } from '../config/api';
 
 const WishlistPage = () => {
   const [wishlist, setWishlist] = useState([]);
@@ -21,7 +22,7 @@ const WishlistPage = () => {
     const fetchWishlist = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/wishlist", {
+        const response = await axios.get(API_ENDPOINTS.WISHLIST, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -30,7 +31,7 @@ const WishlistPage = () => {
           wishlistData.products.map(async (item) => {
             const productId = item.product._id;
             const productRes = await axios.get(
-              `http://localhost:5000/api/products/${productId}`
+              API_ENDPOINTS.PRODUCT_BY_ID(productId)
             );
             return { ...productRes.data, addedAt: item.addedAt };
           })
@@ -63,7 +64,7 @@ const WishlistPage = () => {
   const removeFromWishlist = async (productId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/wishlist/${productId}`, {
+      await axios.delete(API_ENDPOINTS.WISHLIST_REMOVE(productId), {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -84,7 +85,7 @@ const WishlistPage = () => {
   const clearWishlist = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete("http://localhost:5000/api/wishlist", {
+      await axios.delete(API_ENDPOINTS.WISHLIST, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setWishlist([]); // Pulisce lo stato
@@ -109,10 +110,8 @@ const WishlistPage = () => {
       if (!token) {
         setError("Devi essere loggato per aggiungere prodotti al carrello.");
         return;
-      }
-
-      await axios.post(
-        "http://localhost:5000/api/cart",
+      }      await axios.post(
+        API_ENDPOINTS.CART,
         { productId, quantity: 1 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -136,9 +135,8 @@ const WishlistPage = () => {
       }
 
       await Promise.all(
-        wishlist.map((item) =>
-          axios.post(
-            "http://localhost:5000/api/cart",
+        wishlist.map((item) =>          axios.post(
+            API_ENDPOINTS.CART,
             { productId: item._id, quantity: 1 },
             { headers: { Authorization: `Bearer ${token}` } }
           )

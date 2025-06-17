@@ -3,11 +3,12 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import DataTable from 'react-data-table-component';
 import { motion, AnimatePresence } from "framer-motion";
+import { API_ENDPOINTS } from '../config/api';
 import { 
   Settings, 
   Package, 
   ShoppingCart, 
-  Users, 
+  Users,
   Plus, 
   Edit3, 
   Trash2, 
@@ -55,7 +56,7 @@ const AdminHomePage = () => {
   const fetchOrders = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/orders", {
+      const response = await axios.get(API_ENDPOINTS.ORDERS, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.status === 200) {
@@ -70,7 +71,7 @@ const AdminHomePage = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/products");
+      const response = await axios.get(API_ENDPOINTS.PRODUCTS);
       setProducts(response.data);
     } catch (error) {
       console.error("Errore nel recupero dei prodotti:", error);
@@ -80,7 +81,7 @@ const AdminHomePage = () => {
   const handleOrderStatusChange = async (orderId, newStatus) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://localhost:5000/api/orders/${orderId}/status`, { status: newStatus }, {
+      await axios.put(API_ENDPOINTS.ORDER_STATUS(orderId), { status: newStatus }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchOrders();
@@ -111,11 +112,11 @@ const AdminHomePage = () => {
     try {
       const token = localStorage.getItem("token");
       if (editingProduct) {
-        await axios.put(`http://localhost:5000/api/products/${editingProduct._id}`, productForm, {
+        await axios.put(API_ENDPOINTS.PRODUCT_BY_ID(editingProduct._id), productForm, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else {
-        await axios.post("http://localhost:5000/api/products", productForm, {
+        await axios.post(API_ENDPOINTS.PRODUCTS, productForm, {
           headers: { Authorization: `Bearer ${token}` },
         });
       }
@@ -150,7 +151,7 @@ const AdminHomePage = () => {
   const handleProductDelete = async (productId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/products/${productId}`, {
+      await axios.delete(API_ENDPOINTS.PRODUCT_BY_ID(productId), {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchProducts();

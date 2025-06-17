@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, Package, Calendar, CreditCard, Home, Truck, Gift } from "lucide-react";
+import { API_ENDPOINTS } from '../config/api';
 
 const SuccessPage = () => {
   const [orderDetails, setOrderDetails] = useState([]);
@@ -16,7 +17,7 @@ const SuccessPage = () => {
     const fetchOrderDetails = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/cart", {
+        const response = await axios.get(API_ENDPOINTS.CART, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOrderDetails(response.data.products);

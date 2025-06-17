@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CreditCard, Package, MapPin, User, Globe, Hash, Building, CheckCircle, ShoppingBag, Truck } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_ENDPOINTS } from '../config/api';
 
 const OrderPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -19,7 +20,7 @@ const OrderPage = () => {
     const fetchCartItems = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/cart", {
+        const response = await axios.get(API_ENDPOINTS.CART, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCartItems(response.data.products);
@@ -74,7 +75,7 @@ const OrderPage = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:5000/api/orders",
+        API_ENDPOINTS.ORDERS,
         { products: productItems },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -97,13 +98,13 @@ const OrderPage = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://localhost:5000/api/payments/create-checkout-session",
+        API_ENDPOINTS.PAYMENTS_CHECKOUT,
         { cartItems, orderId }, // Invia l'ID dell'ordine alla sessione di pagamento
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       // Svuota il carrello
-      await axios.delete("http://localhost:5000/api/cart", {
+      await axios.delete(API_ENDPOINTS.CART, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -499,15 +500,18 @@ const OrderPage = () => {
         >
           <motion.button
             onClick={handleOrder}
-            disabled={!isFormValid()}            style={{
+            disabled={!isFormValid()}
+            style={{
               padding: '18px 50px',
               fontSize: '1.3rem',
               fontWeight: '600',              background: isFormValid() 
                 ? 'linear-gradient(135deg, #28a745 0%, #20c997 100%)' 
                 : 'rgba(108, 117, 125, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: 'none',
               borderRadius: '25px',
-              cursor: isFormValid() ? 'pointer' : 'not-allowed',              backdropFilter: 'blur(20px)',
+              cursor: isFormValid() ? 'pointer' : 'not-allowed',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
               transition: 'all 0.3s ease',
               display: 'flex',

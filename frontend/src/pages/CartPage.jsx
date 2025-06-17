@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Minus, Trash, ShoppingCart, CreditCard, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingSpinner from '../components/LoadingSpinner';
+import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS } from '../config/api';
 
 const CartPage = () => {  const [cart, setCart] = useState([]);
   const [total, setTotal] = useState(0);
@@ -33,7 +35,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
     const fetchCart = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get("http://localhost:5000/api/cart", {
+        const response = await axios.get(API_ENDPOINTS.CART, {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -45,9 +47,8 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
               console.warn("Prodotto non trovato o non valido:", item);
               return null; // Ignora prodotti non validi
             }
-            const productId = item.product._id;
-            const productRes = await axios.get(
-              `http://localhost:5000/api/products/${productId}`
+            const productId = item.product._id;            const productRes = await axios.get(
+              API_ENDPOINTS.PRODUCT_BY_ID(productId)
             );
             return { ...productRes.data, quantity: item.quantity, cartItemId: item._id };
           })
@@ -75,9 +76,8 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
     if (newQuantity < 1) return; // Evita quantità negative o zero
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        "http://localhost:5000/api/cart",
+      const token = localStorage.getItem("token");      await axios.put(
+        API_ENDPOINTS.CART,
         { productId, quantity: newQuantity },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -100,7 +100,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
 
     try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:5000/api/cart/${productId}`, { 
+        await axios.delete(API_ENDPOINTS.CART_REMOVE(productId), { 
             headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -122,7 +122,7 @@ const CartPage = () => {  const [cart, setCart] = useState([]);
   const clearCart = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete("http://localhost:5000/api/cart", {
+      await axios.delete(API_ENDPOINTS.CART, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCart([]); // Pulisce lo stato
