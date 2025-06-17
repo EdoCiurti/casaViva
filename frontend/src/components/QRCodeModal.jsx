@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import QRCode from 'qrcode';
-import { QrScanner } from '@yudiel/react-qr-scanner';
+import { Scanner } from '@yudiel/react-qr-scanner';
 
 const QRCodeModal = ({ show, onHide, product }) => {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -45,14 +45,15 @@ const QRCodeModal = ({ show, onHide, product }) => {
       console.error('Errore nella generazione del QR code:', error);
     }
   };
-
   const handleScanSuccess = (result) => {
+    console.log('QR Scanned:', result);
     setScannedData(result);
     setShowScanner(false);
     
     // Apri il modello 3D
-    if (result?.text) {
-      window.open(result.text, '_blank');
+    // Il result è già una stringa con il contenuto del QR code
+    if (result) {
+      window.open(result, '_blank');
     }
   };
 
@@ -153,14 +154,15 @@ const QRCodeModal = ({ show, onHide, product }) => {
           </>
         ) : (
           <div className="scanner-container">
-            <h5 className="mb-3">Inquadra il QR Code</h5>
-            <div style={{ maxWidth: '300px', margin: '0 auto' }}>
-              <QrScanner
+            <h5 className="mb-3">Inquadra il QR Code</h5>            <div style={{ maxWidth: '300px', margin: '0 auto' }}>
+              <Scanner
                 onDecode={handleScanSuccess}
                 onError={handleScanError}
-                style={{ width: '100%' }}
                 constraints={{
                   facingMode: 'environment' // Usa fotocamera posteriore
+                }}
+                styles={{
+                  container: { width: '100%' }
                 }}
               />
             </div>
