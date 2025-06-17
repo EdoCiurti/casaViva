@@ -7,8 +7,21 @@ const path = require("path"); // Aggiungi questa importazione all'inizio
 
 const app = express();
 
+// Configurazione CORS
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://casaviva-2.onrender.com',
+    process.env.CLIENT_URL
+  ].filter(Boolean), // Rimuove valori null/undefined
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 // Aggiungi questa configurazione dopo gli altri middleware
