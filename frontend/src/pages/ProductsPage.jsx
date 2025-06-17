@@ -53,7 +53,30 @@ const ProductsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const detailsSectionRef = useRef(null); // Riferimento alla sezione dei dettagli
-    const itemsPerView = 3;
+    const [itemsPerView, setItemsPerView] = useState(3);
+
+    // Funzione per calcolare items per view in base alla larghezza dello schermo
+    const calculateItemsPerView = () => {
+        const width = window.innerWidth;
+        if (width < 480) return 1;        // Mobile molto piccolo: 1 item
+        if (width < 768) return 2;        // Mobile: 2 items  
+        if (width < 1024) return 3;       // Tablet: 3 items
+        if (width < 1400) return 4;       // Desktop piccolo: 4 items
+        return 5;                         // Desktop grande: 5 items
+    };
+
+    // Effect per aggiornare itemsPerView al resize
+    useEffect(() => {
+        const handleResize = () => {
+            setItemsPerView(calculateItemsPerView());
+        };
+
+        // Set initial value
+        setItemsPerView(calculateItemsPerView());
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const categoryImages = {
         "madie-moderne": "https://www.garneroarredamenti.com/data/cat/img/1/100-82902.png",
@@ -227,19 +250,15 @@ const ProductsPage = () => {
 
         setFilteredProducts(filtered);
         setCurrentIndex(0);
-    }, [filters, products]);
-
-    const handleScroll = (direction, increment = itemsPerView) => {
+    }, [filters, products]);    const handleScroll = (direction, increment = itemsPerView) => {
         setCurrentIndex((prev) => {
-            const newIndex =
-                direction === "right"
-                    ? Math.min(
-                          prev + increment,
-                          selectedCategory
-                              ? filteredProducts.length - itemsPerView
-                              : categories.length - itemsPerView
-                      )
-                    : Math.max(prev - increment, 0);
+            const maxIndex = selectedCategory
+                ? Math.max(0, filteredProducts.length - itemsPerView)
+                : Math.max(0, categories.length - itemsPerView);
+            
+            const newIndex = direction === "right"
+                ? Math.min(prev + increment, maxIndex)
+                : Math.max(prev - increment, 0);
     
             // Evidenzia la card centrale
             const container = document.querySelector(".categories-wrapper");
@@ -1170,14 +1189,13 @@ const ProductsPage = () => {
                                     className="d-flex align-items-center overflow-hidden position-relative"
                                     style={{ maxWidth: "100%", cursor: "grab" }}
                                     onWheel={(e) => handleScroll(e.deltaY > 0 ? "right" : "left", 0.05)}
-                                >
-                                    <motion.div
+                                >                                    <motion.div
                                         className="d-flex"
-                                        style={{ display: "flex", gap: "20px" }}
-                                        animate={{ x: -currentIndex * 320 }}
+                                        style={{ display: "flex", gap: `${getGap()}px` }}
+                                        animate={{ x: -currentIndex * (getCardWidth() + getGap()) }}
                                         transition={{ type: "spring", stiffness: 100, damping: 20 }}
                                         drag="x"
-                                        dragConstraints={{ left: -((filteredProducts.length - itemsPerView) * 320), right: 0 }}
+                                        dragConstraints={getDragConstraints(filteredProducts.length)}
                                         onDragEnd={handleDragEnd}
                                     >
                                         {filteredProducts.map((product, index) => (
@@ -1191,10 +1209,14 @@ const ProductsPage = () => {
                                                 }}
                                                 transition={{ duration: 0.5 }}
                                                 onClick={(event) => handleCardClick(product, index, event)}
-                                            >
-                                                <Card
+                                            >                                                <Card
                                                     className="shadow-lg"
-                                                    style={{ borderRadius: "15px", overflow: "hidden", width: "300px", height: "500px" }}
+                                                    style={{ 
+                                                        borderRadius: "15px", 
+                                                        overflow: "hidden", 
+                                                        width: `${getCardWidth()}px`, 
+                                                        height: "500px" 
+                                                    }}
                                                 >
                                                     <Card.Img
                                                         variant="top"
@@ -1315,13 +1337,12 @@ const ProductsPage = () => {
                             opacity: currentIndex === 0 ? 0.5 : 1,
                         }}
                     />
-                    <div className="categories-container" onWheel={(e) => handleScroll(e.deltaY > 0 ? "right" : "left")}>
-                        <motion.div
+                    <div className="categories-container" onWheel={(e) => handleScroll(e.deltaY > 0 ? "right" : "left")}>                        <motion.div
                             className="categories-wrapper"
-                            animate={{ x: -currentIndex * 320 }}
+                            animate={{ x: -currentIndex * (getCardWidth() + getGap()) }}
                             transition={{ type: "spring", stiffness: 100, damping: 20 }}
                             drag="x"
-                            dragConstraints={{ left: -((categories.length - itemsPerView) * 320), right: 0 }}
+                            dragConstraints={getDragConstraints(categories.length)}
                         >
                             {categories.map((category, index) => (
                                 <motion.div
@@ -1351,14 +1372,13 @@ const ProductsPage = () => {
                         <FaArrowRight
                             className="arrow-icon position-absolute"
                             onClick={() => handleScroll("right")}
-                            style={{
-                                cursor: currentIndex >= categories.length - itemsPerView ? "default" : "pointer",
+                            style={{                                cursor: currentIndex >= Math.max(0, categories.length - itemsPerView) ? "default" : "pointer",
                                 fontSize: "2rem",
                                 right: "10px",
                                 top: "50%",
                                 transform: "translateY(-50%)",
                                 zIndex: 1,
-                                opacity: currentIndex >= categories.length - itemsPerView ? 0.5 : 1,
+                                opacity: currentIndex >= Math.max(0, categories.length - itemsPerView) ? 0.5 : 1,
                             }}
                         />
                     </div>
